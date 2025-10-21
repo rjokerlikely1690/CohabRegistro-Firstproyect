@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+starCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -210,6 +210,12 @@
                 <div class="icon">💾</div>
                 <div class="title">Respaldo</div>
                 <div class="desc">Crear backup de datos</div>
+            </div>
+            
+            <div class="quick-action-btn" onclick="deleteAllAlumnos()">
+                <div class="icon">🗑️</div>
+                <div class="title">Eliminar Todos</div>
+                <div class="desc">Borrar todos los alumnos</div>
             </div>
             
             <div class="quick-action-btn" onclick="systemSettings()">
@@ -441,6 +447,29 @@
             
             URL.revokeObjectURL(url);
             showNotification('Respaldo creado correctamente');
+        }
+
+        // Eliminar todos los alumnos
+        function deleteAllAlumnos() {
+            const actuales = JSON.parse(localStorage.getItem('alumnos')) || [];
+            if (actuales.length === 0) {
+                alert('No hay alumnos registrados');
+                return;
+            }
+            
+            if (!confirm(`¿Eliminar a TODOS los ${actuales.length} alumnos? Esta acción es irreversible.`)) {
+                return;
+            }
+            
+            localStorage.setItem('alumnos', JSON.stringify([]));
+            if (typeof window.alumnos !== 'undefined') {
+                window.alumnos = [];
+            }
+            
+            updateStats();
+            loadAlumnos();
+            
+            try { showNotification('Todos los alumnos fueron eliminados'); } catch (e) { alert('Todos los alumnos fueron eliminados'); }
         }
 
         // Configuración del sistema
