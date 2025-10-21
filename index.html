@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Alumnos - Academia COHAB</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Sistema">
+    <meta name="description" content="Gestión de Alumnos - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_cohab.png">
+    <link rel="apple-touch-icon" href="logo_cohab.png">
+    
+    <link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <img src="logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            
+            <!-- Menú hamburguesa para móvil -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+            
+            <ul class="nav-links">
+                <li><a href="login.html">🏠 Inicio</a></li>
+                <li><a href="index.html" class="active">Gestión de Alumnos</a></li>
+                <li><a href="verificar.html">Verificar QR</a></li>
+                <li><a href="admin.html">Panel Admin</a></li>
+            </ul>
+        </div>
+        
+        <!-- Menú móvil -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="login.html">🏠 Inicio</a>
+            <a href="index.html" class="active">👥 Gestión de Alumnos</a>
+            <a href="verificar.html">🔍 Verificar QR</a>
+            <a href="admin.html">👨‍💼 Panel Admin</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="header-section">
+            <h2>Gestión de Alumnos</h2>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="updateDatabase()" title="Actualizar base de datos y recalcular estados">Actualizar</button>
+                <button class="btn btn-primary" onclick="openModal()">+ Agregar Alumno</button>
+            </div>
+        </section>
+
+        <section class="search-section">
+            <input type="text" id="searchInput" placeholder="🔍 Buscar alumno..." onkeyup="filterAlumnos()">
+        </section>
+
+        <section class="alumnos-grid" id="alumnosGrid">
+            <!-- Los alumnos se cargarán aquí dinámicamente -->
+        </section>
+    </main>
+
+    <!-- Modal para agregar/editar alumno -->
+    <div id="alumnoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Agregar Nuevo Alumno</h2>
+            <form id="alumnoForm" onsubmit="saveAlumno(event)">
+                <input type="hidden" id="alumnoId">
+                
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo *</label>
+                    <input type="text" id="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono">
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaPago">Fecha de Último Pago *</label>
+                    <input type="date" id="fechaPago" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="diaPago">Día de Pago Mensual *</label>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button type="button" class="btn btn-secondary" onclick="setDiaPago(30)" style="flex: 1;">Día 30</button>
+                        <button type="button" class="btn btn-secondary" onclick="setDiaPago(31)" style="flex: 1;">Día 31</button>
+                    </div>
+                    <small id="diaPagoInfo">Selecciona el día de pago para toda la academia</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="monto">Monto Mensual *</label>
+                    <input type="number" id="monto" step="0.01" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar QR -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content qr-modal">
+            <span class="close" onclick="closeQRModal()">&times;</span>
+            <h2 id="qrNombre">Código QR</h2>
+            <div id="qrcode" class="qr-container"></div>
+            <button class="btn btn-primary" onclick="downloadQR()">Descargar QR</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="alert-system.js"></script>
+    <script src="app.js?v=8"></script>
+    
+    <script>
+        // Función para toggle del menú móvil
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+        
+        // Cerrar menú móvil al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (!mobileMenu.contains(event.target) && !menuBtn.contains(event.target)) {
+                mobileMenu.classList.remove('active');
+            }
+        });
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Error al registrar ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

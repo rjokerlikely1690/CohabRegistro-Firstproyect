@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Estado de Pago - Academia COHAB (ACTUALIZADO)</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Usuario">
+    <meta name="description" content="Consulta tu estado de pago - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_cohab.png">
+    <link rel="apple-touch-icon" href="logo_cohab.png">
+    
+    <link rel="stylesheet" href="styles.css?v=2">
+    <style>
+        .user-header {
+            background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .user-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .user-welcome {
+            text-align: center;
+        }
+        
+        .user-welcome h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .user-welcome p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .search-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .search-title {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-title h2 {
+            color: #dc2626;
+            margin-bottom: 0.5rem;
+        }
+        
+        .search-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .search-option {
+            text-align: center;
+            padding: 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .search-option:hover {
+            border-color: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .search-option .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .search-option h3 {
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+        
+        .search-option p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+        
+        .camera-container {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .camera-container video {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .manual-search {
+            display: none;
+        }
+        
+        .manual-search input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .manual-search input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        
+        .result-container {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+        
+        .result-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .status-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-aldia { color: #10b981; }
+        .status-proximo { color: #f59e0b; }
+        .status-atrasado { color: #dc2626; }
+        
+        .result-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-item {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #dc2626;
+        }
+        
+        .info-item .label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-item .value {
+            color: #6b7280;
+        }
+        
+        .alert-banner {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .alert-banner.atrasado {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+        
+        .alert-banner.proximo {
+            background: #fffbeb;
+            border-color: #fed7aa;
+            color: #d97706;
+        }
+        
+        @media (max-width: 768px) {
+            .search-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="user-header" style="background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%) !important;">
+        <div class="container">
+            <div class="user-nav">
+                <img src="logo_cohab.svg" alt="COHAB" class="logo" style="height: 40px;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+                <div class="role-badge" style="font-size: 0.8rem; padding: 0.3rem 0.7rem;">👤 USUARIO</div>
+                <button class="btn btn-secondary" onclick="logout()" style="background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); padding: 0.5rem 1rem; font-size: 0.9rem;">Cerrar</button>
+            </div>
+            
+            <div class="user-welcome">
+                <h1 style="font-size: 1.8rem; margin-bottom: 0.5rem;">¡Hola! 👋</h1>
+                <p style="font-size: 1rem; opacity: 0.9;">Consulta tu estado de pago</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <section class="search-section">
+            <div class="search-title">
+                <h2>🔍 Consultar Estado de Pago</h2>
+                <p>Escanéa tu código QR o ingresa tu ID para verificar tu estado</p>
+            </div>
+            
+            <div class="search-options">
+                <div class="search-option">
+                    <div class="icon">📱</div>
+                    <h3>Escanear Código QR</h3>
+                    <p>Usa la cámara de tu dispositivo para escanear tu código QR</p>
+                    <button class="btn btn-primary" onclick="toggleCamera()">Iniciar Cámara</button>
+                    
+                    <div class="camera-container" id="cameraContainer">
+                        <video id="video" width="300" height="200" autoplay></video>
+                        <canvas id="canvas" style="display: none;"></canvas>
+                        <button class="btn btn-secondary" onclick="stopCamera()">Detener Cámara</button>
+                    </div>
+                </div>
+                
+                <div class="search-option">
+                    <div class="icon">✏️</div>
+                    <h3>Ingreso Manual</h3>
+                    <p>Ingresa tu ID de alumno para consultar tu estado</p>
+                    <button class="btn btn-primary" onclick="toggleManualSearch()">Buscar por ID</button>
+                    
+                    <div class="manual-search" id="manualSearch">
+                        <input type="text" id="userIdInput" placeholder="Ingresa tu ID de alumno">
+                        <button class="btn btn-primary" onclick="searchByUserId()">Consultar Estado</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resultado de la consulta -->
+        <div class="result-container" id="resultContainer">
+            <div class="result-header">
+                <div class="status-icon" id="statusIcon">✅</div>
+                <h2 id="studentName">Nombre del Alumno</h2>
+                <p id="paymentStatus" class="status-aldia">🟢 Al día con los pagos</p>
+            </div>
+            
+            <div id="alertBanner" class="alert-banner" style="display: none;">
+                <!-- Alertas se mostrarán aquí -->
+            </div>
+            
+            <div class="result-info" id="resultInfo">
+                <!-- Información del alumno se mostrará aquí -->
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn btn-secondary" onclick="closeResult()">Nueva Consulta</button>
+                <button class="btn btn-primary" onclick="shareStudentUrl()">🔗 Compartir Mi Estado</button>
+                <button class="btn btn-primary" onclick="showHistory()">Ver Historial</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="alert-system.js"></script>
+    <script>
+        let video, canvas, context, scanning = false;
+        let currentStudent = null;
+
+        // Verificar que el usuario tenga permisos de usuario
+        function checkUserAccess() {
+            const userRole = localStorage.getItem('userRole');
+            if (userRole !== 'usuario') {
+                alert('Acceso denegado. Solo usuarios pueden acceder a esta página.');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Función de logout
+        function logout() {
+            if (confirm('¿Estás seguro de cerrar sesión?')) {
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('lastAccess');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Alternar cámara
+        function toggleCamera() {
+            const container = document.getElementById('cameraContainer');
+            if (container.style.display === 'none') {
+                startCamera();
+            } else {
+                stopCamera();
+            }
+        }
+
+        // Iniciar cámara
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas');
+                context = canvas.getContext('2d');
+                
+                video.srcObject = stream;
+                document.getElementById('cameraContainer').style.display = 'block';
+                document.getElementById('manualSearch').style.display = 'none';
+                
+                scanning = true;
+                scanQR();
+            } catch (err) {
+                alert('Error al acceder a la cámara: ' + err.message);
+            }
+        }
+
+        // Detener cámara
+        function stopCamera() {
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('cameraContainer').style.display = 'none';
+            scanning = false;
+        }
+
+        // Escanear QR
+        function scanQR() {
+            if (!scanning) return;
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    stopCamera();
+                    searchByUserId(code.data);
+                }
+            }
+            
+            requestAnimationFrame(scanQR);
+        }
+
+        // Alternar búsqueda manual
+        function toggleManualSearch() {
+            const manualSearch = document.getElementById('manualSearch');
+            if (manualSearch.style.display === 'none') {
+                manualSearch.style.display = 'block';
+                document.getElementById('cameraContainer').style.display = 'none';
+                stopCamera();
+            } else {
+                manualSearch.style.display = 'none';
+            }
+        }
+
+        // Buscar por ID de usuario
+        function searchByUserId(userId) {
+            if (!userId) {
+                userId = document.getElementById('userIdInput').value.trim();
+            }
+            
+            if (!userId) {
+                showCustomAlert('ID requerido', 'Por favor ingresa un ID de alumno para buscar', 'warning');
+                return;
+            }
+            
+            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            const alumno = alumnos.find(a => a.id === userId);
+            
+            if (!alumno) {
+                showCustomAlert('Alumno no encontrado', `No se encontró un alumno con el ID: ${userId}`, 'error');
+                // Si se accedió desde URL, redirigir a la página principal
+                if (window.location.search.includes('id=')) {
+                    setTimeout(() => {
+                        window.location.href = 'usuario.html';
+                    }, 3000);
+                }
+                return;
+            }
+            
+            currentStudent = alumno;
+            showStudentResult(alumno);
+            
+            // Actualizar el título de la página con el nombre del alumno
+            document.title = `Estado de Pago - ${alumno.nombre}`;
+        }
+
+        // Mostrar resultado del alumno
+        function showStudentResult(alumno) {
+            const estado = calcularEstado(alumno);
+            
+            // Actualizar icono y estado
+            const statusIcon = document.getElementById('statusIcon');
+            const paymentStatus = document.getElementById('paymentStatus');
+            
+            if (estado.clase === 'aldia') {
+                statusIcon.textContent = '✅';
+                statusIcon.className = 'status-icon status-aldia';
+                paymentStatus.textContent = '🟢 Al día con los pagos';
+                paymentStatus.className = 'status-aldia';
+            } else if (estado.clase === 'proximo') {
+                statusIcon.textContent = '⚠️';
+                statusIcon.className = 'status-icon status-proximo';
+                paymentStatus.textContent = '🟠 Próximo a vencer';
+                paymentStatus.className = 'status-proximo';
+            } else {
+                statusIcon.textContent = '❌';
+                statusIcon.className = 'status-icon status-atrasado';
+                paymentStatus.textContent = '🔴 Pago atrasado';
+                paymentStatus.className = 'status-atrasado';
+            }
+            
+            document.getElementById('studentName').textContent = alumno.nombre;
+            
+            // Mostrar alerta si es necesario
+            const alertBanner = document.getElementById('alertBanner');
+            if (estado.clase === 'atrasado') {
+                alertBanner.innerHTML = `
+                    <h3>🚨 PAGO ATRASADO</h3>
+                    <p>Tu pago está atrasado por ${Math.abs(estado.diasRestantes)} días. Por favor contacta a la administración.</p>
+                `;
+                alertBanner.className = 'alert-banner atrasado';
+                alertBanner.style.display = 'block';
+            } else if (estado.clase === 'proximo') {
+                alertBanner.innerHTML = `
+                    <h3>⚠️ PRÓXIMO A VENCER</h3>
+                    <p>Tu pago vence en ${estado.diasRestantes} días. Te recomendamos realizar el pago pronto.</p>
+                `;
+                alertBanner.className = 'alert-banner proximo';
+                alertBanner.style.display = 'block';
+            } else {
+                alertBanner.style.display = 'none';
+            }
+            
+            // Mostrar información
+            const resultInfo = document.getElementById('resultInfo');
+            resultInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="label">Email</div>
+                    <div class="value">${alumno.email || 'No especificado'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Teléfono</div>
+                    <div class="value">${alumno.telefono || 'No especificado'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Último Pago</div>
+                    <div class="value">${formatDate(alumno.fechaPago)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Próximo Pago</div>
+                    <div class="value">${formatDate(estado.proximoPago)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Monto Mensual</div>
+                    <div class="value">$${parseFloat(alumno.monto).toFixed(2)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">${estado.diasRestantes < 0 ? 'Días Atrasado' : 'Días Restantes'}</div>
+                    <div class="value">${estado.diasRestantes < 0 ? Math.abs(estado.diasRestantes) + ' días' : estado.diasRestantes + ' días'}</div>
+                </div>
+            `;
+            
+            document.getElementById('resultContainer').style.display = 'block';
+            document.getElementById('manualSearch').style.display = 'none';
+        }
+
+        // Cerrar resultado
+        function closeResult() {
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('userIdInput').value = '';
+            currentStudent = null;
+        }
+
+        // Mostrar historial
+        function showHistory() {
+            alert('Función de historial en desarrollo...');
+        }
+
+        // Compartir URL del alumno
+        function shareStudentUrl() {
+            if (!currentStudent) {
+                alert('No hay información de alumno para compartir');
+                return;
+            }
+            
+            const currentUrl = window.location.href;
+            
+            if (navigator.share) {
+                // Usar Web Share API si está disponible
+                navigator.share({
+                    title: `Estado de Pago - ${currentStudent.nombre}`,
+                    text: `Consulta el estado de pago de ${currentStudent.nombre}`,
+                    url: currentUrl
+                }).catch(err => {
+                    console.log('Error al compartir:', err);
+                    copyToClipboard(currentUrl);
+                });
+            } else {
+                // Fallback: copiar al portapapeles
+                copyToClipboard(currentUrl);
+            }
+        }
+
+        // Copiar al portapapeles
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCustomAlert('URL Copiada', 'La URL ha sido copiada al portapapeles. Puedes compartirla con otros.', 'success');
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+
+        // Fallback para copiar al portapapeles
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showCustomAlert('URL Copiada', 'La URL ha sido copiada al portapapeles. Puedes compartirla con otros.', 'success');
+            } catch (err) {
+                console.error('Error al copiar:', err);
+                showCustomAlert('Error', 'No se pudo copiar la URL automáticamente. Cópiala manualmente: ' + text, 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Formatear fecha
+        function formatDate(date) {
+            const d = new Date(date);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // Función para calcular estado (copiada de app.js)
+        function calcularEstado(alumno) {
+            const hoy = new Date();
+            const fechaUltimoPago = new Date(alumno.fechaPago);
+            const diaPago = parseInt(alumno.diaPago);
+            
+            let proximoPago = new Date(fechaUltimoPago);
+            proximoPago.setMonth(proximoPago.getMonth() + 1);
+            proximoPago.setDate(diaPago);
+            
+            if (proximoPago.getDate() !== diaPago) {
+                proximoPago.setDate(0);
+            }
+            
+            const diffTime = proximoPago - hoy;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            let estado = {
+                tipo: '',
+                clase: '',
+                diasRestantes: diffDays,
+                proximoPago: proximoPago
+            };
+            
+            if (diffDays < 0) {
+                estado.tipo = '🔴 Atrasado';
+                estado.clase = 'atrasado';
+            } else if (diffDays <= 5) {
+                estado.tipo = '🟠 Próximo a vencer';
+                estado.clase = 'proximo';
+            } else {
+                estado.tipo = '🟢 Al día';
+                estado.clase = 'aldia';
+            }
+            
+            return estado;
+        }
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si hay un ID en la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentId = urlParams.get('id');
+            
+            if (studentId) {
+                // Si hay un ID en la URL, buscar automáticamente el alumno
+                searchByUserId(studentId);
+                // Ocultar las opciones de búsqueda ya que ya tenemos el ID
+                document.querySelector('.search-section').style.display = 'none';
+                // Cambiar el título de la página
+                document.querySelector('.user-welcome h1').textContent = '📱 Estado de Pago';
+                document.querySelector('.user-welcome p').textContent = 'Consulta tu información de pago';
+            } else {
+                // Comportamiento normal para usuarios
+                if (checkUserAccess()) {
+                    // Página lista para usar
+                }
+            }
+        });
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Error al registrar ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

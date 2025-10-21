@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Estado de Pagos - Academia COHAB</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Sistema">
+    <meta name="description" content="Verificación de estado de pagos - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_cohab.png">
+    <link rel="apple-touch-icon" href="logo_cohab.png">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <img src="logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            <ul class="nav-links">
+                <li><a href="index.html">Gestión de Alumnos</a></li>
+                <li><a href="verificar.html" class="active">Verificar QR</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Sección de Verificación -->
+        <section class="verificar-section">
+            <h2>🔍 Verificar Estado de Pago</h2>
+            <p class="subtitle">Escanea el código QR del alumno o ingresa el ID manualmente</p>
+            
+            <div class="verificar-options">
+                <div class="option-card">
+                    <h3>📱 Escanear QR</h3>
+                    <button class="btn btn-primary" onclick="startScanner()">Iniciar Cámara</button>
+                    <button class="btn btn-secondary" onclick="stopScanner()">Detener Cámara</button>
+                    <div id="scanner-container" style="display: none;">
+                        <div class="scanner-overlay">
+                            <div class="scanner-frame">
+                                <div class="scanner-corners">
+                                    <div class="corner top-left"></div>
+                                    <div class="corner top-right"></div>
+                                    <div class="corner bottom-left"></div>
+                                    <div class="corner bottom-right"></div>
+                                </div>
+                                <video id="video" autoplay muted playsinline></video>
+                                <canvas id="canvas" style="display: none;"></canvas>
+                            </div>
+                            <div class="scanner-instructions">
+                                <p>📱 Apunta la cámara al código QR del alumno</p>
+                                <p>🔍 El código se detectará automáticamente</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="option-divider">O</div>
+                
+                <div class="option-card">
+                    <h3>✏️ Ingreso Manual</h3>
+                    <input type="text" id="manualId" placeholder="Ingresa el ID del alumno">
+                    <button class="btn btn-primary" onclick="verificarManual()">Verificar</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resultado de Verificación -->
+        <div id="resultadoVerificacion" class="resultado-container" style="display: none;">
+            <div class="resultado-card">
+                <div id="resultadoHeader" class="resultado-header">
+                    <div class="status-icon" id="statusIcon">✅</div>
+                    <h3 id="alumnoNombre">Nombre del Alumno</h3>
+                    <p id="estadoPago">🟢 Al día</p>
+                </div>
+                
+                <!-- Información del Alumno -->
+                <div class="resultado-body">
+                    <div class="info-section">
+                        <h4>📋 Información Personal</h4>
+                        <div class="info-row">
+                            <span class="label">ID del Alumno:</span>
+                            <span class="value" id="alumnoId">ID123456</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Email:</span>
+                            <span class="value" id="alumnoEmail">alumno@email.com</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Teléfono:</span>
+                            <span class="value" id="alumnoTelefono">+1234567890</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h4>💰 Estado de Pago</h4>
+                        <div class="info-row">
+                            <span class="label">Último Pago:</span>
+                            <span class="value" id="ultimoPago">01/01/2024</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Próximo Pago:</span>
+                            <span class="value" id="proximoPago">01/02/2024</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Monto Mensual:</span>
+                            <span class="value" id="montoMensual">$50.00</span>
+                        </div>
+                        <div class="info-row" id="diasRestantesRow">
+                            <span class="label">Días Restantes:</span>
+                            <span class="value" id="diasRestantes">15 días</span>
+                        </div>
+                        <div class="info-row" id="diasAtrasadosRow" style="display: none;">
+                            <span class="label">Días Atrasado:</span>
+                            <span class="value" id="diasAtrasados">5 días</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Código QR del Alumno -->
+                    <div class="qr-section">
+                        <h4>🔲 Código QR del Alumno</h4>
+                        <div id="qrDisplay" class="qr-display">
+                            <!-- El QR se generará aquí -->
+                        </div>
+                        <div class="qr-info">
+                            <p><strong>ID:</strong> <span id="qrId">ID123456</span></p>
+                            <button class="btn btn-small" onclick="downloadQR()">📥 Descargar QR</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="resultado-footer">
+                    <button class="btn btn-success" onclick="registrarPago()">💳 Registrar Pago</button>
+                    <button class="btn btn-primary" onclick="mostrarQRCompleto()">🔲 Ver QR Completo</button>
+                    <button class="btn btn-secondary" onclick="cerrarResultado()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista Rápida de Todos los Alumnos -->
+        <section class="todos-alumnos-section">
+            <h3>👥 Vista Rápida - Todos los Alumnos</h3>
+            <p class="subtitle">Haz clic en cualquier tarjeta para verificar su estado</p>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterStatus('all')">Todos</button>
+                <button class="filter-btn" onclick="filterStatus('atrasado')">🔴 Atrasados</button>
+                <button class="filter-btn" onclick="filterStatus('proximo')">🟠 Próximos a vencer</button>
+                <button class="filter-btn" onclick="filterStatus('aldia')">🟢 Al día</button>
+            </div>
+            
+            <div id="todosAlumnos" class="todos-alumnos-grid">
+                <!-- Los alumnos se cargarán aquí dinámicamente -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="alert-system.js"></script>
+    <script src="verificar.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Error al registrar ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

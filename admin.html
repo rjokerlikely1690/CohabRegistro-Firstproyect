@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador - Academia COHAB</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Admin">
+    <meta name="description" content="Panel de Administración - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_cohab.png">
+    <link rel="apple-touch-icon" href="logo_cohab.png">
+    
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .admin-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .admin-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .admin-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            border-left: 4px solid;
+        }
+        
+        .stat-card.aldia { border-left-color: #10b981; }
+        .stat-card.proximo { border-left-color: #f59e0b; }
+        .stat-card.atrasado { border-left-color: #dc2626; }
+        .stat-card.total { border-left-color: #6366f1; }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quick-action-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .quick-action-btn:hover {
+            border-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+        }
+        
+        .quick-action-btn .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .quick-action-btn .title {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .quick-action-btn .desc {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .admin-nav {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .admin-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div class="container">
+            <div class="admin-nav">
+            <div class="admin-nav-left">
+                <img src="logo_cohab.svg" alt="COHAB" class="logo" style="height: 40px;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+                <div>
+                    <h1 style="margin: 0; font-size: 1.2rem;">Panel Admin</h1>
+                    <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">Academia COHAB</p>
+                </div>
+            </div>
+                <div class="admin-nav-right">
+                    <div class="role-badge" style="font-size: 0.8rem; padding: 0.3rem 0.7rem;">👨‍💼 ADMIN</div>
+                    <button class="btn btn-secondary" onclick="logout()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <!-- Estadísticas Rápidas -->
+        <section class="admin-stats">
+            <div class="stat-card total">
+                <div class="stat-number" id="totalAlumnos">0</div>
+                <div class="stat-label">Total Alumnos</div>
+            </div>
+            <div class="stat-card aldía">
+                <div class="stat-number" id="alumnosAldia">0</div>
+                <div class="stat-label">Al Día</div>
+            </div>
+            <div class="stat-card proximo">
+                <div class="stat-number" id="alumnosProximo">0</div>
+                <div class="stat-label">Próximos a Vencer</div>
+            </div>
+            <div class="stat-card atrasado">
+                <div class="stat-number" id="alumnosAtrasados">0</div>
+                <div class="stat-label">Atrasados</div>
+            </div>
+        </section>
+
+        <!-- Acciones Rápidas -->
+        <section class="quick-actions">
+            <a href="index.html" class="quick-action-btn">
+                <div class="icon">👥</div>
+                <div class="title">Gestión de Alumnos</div>
+                <div class="desc">Agregar, editar y administrar alumnos</div>
+            </a>
+            
+            <a href="verificar.html" class="quick-action-btn">
+                <div class="icon">🔍</div>
+                <div class="title">Verificar Pagos</div>
+                <div class="desc">Escanear QR y verificar estados</div>
+            </a>
+            
+            <div class="quick-action-btn" onclick="generateAllQRs()">
+                <div class="icon">📱</div>
+                <div class="title">Generar QR Masivo</div>
+                <div class="desc">Crear códigos QR para todos</div>
+            </div>
+            
+            <div class="quick-action-btn" onclick="exportData()">
+                <div class="icon">📊</div>
+                <div class="title">Exportar Datos</div>
+                <div class="desc">Descargar reporte completo</div>
+            </div>
+            
+            <div class="quick-action-btn" onclick="backupData()">
+                <div class="icon">💾</div>
+                <div class="title">Respaldo</div>
+                <div class="desc">Crear backup de datos</div>
+            </div>
+            
+            <div class="quick-action-btn" onclick="systemSettings()">
+                <div class="icon">⚙️</div>
+                <div class="title">Configuración</div>
+                <div class="desc">Ajustes del sistema</div>
+            </div>
+        </section>
+
+        <!-- Vista Rápida de Alumnos -->
+        <section class="header-section">
+            <h2>📋 Vista Rápida de Alumnos</h2>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="refreshStats()">Actualizar</button>
+                <button class="btn btn-primary" onclick="window.location.href='index.html'">Ver Todos</button>
+            </div>
+        </section>
+
+        <section class="alumnos-grid" id="alumnosGrid">
+            <!-- Los alumnos se cargarán aquí dinámicamente -->
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="alert-system.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Verificar que el usuario tenga permisos de admin
+        function checkAdminAccess() {
+            const userRole = localStorage.getItem('userRole');
+            if (userRole !== 'admin') {
+                alert('Acceso denegado. Solo administradores pueden acceder a esta página.');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Función de logout
+        function logout() {
+            if (confirm('¿Estás seguro de cerrar sesión?')) {
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('lastAccess');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            
+            let total = alumnos.length;
+            let aldía = 0;
+            let proximo = 0;
+            let atrasados = 0;
+            
+            alumnos.forEach(alumno => {
+                const estado = calcularEstado(alumno);
+                if (estado.clase === 'aldia') aldía++;
+                else if (estado.clase === 'proximo') proximo++;
+                else if (estado.clase === 'atrasado') atrasados++;
+            });
+            
+            document.getElementById('totalAlumnos').textContent = total;
+            document.getElementById('alumnosAldia').textContent = aldía;
+            document.getElementById('alumnosProximo').textContent = proximo;
+            document.getElementById('alumnosAtrasados').textContent = atrasados;
+        }
+
+        // Refrescar estadísticas
+        function refreshStats() {
+            updateStats();
+            // Recargar la página para mostrar los alumnos
+            location.reload();
+            showNotification('Estadísticas actualizadas');
+        }
+
+        // Generar QR para todos los alumnos
+        function generateAllQRs() {
+            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            if (alumnos.length === 0) {
+                alert('No hay alumnos registrados');
+                return;
+            }
+            
+            if (confirm(`¿Generar códigos QR para ${alumnos.length} alumnos?`)) {
+                generarQRsMasivo(alumnos);
+            }
+        }
+
+        // Función para generar QR masivo
+        function generarQRsMasivo(alumnos) {
+            // Crear ventana nueva para mostrar QR
+            const ventanaQR = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+            ventanaQR.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Códigos QR - Academia COHAB</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            padding: 20px; 
+                            background: #f5f5f5;
+                        }
+                        .qr-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                            gap: 20px;
+                            margin-bottom: 20px;
+                        }
+                        .qr-item {
+                            background: white;
+                            padding: 15px;
+                            border-radius: 10px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            text-align: center;
+                        }
+                        .qr-item h3 {
+                            margin: 0 0 10px 0;
+                            color: #333;
+                            font-size: 14px;
+                        }
+                        .qr-item p {
+                            margin: 5px 0;
+                            color: #666;
+                            font-size: 12px;
+                        }
+                        .print-btn {
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            background: #dc2626;
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-size: 16px;
+                        }
+                        @media print {
+                            .print-btn { display: none; }
+                            body { background: white; }
+                        }
+                    </style>
+                    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+                </head>
+                <body>
+                    <button class="print-btn" onclick="window.print()">🖨️ Imprimir Todos</button>
+                    <h1>Códigos QR - Academia COHAB</h1>
+                    <p>Generados el ${new Date().toLocaleDateString()}</p>
+                    <div class="qr-grid" id="qrGrid">
+                        <!-- Los QR se generarán aquí -->
+                    </div>
+                    <script>
+                        const alumnos = ${JSON.stringify(alumnos)};
+                        
+                        alumnos.forEach((alumno, index) => {
+                            const qrItem = document.createElement('div');
+                            qrItem.className = 'qr-item';
+                            qrItem.innerHTML = \`
+                                <h3>\${alumno.nombre}</h3>
+                                <div id="qr-\${index}"></div>
+                                <p><strong>ID:</strong> \${alumno.id}</p>
+                                <p><strong>Email:</strong> \${alumno.email || 'No especificado'}</p>
+                                <p><strong>Tel:</strong> \${alumno.telefono || 'No especificado'}</p>
+                            \`;
+                            document.getElementById('qrGrid').appendChild(qrItem);
+                            
+                            new QRCode(qrItem.querySelector(\`#qr-\${index}\`), {
+                                text: alumno.id,
+                                width: 150,
+                                height: 150,
+                                colorDark: "#000000",
+                                colorLight: "#ffffff",
+                                correctLevel: QRCode.CorrectLevel.H
+                            });
+                        });
+                    </script>
+                </body>
+                </html>
+            `);
+            
+            showNotification(`Códigos QR generados para ${alumnos.length} alumnos`);
+        }
+
+        // Exportar datos
+        function exportData() {
+            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            if (alumnos.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(alumnos, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `backup_cohab_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification('Datos exportados correctamente');
+        }
+
+        // Crear respaldo
+        function backupData() {
+            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            const backup = {
+                fecha: new Date().toISOString(),
+                version: '1.0',
+                alumnos: alumnos,
+                configuracion: {
+                    diaPagoGlobal: localStorage.getItem('diaPagoGlobal') || '30'
+                }
+            };
+            
+            const dataStr = JSON.stringify(backup, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `respaldo_cohab_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification('Respaldo creado correctamente');
+        }
+
+        // Configuración del sistema
+        function systemSettings() {
+            alert('Panel de configuración en desarrollo...');
+        }
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (checkAdminAccess()) {
+                updateStats();
+                loadAlumnos();
+                
+                // Actualizar estadísticas cada minuto
+                setInterval(updateStats, 60000);
+            }
+        });
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Error al registrar ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

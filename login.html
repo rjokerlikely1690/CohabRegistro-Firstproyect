@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academia COHAB - Sistema de Control de Mensualidades</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Sistema">
+    <meta name="description" content="Sistema de Control de Mensualidades - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_cohab.png">
+    <link rel="apple-touch-icon" href="logo_cohab.png">
+    
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            padding: 2rem;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo-container {
+            margin-bottom: 2rem;
+        }
+        
+        .logo-container img {
+            max-width: 200px;
+            height: auto;
+        }
+        
+        .role-selector {
+            margin: 2rem 0;
+        }
+        
+        .role-button {
+            display: block;
+            width: 100%;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .role-admin {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        }
+        
+        .role-admin:hover {
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+            transform: translateY(-2px);
+        }
+        
+        .role-user {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .role-user:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+        }
+        
+        .role-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .admin-features {
+            background: #f3f4f6;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+        
+        .admin-features h4 {
+            color: #dc2626;
+            margin-bottom: 1rem;
+        }
+        
+        .admin-features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .admin-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .admin-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .user-features {
+            background: #f0fdf4;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+        
+        .user-features h4 {
+            color: #10b981;
+            margin-bottom: 1rem;
+        }
+        
+        .user-features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .user-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .user-features li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo-container">
+                <img src="logo_cohab.svg" alt="Academia COHAB" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            </div>
+            
+            <h1>Sistema de Control de Mensualidades</h1>
+            <p class="subtitle">Academia COHAB</p>
+            
+            <!-- Botón para cargar datos de prueba -->
+            <div style="margin: 1rem 0;">
+                <button onclick="cargarDatosPrueba()" style="
+                    background: #10b981;
+                    color: white;
+                    border: none;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 0.5rem;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    margin-bottom: 1rem;
+                ">📊 Cargar Datos de Prueba</button>
+            </div>
+            
+            <div class="role-selector">
+                <h3>Selecciona tu tipo de acceso:</h3>
+                
+                <a href="admin.html" class="role-button role-admin">
+                    👨‍💼 ACCESO ADMINISTRADOR
+                    <div class="role-description">Gestión completa del sistema</div>
+                </a>
+                
+                <a href="usuario.html" class="role-button role-user">
+                    👤 ACCESO USUARIO
+                    <div class="role-description">Verificar estado de pago</div>
+                </a>
+                
+                <a href="index.html" class="role-button" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                    👥 GESTIÓN DE ALUMNOS
+                    <div class="role-description">Agregar, editar y gestionar alumnos</div>
+                </a>
+                
+                <a href="test-funciones-movil.html" class="role-button" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);">
+                    🧪 TEST FUNCIONES MÓVIL
+                    <div class="role-description">Probar funciones específicas en móvil</div>
+                </a>
+            </div>
+            
+            <div class="admin-features">
+                <h4>🔧 Funciones de Administrador:</h4>
+                <ul>
+                    <li>✅ Gestión completa de alumnos</li>
+                    <li>✅ Generación de códigos QR</li>
+                    <li>✅ Control de pagos y estados</li>
+                    <li>✅ Sistema de alertas de emergencia</li>
+                    <li>✅ Reportes y estadísticas</li>
+                    <li>✅ Configuración del sistema</li>
+                </ul>
+            </div>
+            
+            <div class="user-features">
+                <h4>👤 Funciones de Usuario:</h4>
+                <ul>
+                    <li>📱 Verificar estado de pago</li>
+                    <li>🔍 Consultar información personal</li>
+                    <li>📅 Ver fechas de vencimiento</li>
+                    <li>💳 Verificar historial de pagos</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script src="datos-prueba.js"></script>
+    <script>
+        // Función para cargar datos de prueba
+        function cargarDatosPrueba() {
+            const datosPrueba = [
+                {
+                    id: "alumno001",
+                    nombre: "Juan Carlos Pérez",
+                    email: "juan.perez@email.com",
+                    telefono: "+52 555 123 4567",
+                    fechaPago: "2024-10-15",
+                    diaPago: 30,
+                    monto: 1200.00
+                },
+                {
+                    id: "alumno002", 
+                    nombre: "María González López",
+                    email: "maria.gonzalez@email.com",
+                    telefono: "+52 555 234 5678",
+                    fechaPago: "2024-09-25",
+                    diaPago: 30,
+                    monto: 1200.00
+                },
+                {
+                    id: "alumno003",
+                    nombre: "Carlos Rodríguez Martínez",
+                    email: "carlos.rodriguez@email.com",
+                    telefono: "+52 555 345 6789",
+                    fechaPago: "2024-10-01",
+                    diaPago: 30,
+                    monto: 1200.00
+                },
+                {
+                    id: "alumno004",
+                    nombre: "Ana Sofía Hernández",
+                    email: "ana.hernandez@email.com",
+                    telefono: "+52 555 456 7890",
+                    fechaPago: "2024-08-30",
+                    diaPago: 30,
+                    monto: 1200.00
+                },
+                {
+                    id: "alumno005",
+                    nombre: "Luis Miguel Torres",
+                    email: "luis.torres@email.com",
+                    telefono: "+52 555 567 8901",
+                    fechaPago: "2024-10-10",
+                    diaPago: 30,
+                    monto: 1200.00
+                }
+            ];
+            
+            localStorage.setItem('alumnos', JSON.stringify(datosPrueba));
+            localStorage.setItem('diaPagoGlobal', '30');
+            localStorage.setItem('datosPruebaCargados', 'true');
+            
+            alert('✅ Datos de prueba cargados correctamente. 5 alumnos agregados al sistema.');
+        }
+        
+        // Guardar selección de rol en localStorage
+        document.querySelectorAll('.role-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const role = this.textContent.includes('ADMIN') ? 'admin' : 'usuario';
+                localStorage.setItem('userRole', role);
+                localStorage.setItem('lastAccess', new Date().toISOString());
+            });
+        });
+        
+        // Verificar si ya hay un rol seleccionado recientemente
+        const lastRole = localStorage.getItem('userRole');
+        const lastAccess = localStorage.getItem('lastAccess');
+        
+        if (lastRole && lastAccess) {
+            const timeDiff = new Date() - new Date(lastAccess);
+            const hoursDiff = timeDiff / (1000 * 60 * 60);
+            
+            // Si han pasado menos de 24 horas, redirigir automáticamente
+            if (hoursDiff < 24) {
+                if (lastRole === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'usuario.html';
+                }
+            }
+        }
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Error al registrar ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
