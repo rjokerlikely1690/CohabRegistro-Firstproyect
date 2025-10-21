@@ -1,0 +1,33 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors/IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Temp files
+*.log
+*.tmp
+*.temp
+~$*
+
+# Agent tools
+.cursor/
+.agent/
+.agent-tools/
+
+# Archives / build artifacts
+*.zip
+*.7z
+*.rar
+COHAB_FINAL/
+Sistema_COHAB_Completo.zip
+
+# Python http.server cache
+__pycache__/
+
+# Misc
+npm-debug.log*
