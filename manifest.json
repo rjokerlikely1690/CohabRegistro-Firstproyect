@@ -1,0 +1,53 @@
+{
+  "name": "COHAB Sistema",
+  "short_name": "COHAB",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#dc2626",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "logo_cohab.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo_cohab.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Panel Admin",
+      "short_name": "Admin",
+      "description": "Acceso rápido al panel de administración",
+      "url": "admin.html",
+      "icons": [
+        {
+          "src": "logo_cohab.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Versión Usuario",
+      "short_name": "Usuario",
+      "description": "Verificar estado de pago",
+      "url": "usuario.html",
+      "icons": [
+        {
+          "src": "logo_cohab.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,27 @@
+🥋 SISTEMA COHAB - ACADEMIA DE BJJ 🥋
+
+INSTRUCCIONES SIMPLES:
+
+1. Hacer DOBLE CLIC en "INICIAR_COHAB.bat"
+2. Esperar que se abra el navegador
+3. ¡Listo! El sistema está funcionando
+
+PARA USAR EN MÓVIL:
+- Conectar el móvil a la misma WiFi que la computadora
+- En la ventana negra verás una IP (ej: 192.168.1.100)
+- En el móvil ir a: http://192.168.1.100:8000
+
+FUNCIONALIDADES:
+✅ Gestión de alumnos
+✅ Escáner QR desde móvil
+✅ Verificación de pagos
+✅ Panel administrativo
+✅ Acceso directo desde QR
+
+REQUISITOS:
+- Windows 10/11
+- Python (viene incluido)
+- Navegador web
+- WiFi para móviles
+
+¡Solo necesitas hacer doble clic en INICIAR_COHAB.bat!
