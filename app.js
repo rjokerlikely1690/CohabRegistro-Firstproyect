@@ -178,7 +178,8 @@ function openModal() {
         modalTitle.textContent = 'Agregar Nuevo Alumno';
         alumnoForm.reset();
         setTodayDate();
-        alumnoModal.style.display = 'block';
+        alumnoModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
         
         console.log('✅ Modal abierto correctamente');
         
@@ -193,6 +194,7 @@ function closeModal() {
     const modal = document.getElementById('alumnoModal');
     if (modal) {
         modal.style.display = 'none';
+        document.body.style.overflow = '';
     }
     editingAlumno = null;
 }
