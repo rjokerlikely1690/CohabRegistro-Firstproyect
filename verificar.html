@@ -41,8 +41,16 @@
             <div class="verificar-options">
                 <div class="option-card">
                     <h3>📱 Escanear QR</h3>
-                    <button class="btn btn-primary" onclick="startScanner()">Iniciar Cámara</button>
-                    <button class="btn btn-secondary" onclick="stopScanner()">Detener Cámara</button>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center;">
+                        <button class="btn btn-primary" onclick="startScanner()">Iniciar Cámara</button>
+                        <button class="btn btn-secondary" onclick="stopScanner()">Detener Cámara</button>
+                        <button class="btn btn-secondary" id="torchBtn" onclick="toggleTorch()" style="display:none;">💡 Linterna</button>
+                    </div>
+                    <div style="margin-top:0.75rem; display:flex; gap:0.5rem; align-items:center; justify-content:center; flex-wrap:wrap;">
+                        <select id="cameraSelect" class="btn" style="min-width:220px; background:#111827; color:#fff; border:1px solid #374151; display:none;" onchange="switchCamera(this.value)"></select>
+                        <label class="btn btn-secondary" for="imageInput" style="cursor:pointer;">📁 Subir imagen</label>
+                        <input id="imageInput" type="file" accept="image/*" capture="environment" style="display:none;" onchange="decodeFromImage(event)">
+                    </div>
                     <div id="scanner-container" style="display: none;">
                         <div class="scanner-overlay">
                             <div class="scanner-frame">

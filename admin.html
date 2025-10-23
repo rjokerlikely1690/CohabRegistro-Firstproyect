@@ -267,21 +267,18 @@ starCTYPE html>
         // Actualizar estadísticas
         function updateStats() {
             const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            
             let total = alumnos.length;
-            let aldía = 0;
+            let aldia = 0;
             let proximo = 0;
             let atrasados = 0;
-            
             alumnos.forEach(alumno => {
                 const estado = calcularEstado(alumno);
-                if (estado.clase === 'aldia') aldía++;
+                if (estado.clase === 'aldia') aldia++;
                 else if (estado.clase === 'proximo') proximo++;
                 else if (estado.clase === 'atrasado') atrasados++;
             });
-            
             document.getElementById('totalAlumnos').textContent = total;
-            document.getElementById('alumnosAldia').textContent = aldía;
+            document.getElementById('alumnosAldia').textContent = aldia;
             document.getElementById('alumnosProximo').textContent = proximo;
             document.getElementById('alumnosAtrasados').textContent = atrasados;
         }
@@ -448,6 +445,52 @@ starCTYPE html>
             URL.revokeObjectURL(url);
             showNotification('Respaldo creado correctamente');
         }
+
+        // Importar respaldo
+        (function(){
+            const actions = document.querySelector('.quick-actions');
+            if (actions && !document.getElementById('importInput')) {
+                const importBtn = document.createElement('label');
+                importBtn.className = 'quick-action-btn';
+                importBtn.innerHTML = '<div class="icon">📥</div><div class="title">Importar Respaldo</div><div class="desc">Cargar JSON de respaldo</div>';
+                importBtn.htmlFor = 'importInput';
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.id = 'importInput';
+                input.accept = 'application/json';
+                input.style.display = 'none';
+                input.onchange = function(e){
+                    const file = e.target.files && e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(ev){
+                        try {
+                            const data = JSON.parse(ev.target.result);
+                            if (Array.isArray(data)) {
+                                localStorage.setItem('alumnos', JSON.stringify(data));
+                            } else if (data && Array.isArray(data.alumnos)) {
+                                localStorage.setItem('alumnos', JSON.stringify(data.alumnos));
+                                if (data.configuracion && data.configuracion.diaPagoGlobal) {
+                                    localStorage.setItem('diaPagoGlobal', String(data.configuracion.diaPagoGlobal));
+                                }
+                            } else {
+                                alert('Formato de respaldo no válido');
+                                return;
+                            }
+                            if (typeof window.alumnos !== 'undefined') window.alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+                            updateStats();
+                            loadAlumnos();
+                            showNotification('Respaldo importado correctamente');
+                        } catch(err) {
+                            alert('Error al importar respaldo: ' + err.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                actions.appendChild(importBtn);
+                actions.appendChild(input);
+            }
+        })();
 
         // Eliminar todos los alumnos
         function deleteAllAlumnos() {

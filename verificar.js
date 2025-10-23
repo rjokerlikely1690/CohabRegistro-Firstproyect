@@ -4,6 +4,8 @@ let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let stream = null;
 let scanning = false;
 let currentFilter = 'all';
+let currentTrack = null;
+let currentDeviceId = null;
 
 // Cargar al iniciar
 document.addEventListener('DOMContentLoaded', function() {
@@ -63,6 +65,8 @@ async function startScanner() {
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const scannerContainer = document.getElementById('scanner-container');
+        const torchBtn = document.getElementById('torchBtn');
+        const cameraSelect = document.getElementById('cameraSelect');
         
         // Verificar si el navegador soporta getUserMedia
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -70,18 +74,19 @@ async function startScanner() {
             return;
         }
         
-        // Configuración optimizada para móviles
+        // Configuración optimizada (permitir elegir cámara)
+        const videoConstraints = currentDeviceId ? { deviceId: { exact: currentDeviceId } } : { facingMode: 'environment' };
         const constraints = {
-            video: {
-                facingMode: 'environment', // Cámara trasera
+            video: Object.assign({
                 width: { ideal: 1280, min: 640 },
                 height: { ideal: 720, min: 480 },
                 frameRate: { ideal: 30, min: 15 }
-            }
+            }, videoConstraints)
         };
         
         // Intentar obtener stream con configuración optimizada
         stream = await navigator.mediaDevices.getUserMedia(constraints);
+        currentTrack = stream.getVideoTracks()[0] || null;
         
         video.srcObject = stream;
         video.playsInline = true; // Importante para iOS
@@ -89,6 +94,30 @@ async function startScanner() {
         
         scannerContainer.style.display = 'block';
         scanning = true;
+        
+        // Torch disponible
+        try {
+            if (currentTrack && typeof currentTrack.getCapabilities === 'function') {
+                const caps = currentTrack.getCapabilities();
+                if (caps.torch) {
+                    torchBtn.style.display = 'inline-flex';
+                } else {
+                    torchBtn.style.display = 'none';
+                }
+            }
+        } catch (_) {}
+        
+        // Poblar lista de cámaras
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videos = devices.filter(d => d.kind === 'videoinput');
+            if (videos.length > 1) {
+                cameraSelect.innerHTML = videos.map(d => `<option value="${d.deviceId}">${d.label || 'Cámara'}</option>`).join('');
+                cameraSelect.style.display = 'inline-flex';
+            } else {
+                cameraSelect.style.display = 'none';
+            }
+        } catch (_) {}
         
         // Esperar a que el video esté listo
         video.addEventListener('loadedmetadata', () => {
@@ -134,6 +163,7 @@ function stopScanner() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
         stream = null;
+        currentTrack = null;
     }
     scanning = false;
     document.getElementById('scanner-container').style.display = 'none';
@@ -180,6 +210,62 @@ function scanQRCode(video, canvas) {
     
     // Continuar escaneando
     requestAnimationFrame(() => scanQRCode(video, canvas));
+}
+
+// Alternar linterna si está disponible
+async function toggleTorch() {
+    try {
+        if (!currentTrack || typeof currentTrack.applyConstraints !== 'function') return;
+        const caps = currentTrack.getCapabilities ? currentTrack.getCapabilities() : {};
+        if (!caps.torch) return;
+        const settings = currentTrack.getSettings ? currentTrack.getSettings() : {};
+        const enable = !settings.torch;
+        await currentTrack.applyConstraints({ advanced: [{ torch: enable }] });
+    } catch (e) {
+        console.warn('Torch no disponible:', e);
+    }
+}
+
+// Cambiar de cámara
+async function switchCamera(deviceId) {
+    try {
+        currentDeviceId = deviceId;
+        stopScanner();
+        await startScanner();
+    } catch (e) {
+        console.error('No se pudo cambiar de cámara', e);
+    }
+}
+
+// Decodificar QR desde imagen
+function decodeFromImage(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            try {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+                if (code && code.data) {
+                    showToast('Código QR detectado desde imagen', 'success');
+                    verificarAlumno(code.data);
+                } else {
+                    showCustomAlert('QR no detectado', 'No se pudo detectar un código QR en la imagen seleccionada.', 'warning');
+                }
+            } catch (err) {
+                showCustomAlert('Error', 'Ocurrió un error al procesar la imagen.', 'error');
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 // Verificar manual
