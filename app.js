@@ -5,6 +5,19 @@ let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let editingAlumno = null;
 let diaPagoGlobal = parseInt(localStorage.getItem('diaPagoGlobal')) || 30;
 
+// Obtener URL base del servidor para generar enlaces que funcionen en móviles
+function getServerBaseUrl() {
+    let configured = localStorage.getItem('serverBaseUrl');
+    let base;
+    if (configured && /^https?:\/\//i.test(configured)) {
+        base = configured;
+    } else {
+        base = window.location.origin + window.location.pathname.replace('index.html', '');
+    }
+    if (!base.endsWith('/')) base += '/';
+    return base;
+}
+
 // Cargar datos al iniciar
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Sistema COHAB iniciando...');
@@ -290,15 +303,15 @@ function showQR(id) {
     const qrContainer = document.getElementById('qrcode');
     qrContainer.innerHTML = '';
     
-    // Crear URL directa para el alumno
-    let baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
-    
-    // Si estamos en localhost, usar la IP local para que funcione en móviles
-    if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
-        baseUrl = baseUrl.replace('localhost:8000', '192.168.68.112:8000');
-        baseUrl = baseUrl.replace('127.0.0.1:8000', '192.168.68.112:8000');
+    // Crear URL directa para el alumno usando base configurada
+    let baseUrl = getServerBaseUrl();
+    if ((baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) && !localStorage.getItem('serverBaseUrl')) {
+        const entered = prompt('URL base para QR (ej. http://192.168.1.10:8080):', 'http://');
+        if (entered && /^https?:\/\//i.test(entered)) {
+            localStorage.setItem('serverBaseUrl', entered.trim());
+            baseUrl = getServerBaseUrl();
+        }
     }
-    
     const studentUrl = `${baseUrl}usuario.html?id=${alumno.id}`;
     
     // Generar QR

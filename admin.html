@@ -223,6 +223,12 @@ starCTYPE html>
                 <div class="title">Configuración</div>
                 <div class="desc">Ajustes del sistema</div>
             </div>
+            
+            <div class="quick-action-btn" onclick="configureServerBaseUrl()">
+                <div class="icon">🔗</div>
+                <div class="title">Configurar URL Base</div>
+                <div class="desc">Fijar URL para QRs (LAN o dominio)</div>
+            </div>
         </section>
 
         <!-- Vista Rápida de Alumnos -->
@@ -518,6 +524,18 @@ starCTYPE html>
         // Configuración del sistema
         function systemSettings() {
             alert('Panel de configuración en desarrollo...');
+        }
+
+        function configureServerBaseUrl() {
+            const current = localStorage.getItem('serverBaseUrl') || '';
+            const value = prompt('URL base para QRs (ej. http://192.168.1.10:8080 o https://tu-dominio.com)', current);
+            if (!value) return;
+            if (!/^https?:\/\//i.test(value)) {
+                alert('URL inválida. Debe comenzar con http:// o https://');
+                return;
+            }
+            localStorage.setItem('serverBaseUrl', value.trim().replace(/\/$/, ''));
+            showNotification('URL base guardada. Nuevos QRs usarán esta URL.');
         }
 
         // Inicializar página

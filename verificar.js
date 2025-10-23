@@ -7,6 +7,19 @@ let currentFilter = 'all';
 let currentTrack = null;
 let currentDeviceId = null;
 
+// URL base del servidor para construir enlaces válidos en móviles
+function getServerBaseUrl() {
+    let configured = localStorage.getItem('serverBaseUrl');
+    let base;
+    if (configured && /^https?:\/\//i.test(configured)) {
+        base = configured;
+    } else {
+        base = window.location.origin + window.location.pathname.replace('verificar.html', '');
+    }
+    if (!base.endsWith('/')) base += '/';
+    return base;
+}
+
 // Cargar al iniciar
 document.addEventListener('DOMContentLoaded', function() {
     loadTodosAlumnos();
@@ -205,13 +218,32 @@ function scanQRCode(video, canvas) {
                 // Intentar JSON con url
                 const parsed = JSON.parse(data);
                 if (parsed && parsed.url && /^https?:\/\//i.test(parsed.url)) {
+                    const urlObj = new URL(parsed.url);
+                    // Si apunta a localhost, reescribir con nuestra base
+                    if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') {
+                        const idParam = urlObj.searchParams.get('id');
+                        if (idParam) {
+                            window.location.href = buildStudentUrl(idParam);
+                            return;
+                        }
+                    }
                     window.location.href = parsed.url;
                     return;
                 }
             } catch (_) {}
             
             if (/^https?:\/\//i.test(data)) {
-                // Es una URL directa
+                // Es una URL directa; si es localhost, adaptarla al host actual
+                try {
+                    const urlObj = new URL(data);
+                    if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') {
+                        const idParam = urlObj.searchParams.get('id');
+                        if (idParam) {
+                            window.location.href = buildStudentUrl(idParam);
+                            return;
+                        }
+                    }
+                } catch (_) {}
                 window.location.href = data;
                 return;
             }
@@ -229,8 +261,8 @@ function scanQRCode(video, canvas) {
 
 // Construir URL de alumno estable en el mismo host
 function buildStudentUrl(alumnoId) {
-    // Base del sitio actual (maneja puertos y protocolo)
-    let baseUrl = window.location.origin + window.location.pathname.replace('verificar.html', '');
+    // Base del sitio (maneja puertos y protocolo) o base configurada
+    let baseUrl = getServerBaseUrl();
     // Normalizar doble barras
     if (!baseUrl.endsWith('/')) baseUrl += '/';
     return `${baseUrl}usuario.html?id=${encodeURIComponent(alumnoId)}`;
@@ -419,17 +451,8 @@ function generarQRResultado(alumno) {
     const qrContainer = document.getElementById('qrDisplay');
     qrContainer.innerHTML = '';
     
-    // Obtener la URL base actual
-    let baseUrl = window.location.origin + window.location.pathname.replace('verificar.html', '');
-    
-    // Si estamos en localhost, usar la IP local para que funcione en móviles
-    if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
-        baseUrl = baseUrl.replace('localhost:8000', '192.168.68.112:8000');
-        baseUrl = baseUrl.replace('127.0.0.1:8000', '192.168.68.112:8000');
-    }
-    
-    // Crear URL directa para el alumno
-    const studentUrl = `${baseUrl}usuario.html?id=${alumno.id}`;
+    // Crear URL directa para el alumno usando base configurada
+    const studentUrl = buildStudentUrl(alumno.id);
     
     // Crear información estructurada para el QR
     const qrData = {
@@ -522,17 +545,8 @@ function mostrarQRCompleto() {
     // Generar QR completo
     const qrCompleto = document.getElementById('qrCompleto');
     
-    // Obtener la URL base actual
-    let baseUrl = window.location.origin + window.location.pathname.replace('verificar.html', '');
-    
-    // Si estamos en localhost, usar la IP local para que funcione en móviles
-    if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
-        baseUrl = baseUrl.replace('localhost:8000', '192.168.68.112:8000');
-        baseUrl = baseUrl.replace('127.0.0.1:8000', '192.168.68.112:8000');
-    }
-    
-    // Crear URL directa para el alumno
-    const studentUrl = `${baseUrl}usuario.html?id=${alumno.id}`;
+    // Crear URL directa para el alumno usando base configurada
+    const studentUrl = buildStudentUrl(alumno.id);
     
     const qrData = {
         id: alumno.id,
