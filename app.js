@@ -204,6 +204,18 @@ function openModal() {
         alumnoModal.style.display = 'flex';
         document.body.classList.add('modal-open');
         
+        // Enfocar el primer input después de un pequeño delay para móvil
+        setTimeout(() => {
+            const firstInput = document.getElementById('nombre');
+            if (firstInput) {
+                firstInput.focus();
+                // Scroll suave al modal en móvil
+                if (window.innerWidth <= 768) {
+                    alumnoModal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }, 100);
+        
         console.log('✅ Modal abierto correctamente');
         
     } catch (error) {

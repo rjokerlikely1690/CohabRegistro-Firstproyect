@@ -604,8 +604,16 @@ body.modal-open {
 body.modal-open .navbar { pointer-events: none; }
 /* Hotfix: header estático en móvil para no bloquear clics debajo */
 @media (max-width: 768px) {
-    .navbar { position: static; top: auto; z-index: 1; }
+    .navbar { position: static !important; top: auto !important; z-index: 1 !important; }
     main { margin-top: 0; }
+    /* Asegurar que el modal funcione en móvil */
+    .modal { z-index: 1000 !important; }
+    .modal-content { position: relative !important; }
+    /* Mejorar interacción táctil */
+    .btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .btn:active { transform: scale(0.98); }
+    /* Asegurar que los inputs funcionen en móvil */
+    input, textarea, select { touch-action: manipulation; }
 }
 
 @keyframes fadeIn {
