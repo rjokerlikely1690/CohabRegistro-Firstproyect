@@ -602,8 +602,9 @@ body.modal-open {
 
 /* Encabezado: evitar conflicto con modal y scroll en móvil */
 body.modal-open .navbar { pointer-events: none; }
+/* Hotfix: header estático en móvil para no bloquear clics debajo */
 @media (max-width: 768px) {
-    .navbar { position: sticky; top: 0; z-index: 500; }
+    .navbar { position: static; top: auto; z-index: 1; }
     main { margin-top: 0; }
 }
 
