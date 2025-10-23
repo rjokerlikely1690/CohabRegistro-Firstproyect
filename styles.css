@@ -602,11 +602,97 @@ body.modal-open {
 
 /* Encabezado: evitar conflicto con modal y scroll en móvil */
 body.modal-open .navbar { pointer-events: none; }
-/* Simplificado para móvil */
+/* Mejorado para móvil - interfaz más simple */
 @media (max-width: 768px) {
     .navbar { position: static; z-index: 1; }
-    main { margin-top: 0; }
+    main { margin-top: 0; padding: 10px; }
     .modal { z-index: 1000; }
+    
+    /* Botones más grandes y fáciles de tocar */
+    .btn {
+        padding: 20px 30px !important;
+        font-size: 18px !important;
+        margin: 10px 0 !important;
+        min-height: 60px;
+        border-radius: 12px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Header actions más simple */
+    .header-actions {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    /* Modal más grande y centrado */
+    .modal-content {
+        width: 95% !important;
+        margin: 20px auto !important;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 20px !important;
+    }
+    
+    /* Inputs más grandes */
+    input, textarea, select {
+        padding: 15px !important;
+        font-size: 16px !important;
+        margin: 15px 0 !important;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+    }
+    
+    /* Labels más grandes */
+    label {
+        font-size: 16px !important;
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    /* Form groups con más espacio */
+    .form-group {
+        margin: 20px 0 !important;
+    }
+    
+    /* Botones de acción del modal */
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 30px;
+    }
+    
+    /* Navbar más simple */
+    .nav-links {
+        display: none;
+    }
+    
+    .mobile-menu-btn {
+        display: block !important;
+        font-size: 24px;
+        padding: 15px;
+    }
+    
+    /* Cards de alumnos más simples */
+    .alumno-card {
+        margin: 15px 0 !important;
+        padding: 20px !important;
+        border-radius: 12px;
+    }
+    
+    /* Botones de acción en cards más grandes */
+    .alumno-actions {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .alumno-actions .btn {
+        padding: 15px !important;
+        font-size: 16px !important;
+    }
 }
 
 @keyframes fadeIn {

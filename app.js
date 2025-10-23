@@ -182,7 +182,7 @@ function loadAlumnos() {
     console.log(`✅ ${alumnos.length} alumnos cargados`);
 }
 
-// Abrir modal para agregar alumno
+// Abrir modal para agregar alumno - VERSIÓN MEJORADA PARA MÓVIL
 function openModal() {
     console.log('🔧 Abriendo modal para agregar alumno...');
     try {
@@ -201,9 +201,29 @@ function openModal() {
         modalTitle.textContent = 'Agregar Nuevo Alumno';
         alumnoForm.reset();
         setTodayDate();
+        
+        // Mostrar modal
         alumnoModal.style.display = 'flex';
         document.body.classList.add('modal-open');
         
+        // Scroll al modal en móvil
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                alumnoModal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+        
+        // Enfocar el primer input después de mostrar el modal
+        setTimeout(() => {
+            const firstInput = document.getElementById('nombre');
+            if (firstInput) {
+                firstInput.focus();
+                // Scroll al input si es necesario
+                if (window.innerWidth <= 768) {
+                    firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }, 200);
         
         console.log('✅ Modal abierto correctamente');
         
