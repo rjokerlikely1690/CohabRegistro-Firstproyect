@@ -202,7 +202,7 @@ function openModal() {
         alumnoForm.reset();
         setTodayDate();
         alumnoModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
         
         console.log('✅ Modal abierto correctamente');
         
@@ -217,7 +217,7 @@ function closeModal() {
     const modal = document.getElementById('alumnoModal');
     if (modal) {
         modal.style.display = 'none';
-        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
     }
     editingAlumno = null;
 }

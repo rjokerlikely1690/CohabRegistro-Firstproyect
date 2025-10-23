@@ -571,6 +571,8 @@ body::before {
     align-items: center;
     padding: 2rem 1rem;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
 
 .modal-content {
@@ -580,7 +582,7 @@ body::before {
     border-radius: 1.5rem;
     width: 90%;
     max-width: 600px;
-    max-height: 90vh;
+    max-height: calc(100dvh - 64px);
     overflow-y: auto;
     position: relative;
     box-shadow: 
@@ -589,6 +591,13 @@ body::before {
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     animation: modalSlideIn 0.4s ease;
     border: 2px solid rgba(220, 38, 38, 0.6);
+}
+
+/* Evitar scroll del fondo cuando el modal está abierto */
+body.modal-open {
+    overflow: hidden;
+    height: 100dvh;
+    touch-action: none;
 }
 
 @keyframes fadeIn {
