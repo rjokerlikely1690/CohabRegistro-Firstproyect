@@ -30,6 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Sistema COHAB iniciando...');
     loadAlumnos();
     updateDiaPagoButtons();
+    
+    // Agregar listener de prueba para el botón
+    const addButton = document.querySelector('.btn-primary');
+    if (addButton) {
+        addButton.addEventListener('click', function() {
+            console.log('🔘 Botón tocado - listener funciona');
+        });
+    }
+    
     console.log('✅ Sistema COHAB cargado correctamente');
 });
 
