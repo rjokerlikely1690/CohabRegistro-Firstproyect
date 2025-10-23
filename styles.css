@@ -600,6 +600,13 @@ body.modal-open {
     touch-action: none;
 }
 
+/* Encabezado: evitar conflicto con modal y scroll en móvil */
+body.modal-open .navbar { pointer-events: none; }
+@media (max-width: 768px) {
+    .navbar { position: sticky; top: 0; z-index: 500; }
+    main { margin-top: 0; }
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
