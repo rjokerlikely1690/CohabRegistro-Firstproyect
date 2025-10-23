@@ -191,64 +191,75 @@ function loadAlumnos() {
     console.log(`✅ ${alumnos.length} alumnos cargados`);
 }
 
-// Abrir modal para agregar alumno - VERSIÓN MEJORADA PARA MÓVIL
+// Abrir modal para agregar alumno - VERSIÓN SIMPLE PARA MÓVIL
 function openModal() {
     console.log('🔧 Abriendo modal para agregar alumno...');
+    
     try {
         editingAlumno = null;
         
+        // Buscar elementos del modal
+        const alumnoModal = document.getElementById('alumnoModal');
         const modalTitle = document.getElementById('modalTitle');
         const alumnoForm = document.getElementById('alumnoForm');
-        const alumnoModal = document.getElementById('alumnoModal');
         
-        if (!modalTitle || !alumnoForm || !alumnoModal) {
-            console.error('❌ Elementos del modal no encontrados');
-            alert('Error: No se pudieron encontrar los elementos del formulario. Recarga la página e intenta de nuevo.');
+        console.log('🔍 Elementos encontrados:', {
+            modal: !!alumnoModal,
+            title: !!modalTitle,
+            form: !!alumnoForm
+        });
+        
+        if (!alumnoModal) {
+            console.error('❌ Modal no encontrado');
+            alert('Error: Modal no encontrado. Recarga la página.');
             return;
         }
         
-        modalTitle.textContent = 'Agregar Nuevo Alumno';
-        alumnoForm.reset();
+        // Configurar modal
+        if (modalTitle) modalTitle.textContent = 'Agregar Nuevo Alumno';
+        if (alumnoForm) alumnoForm.reset();
         setTodayDate();
         
-        // Mostrar modal
-        alumnoModal.style.display = 'flex';
-        document.body.classList.add('modal-open');
+        // Mostrar modal de forma simple
+        alumnoModal.style.display = 'block';
+        alumnoModal.style.position = 'fixed';
+        alumnoModal.style.top = '0';
+        alumnoModal.style.left = '0';
+        alumnoModal.style.width = '100%';
+        alumnoModal.style.height = '100%';
+        alumnoModal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        alumnoModal.style.zIndex = '1000';
         
-        // Scroll al modal en móvil
-        if (window.innerWidth <= 768) {
-            setTimeout(() => {
-                alumnoModal.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-        }
+        // Prevenir scroll del body
+        document.body.style.overflow = 'hidden';
         
-        // Enfocar el primer input después de mostrar el modal
+        console.log('✅ Modal mostrado');
+        
+        // Enfocar primer input después de un delay
         setTimeout(() => {
             const firstInput = document.getElementById('nombre');
             if (firstInput) {
                 firstInput.focus();
-                // Scroll al input si es necesario
-                if (window.innerWidth <= 768) {
-                    firstInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                console.log('✅ Input enfocado');
             }
-        }, 200);
-        
-        console.log('✅ Modal abierto correctamente');
+        }, 300);
         
     } catch (error) {
         console.error('❌ Error al abrir modal:', error);
-        alert('Error al abrir el formulario: ' + error.message);
+        alert('Error: ' + error.message);
     }
 }
 
 
-// Cerrar modal
+// Cerrar modal - VERSIÓN SIMPLE
 function closeModal() {
+    console.log('🔧 Cerrando modal...');
+    
     const modal = document.getElementById('alumnoModal');
     if (modal) {
         modal.style.display = 'none';
-        document.body.classList.remove('modal-open');
+        document.body.style.overflow = 'auto';
+        console.log('✅ Modal cerrado');
     }
     editingAlumno = null;
 }
