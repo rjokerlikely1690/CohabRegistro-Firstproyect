@@ -14,7 +14,14 @@ function getServerBaseUrl() {
     if (configured && /^https?:\/\//i.test(configured)) {
         base = configured;
     } else {
+        // Si no está configurado y no es localhost, inicializar automáticamente
+        const isLoopback = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
         base = window.location.origin + window.location.pathname.replace('verificar.html', '');
+        if (!isLoopback) {
+            try {
+                localStorage.setItem('serverBaseUrl', base.replace(/\/$/, ''));
+            } catch (_) {}
+        }
     }
     if (!base.endsWith('/')) base += '/';
     return base;

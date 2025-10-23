@@ -527,13 +527,19 @@ starCTYPE html>
         }
 
         function configureServerBaseUrl() {
-            const current = localStorage.getItem('serverBaseUrl') || '';
-            const value = prompt('URL base para QRs (ej. http://192.168.1.10:8080 o https://tu-dominio.com)', current);
-            if (!value) return;
-            if (!/^https?:\/\//i.test(value)) {
-                alert('URL inválida. Debe comenzar con http:// o https://');
-                return;
+            const current = localStorage.getItem('serverBaseUrl');
+            if (!current) {
+                const isLoopback = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+                if (!isLoopback) {
+                    const autoBase = (window.location.origin + window.location.pathname.replace('admin.html','')).replace(/\/$/,'');
+                    try { localStorage.setItem('serverBaseUrl', autoBase); } catch(_) {}
+                    showNotification('URL base configurada automáticamente: ' + autoBase);
+                    return;
+                }
             }
+            const value = prompt('URL base para QRs (ej. http://192.168.1.10:8080 o https://tu-dominio.com)', current || 'http://');
+            if (!value) return;
+            if (!/^https?:\/\//i.test(value)) { alert('URL inválida. Debe comenzar con http:// o https://'); return; }
             localStorage.setItem('serverBaseUrl', value.trim().replace(/\/$/, ''));
             showNotification('URL base guardada. Nuevos QRs usarán esta URL.');
         }
