@@ -45,6 +45,21 @@
         return true;
     }
 
+    // Insert and return generated id (if DB assigns it)
+    async function insertAlumnoReturningId(alumnoNoId) {
+        const c = client();
+        if (!c) return null;
+        const payload = mapToDb(alumnoNoId);
+        delete payload.id;
+        const { data, error } = await c
+            .from('alumnos')
+            .insert(payload)
+            .select('id')
+            .single();
+        if (error) throw error;
+        return data;
+    }
+
     async function deleteAlumno(id) {
         const c = client();
         if (!c) return null;
@@ -98,6 +113,7 @@
         upsertAlumno,
         deleteAlumno,
         registrarPago,
+        insertAlumnoReturningId,
         configure
     };
 })();

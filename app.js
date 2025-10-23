@@ -60,8 +60,13 @@ function updateDiaPagoButtons() {
     }
 }
 
-// Generar ID único
+// Generar ID único (UUID si está disponible)
 function generateId() {
+    try {
+        if (window.crypto && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+    } catch (_) {}
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
@@ -224,7 +229,7 @@ function saveAlumno(event) {
     
     try {
         const formData = {
-            id: editingAlumno || generateId(),
+            id: editingAlumno || null,
             nombre: document.getElementById('nombre').value.trim(),
             email: document.getElementById('email').value.trim(),
             telefono: document.getElementById('telefono').value.trim(),
@@ -259,6 +264,24 @@ function saveAlumno(event) {
             }
         } else {
             // Agregar nuevo alumno
+            try {
+                if (window.SUPA && SUPA.isConfigured()) {
+                    // Si Supabase está configurado, permitir que la BD genere el ID (si tiene default)
+                    const payload = { ...formData };
+                    delete payload.id; // no enviar id para que el servidor lo asigne si corresponde
+                    const inserted = await SUPA.insertAlumnoReturningId(payload);
+                    if (inserted && inserted.id) {
+                        formData.id = inserted.id;
+                    } else {
+                        formData.id = generateId();
+                    }
+                } else {
+                    formData.id = generateId();
+                }
+            } catch (e) {
+                console.warn('Fallo insert remoto, se usará ID local', e);
+                formData.id = generateId();
+            }
             alumnos.push(formData);
             console.log('➕ Nuevo alumno agregado:', formData);
         }
