@@ -199,17 +199,41 @@ function scanQRCode(video, canvas) {
             // Mostrar feedback visual
             showToast('¡Código QR detectado!', 'success');
             
-            // Pequeño delay para que el usuario vea el feedback
-            setTimeout(() => {
-                verificarAlumno(code.data);
-            }, 500);
+            // Si el QR contiene una URL válida a usuario.html, ir directo
+            const data = String(code.data || '').trim();
+            try {
+                // Intentar JSON con url
+                const parsed = JSON.parse(data);
+                if (parsed && parsed.url && /^https?:\/\//i.test(parsed.url)) {
+                    window.location.href = parsed.url;
+                    return;
+                }
+            } catch (_) {}
             
+            if (/^https?:\/\//i.test(data)) {
+                // Es una URL directa
+                window.location.href = data;
+                return;
+            }
+            
+            // Caso: es solo el ID → construir URL del alumno y redirigir
+            const studentUrl = buildStudentUrl(data);
+            window.location.href = studentUrl;
             return;
         }
     }
     
     // Continuar escaneando
     requestAnimationFrame(() => scanQRCode(video, canvas));
+}
+
+// Construir URL de alumno estable en el mismo host
+function buildStudentUrl(alumnoId) {
+    // Base del sitio actual (maneja puertos y protocolo)
+    let baseUrl = window.location.origin + window.location.pathname.replace('verificar.html', '');
+    // Normalizar doble barras
+    if (!baseUrl.endsWith('/')) baseUrl += '/';
+    return `${baseUrl}usuario.html?id=${encodeURIComponent(alumnoId)}`;
 }
 
 // Alternar linterna si está disponible
