@@ -602,37 +602,11 @@ body.modal-open {
 
 /* Encabezado: evitar conflicto con modal y scroll en móvil */
 body.modal-open .navbar { pointer-events: none; }
-/* Hotfix: header estático en móvil para no bloquear clics debajo */
+/* Simplificado para móvil */
 @media (max-width: 768px) {
-    .navbar { position: static !important; top: auto !important; z-index: 1 !important; }
+    .navbar { position: static; z-index: 1; }
     main { margin-top: 0; }
-    /* Asegurar que el modal funcione en móvil */
-    .modal { z-index: 1000 !important; }
-    .modal-content { position: relative !important; }
-    /* Mejorar interacción táctil */
-    .btn { 
-        touch-action: manipulation; 
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-    }
-    .btn:active { transform: scale(0.98); }
-    /* Asegurar que los inputs funcionen en móvil */
-    input, textarea, select { 
-        touch-action: manipulation; 
-        -webkit-tap-highlight-color: transparent;
-    }
-    /* Fix específico para Safari */
-    @supports (-webkit-touch-callout: none) {
-        .btn {
-            -webkit-appearance: none;
-            border-radius: 8px;
-        }
-        .modal {
-            -webkit-overflow-scrolling: touch;
-        }
-    }
+    .modal { z-index: 1000; }
 }
 
 @keyframes fadeIn {

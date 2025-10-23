@@ -30,41 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Sistema COHAB iniciando...');
     loadAlumnos();
     updateDiaPagoButtons();
-    
-    // Agregar event listeners específicos para móvil
-    setupMobileTouchHandlers();
-    
     console.log('✅ Sistema COHAB cargado correctamente');
 });
-
-// Configurar manejadores táctiles para móvil
-function setupMobileTouchHandlers() {
-    const addButton = document.querySelector('.btn-primary');
-    if (addButton && window.innerWidth <= 768) {
-        // Remover listeners existentes para evitar duplicados
-        addButton.removeEventListener('touchstart', handleTouchStart);
-        addButton.removeEventListener('touchend', handleTouchEnd);
-        
-        // Agregar nuevos listeners
-        addButton.addEventListener('touchstart', handleTouchStart, { passive: false });
-        addButton.addEventListener('touchend', handleTouchEnd, { passive: true });
-    }
-}
-
-// Manejar inicio de toque
-function handleTouchStart(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    console.log('📱 Touch start detectado');
-}
-
-// Manejar fin de toque
-function handleTouchEnd(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    console.log('📱 Touch end detectado - abriendo modal');
-    openModal();
-}
 
 // Establecer fecha de hoy
 function setTodayDate() {
@@ -237,17 +204,6 @@ function openModal() {
         alumnoModal.style.display = 'flex';
         document.body.classList.add('modal-open');
         
-        // Enfocar el primer input después de un pequeño delay para móvil
-        setTimeout(() => {
-            const firstInput = document.getElementById('nombre');
-            if (firstInput) {
-                firstInput.focus();
-                // Scroll suave al modal en móvil
-                if (window.innerWidth <= 768) {
-                    alumnoModal.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-        }, 100);
         
         console.log('✅ Modal abierto correctamente');
         
@@ -257,13 +213,6 @@ function openModal() {
     }
 }
 
-// Función de respaldo para abrir modal (fallback)
-function openModalFallback() {
-    console.log('🔄 Usando fallback para abrir modal...');
-    setTimeout(() => {
-        openModal();
-    }, 50);
-}
 
 // Cerrar modal
 function closeModal() {
