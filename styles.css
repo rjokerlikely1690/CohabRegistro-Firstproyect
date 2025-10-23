@@ -610,10 +610,29 @@ body.modal-open .navbar { pointer-events: none; }
     .modal { z-index: 1000 !important; }
     .modal-content { position: relative !important; }
     /* Mejorar interacción táctil */
-    .btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .btn { 
+        touch-action: manipulation; 
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
     .btn:active { transform: scale(0.98); }
     /* Asegurar que los inputs funcionen en móvil */
-    input, textarea, select { touch-action: manipulation; }
+    input, textarea, select { 
+        touch-action: manipulation; 
+        -webkit-tap-highlight-color: transparent;
+    }
+    /* Fix específico para Safari */
+    @supports (-webkit-touch-callout: none) {
+        .btn {
+            -webkit-appearance: none;
+            border-radius: 8px;
+        }
+        .modal {
+            -webkit-overflow-scrolling: touch;
+        }
+    }
 }
 
 @keyframes fadeIn {
