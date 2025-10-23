@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal - COHAB</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .btn { 
+            background: #dc2626; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 18px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 1000;
+        }
+        .modal-content { 
+            background: white; 
+            margin: 50px auto; 
+            padding: 20px; 
+            width: 90%; 
+            max-width: 500px; 
+            border-radius: 8px;
+        }
+        .close { 
+            float: right; 
+            font-size: 28px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border: 1px solid #ccc; 
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Modal COHAB</h1>
+    
+    <button class="btn" onclick="openTestModal()">+ Agregar Alumno (TEST)</button>
+    
+    <div id="testModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTestModal()">&times;</span>
+            <h2>Test Modal</h2>
+            <p>Si ves esto, el modal funciona!</p>
+            <input type="text" placeholder="Nombre" id="testNombre">
+            <input type="email" placeholder="Email" id="testEmail">
+            <button class="btn" onclick="closeTestModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        function openTestModal() {
+            console.log('🔧 Abriendo modal de prueba...');
+            const modal = document.getElementById('testModal');
+            if (modal) {
+                modal.style.display = 'block';
+                console.log('✅ Modal de prueba abierto');
+            } else {
+                console.error('❌ Modal no encontrado');
+                alert('Error: Modal no encontrado');
+            }
+        }
+
+        function closeTestModal() {
+            console.log('🔧 Cerrando modal de prueba...');
+            const modal = document.getElementById('testModal');
+            if (modal) {
+                modal.style.display = 'none';
+                console.log('✅ Modal de prueba cerrado');
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('testModal');
+            if (event.target === modal) {
+                closeTestModal();
+            }
+        }
+    </script>
+</body>
+</html>
