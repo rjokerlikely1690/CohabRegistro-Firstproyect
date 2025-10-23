@@ -344,7 +344,22 @@ function verificarManual() {
 // Verificar alumno
 function verificarAlumno(id) {
     // Recargar datos por si se actualizaron
-    alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+    // Sincronizar desde Supabase si está disponible
+    try {
+        if (window.SUPA && SUPA.isConfigured()) {
+            const nube = await SUPA.listAlumnos();
+            if (Array.isArray(nube)) {
+                alumnos = nube;
+                localStorage.setItem('alumnos', JSON.stringify(alumnos));
+            } else {
+                alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            }
+        } else {
+            alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+        }
+    } catch (e) {
+        alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+    }
     
     let alumnoId = id;
     
@@ -730,10 +745,11 @@ function registrarPago() {
         // Actualizar fecha de pago a hoy
         alumno.fechaPago = new Date().toISOString().split('T')[0];
         
-        // Guardar en localStorage
+        // Guardar en localStorage y Supabase
         const index = alumnos.findIndex(a => a.id === alumnoId);
         alumnos[index] = alumno;
         localStorage.setItem('alumnos', JSON.stringify(alumnos));
+        try { if (window.SUPA && SUPA.isConfigured()) { await SUPA.registrarPago(alumnoId, alumno.fechaPago); } } catch (e) { console.warn('Supabase registrarPago fallo', e); }
         
         alert('¡Pago registrado exitosamente!');
         

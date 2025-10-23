@@ -112,6 +112,17 @@ function loadAlumnos() {
     
     grid.innerHTML = '';
     
+    // Si hay Supabase configurado, sincronizar desde la nube
+    try {
+        if (window.SUPA && SUPA.isConfigured()) {
+            const nube = await SUPA.listAlumnos();
+            if (Array.isArray(nube)) {
+                alumnos = nube;
+                localStorage.setItem('alumnos', JSON.stringify(alumnos));
+            }
+        }
+    } catch (e) { console.warn('No se pudo sincronizar desde Supabase', e); }
+    
     if (alumnos.length === 0) {
         grid.innerHTML = `
             <div class="empty-state" style="grid-column: 1/-1;">
@@ -254,6 +265,9 @@ function saveAlumno(event) {
         
         // Guardar en localStorage
         localStorage.setItem('alumnos', JSON.stringify(alumnos));
+        
+        // Guardar en Supabase si está configurado
+        try { if (window.SUPA && SUPA.isConfigured()) { await SUPA.upsertAlumno(formData); } } catch (e) { console.warn('Supabase upsert fallo', e); }
         console.log('💾 Datos guardados en localStorage');
         
         // Recargar vista SIN llamar a funciones problemáticas
@@ -295,6 +309,7 @@ function deleteAlumno(id) {
         const alumnoEliminado = alumnos.find(a => a.id === id);
         alumnos = alumnos.filter(a => a.id !== id);
         localStorage.setItem('alumnos', JSON.stringify(alumnos));
+        try { if (window.SUPA && SUPA.isConfigured()) { await SUPA.deleteAlumno(id); } } catch (e) { console.warn('Supabase delete fallo', e); }
         loadAlumnos();
         alert(`Alumno ${alumnoEliminado ? alumnoEliminado.nombre : ''} eliminado correctamente`);
         console.log('✅ Alumno eliminado correctamente');
