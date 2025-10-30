@@ -460,14 +460,13 @@ function showQR(id) {
     
     // Crear URL directa para el alumno usando base configurada
     let baseUrl = getServerBaseUrl();
-    if ((baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) && !localStorage.getItem('serverBaseUrl')) {
-        const entered = prompt('URL base para QR (ej. http://192.168.1.10:8080):', 'http://');
-        if (entered && /^https?:\/\//i.test(entered)) {
-            localStorage.setItem('serverBaseUrl', entered.trim());
-            baseUrl = getServerBaseUrl();
-        }
-    }
-    const studentUrl = `${baseUrl}usuario.html?id=${alumno.id}`;
+    // Usar URLs "bonitas" en Netlify o si el usuario lo activó
+    const usePretty = (localStorage.getItem('usePrettyUrls') === '1') || (/\.netlify\.app$/i.test(window.location.hostname));
+    // Asegurar base con trailing slash
+    try { if (!baseUrl.endsWith('/')) baseUrl += '/'; } catch(_) {}
+    const studentUrl = usePretty
+        ? `${baseUrl}alumno/${alumno.id}`
+        : `${baseUrl}usuario.html?id=${alumno.id}`;
     
     // Generar QR
     new QRCode(qrContainer, {
