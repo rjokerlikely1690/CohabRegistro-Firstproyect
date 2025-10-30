@@ -1,0 +1,2 @@
+/alumno/:id /usuario.html?id=:id 200
+/u/:id /usuario.html?id=:id 200
