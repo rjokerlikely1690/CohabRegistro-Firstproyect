@@ -304,10 +304,8 @@
         // Verificar que el usuario tenga permisos de usuario
         function checkUserAccess() {
             const params = new URLSearchParams(window.location.search);
-            const hasPublicId = params.has('id');
-
-            if (hasPublicId) {
-                return true; // acceso público vía QR o enlace directo
+            if (params.has('id')) {
+                return true;
             }
 
             const userRole = localStorage.getItem('userRole');
@@ -315,9 +313,8 @@
                 return true;
             }
 
-            alert('Acceso denegado. Inicia sesión como usuario para ver tu estado.');
-            window.location.href = 'login.html';
-            return false;
+            console.info('Acceso sin sesión: solo se mostrarán datos si ingresas un ID.');
+            return true;
         }
 
         // Función de logout
