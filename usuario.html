@@ -303,13 +303,21 @@
 
         // Verificar que el usuario tenga permisos de usuario
         function checkUserAccess() {
-            const userRole = localStorage.getItem('userRole');
-            if (userRole !== 'usuario') {
-                alert('Acceso denegado. Solo usuarios pueden acceder a esta página.');
-                window.location.href = 'login.html';
-                return false;
+            const params = new URLSearchParams(window.location.search);
+            const hasPublicId = params.has('id');
+
+            if (hasPublicId) {
+                return true; // acceso público vía QR o enlace directo
             }
-            return true;
+
+            const userRole = localStorage.getItem('userRole');
+            if (userRole === 'usuario' || userRole === 'admin') {
+                return true;
+            }
+
+            alert('Acceso denegado. Inicia sesión como usuario para ver tu estado.');
+            window.location.href = 'login.html';
+            return false;
         }
 
         // Función de logout
