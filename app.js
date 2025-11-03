@@ -152,37 +152,66 @@ async function loadAlumnos() {
         const estado = calcularEstado(alumno);
         const card = document.createElement('div');
         card.className = `alumno-card estado-${estado.clase}`;
+        
+        // Icono según estado
+        let estadoIcon = '';
+        let estadoColor = '';
+        if (estado.clase === 'atrasado') {
+            estadoIcon = '🔴';
+            estadoColor = '#ef4444';
+        } else if (estado.clase === 'proximo') {
+            estadoIcon = '🟠';
+            estadoColor = '#f59e0b';
+        } else {
+            estadoIcon = '🟢';
+            estadoColor = '#10b981';
+        }
+        
         card.innerHTML = `
-            <div class="card-header">
-                <div class="status-indicator ${estado.clase}"></div>
-                <h3>${alumno.nombre}</h3>
+            <div class="card-header-new">
+                <div class="card-status-badge status-${estado.clase}">
+                    <span class="status-icon">${estadoIcon}</span>
+                    <span class="status-text">${estado.texto}</span>
+                </div>
+                <h3 class="card-name">${alumno.nombre}</h3>
             </div>
-            <div class="card-body">
-                <div class="info-row">
-                    <span class="info-label">Email</span>
-                    <span class="info-value">${alumno.email || 'No especificado'}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Teléfono</span>
-                    <span class="info-value">${alumno.telefono || 'No especificado'}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Monto</span>
-                    <span class="info-value">$${alumno.monto}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Estado</span>
-                    <span class="info-value status-${estado.clase}">${estado.texto}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Próximo</span>
-                    <span class="info-value">${estado.proximo}</span>
+            <div class="card-body-new">
+                <div class="card-info-compact">
+                    <div class="info-item-compact">
+                        <span class="info-icon">💰</span>
+                        <span class="info-text">$${parseFloat(alumno.monto).toFixed(2)}</span>
+                    </div>
+                    <div class="info-item-compact">
+                        <span class="info-icon">📅</span>
+                        <span class="info-text">${estado.proximo}</span>
+                    </div>
+                    ${alumno.email ? `
+                    <div class="info-item-compact">
+                        <span class="info-icon">📧</span>
+                        <span class="info-text">${alumno.email}</span>
+                    </div>
+                    ` : ''}
+                    ${alumno.telefono ? `
+                    <div class="info-item-compact">
+                        <span class="info-icon">📱</span>
+                        <span class="info-text">${alumno.telefono}</span>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
-            <div class="card-actions">
-                <button class="action-btn btn-edit" onclick="editAlumno('${alumno.id}')">✏️ Editar</button>
-                <button class="action-btn btn-qr" onclick="showQR('${alumno.id}')">🔲 QR</button>
-                <button class="action-btn btn-delete" onclick="deleteAlumno('${alumno.id}')">🗑️ Eliminar</button>
+            <div class="card-actions-new">
+                <button class="action-btn-new btn-primary-action" onclick="showQR('${alumno.id}')" title="Ver QR">
+                    <span class="btn-icon">🔲</span>
+                    <span class="btn-text">QR</span>
+                </button>
+                <button class="action-btn-new btn-secondary-action" onclick="editAlumno('${alumno.id}')" title="Editar">
+                    <span class="btn-icon">✏️</span>
+                    <span class="btn-text">Editar</span>
+                </button>
+                <button class="action-btn-new btn-danger-action" onclick="deleteAlumno('${alumno.id}')" title="Eliminar">
+                    <span class="btn-icon">🗑️</span>
+                    <span class="btn-text">Eliminar</span>
+                </button>
             </div>
         `;
         grid.appendChild(card);
