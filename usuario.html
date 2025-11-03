@@ -587,7 +587,9 @@
         function calcularEstado(alumno) {
             const hoy = new Date();
             const fechaUltimoPago = new Date(alumno.fechaPago);
-            const diaPago = parseInt(alumno.diaPago);
+            // Fallback: usar diaPagoGlobal si no está definido, o 30 por defecto
+            const diaPagoGlobal = parseInt(localStorage.getItem('diaPagoGlobal')) || 30;
+            const diaPago = parseInt(alumno.diaPago) || diaPagoGlobal;
             
             let proximoPago = new Date(fechaUltimoPago);
             proximoPago.setMonth(proximoPago.getMonth() + 1);

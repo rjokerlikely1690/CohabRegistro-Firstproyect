@@ -598,16 +598,52 @@ body.modal-open {
     overflow: hidden;
     height: 100dvh;
     touch-action: none;
+    position: relative;
+}
+
+body.modal-open::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+}
+
+body.modal-open .navbar {
+    pointer-events: none;
+    opacity: 0.4;
 }
 
 /* Encabezado: evitar conflicto con modal y scroll en móvil */
 body.modal-open .navbar { pointer-events: none; }
 /* Mejorado para móvil - interfaz más simple */
 @media (max-width: 768px) {
-    .navbar { position: static; z-index: 1; }
-    main { margin-top: 0; padding: 10px; }
-    .modal { z-index: 1000; }
-    
+    body {
+        background: #0f0f0f;
+        min-height: 100dvh;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        display: none;
+    }
+
+    .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+        backdrop-filter: blur(6px);
+    }
+
+    main {
+        padding: 0.75rem;
+    }
+
+    .modal {
+        z-index: 1000;
+    }
+
     /* Botones más grandes y fáciles de tocar */
     .btn {
         padding: 20px 30px !important;
@@ -1654,21 +1690,22 @@ body.modal-open .navbar { pointer-events: none; }
     
     /* NAVEGACIÓN MÓVIL MEJORADA */
     .navbar {
-        position: fixed;
+        position: sticky;
         top: 0;
         left: 0;
         right: 0;
         z-index: 1000;
-        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        background: linear-gradient(135deg, #1b1b1b 0%, #2a2a2a 100%);
         padding: 0.75rem 1rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.35);
     }
-    
+
     .navbar .container {
         padding: 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 0.75rem;
     }
     
     .logo {

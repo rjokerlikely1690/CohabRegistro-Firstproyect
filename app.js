@@ -116,7 +116,7 @@ function calcularEstado(alumno) {
 }
 
 // Cargar alumnos - VERSIÓN LIMPIA
-function loadAlumnos() {
+async function loadAlumnos() {
     console.log('📚 Cargando alumnos...');
     const grid = document.getElementById('alumnosGrid');
     if (!grid) {
@@ -191,150 +191,66 @@ function loadAlumnos() {
     console.log(`✅ ${alumnos.length} alumnos cargados`);
 }
 
-// Abrir modal para agregar alumno - VERSIÓN ULTRA SIMPLE
+// Abrir modal para agregar alumno
 function openModal() {
-    console.log('🔧 Abriendo modal para agregar alumno...');
-    
-    // Crear modal completamente nuevo si no existe
-    let modal = document.getElementById('alumnoModal');
-    
-    if (!modal) {
-        console.log('🔧 Creando modal nuevo...');
-        modal = document.createElement('div');
-        modal.id = 'alumnoModal';
-        modal.innerHTML = `
-            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-                <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;">
-                    <h2>Agregar Nuevo Alumno</h2>
-                    <form id="alumnoFormSimple">
-                        <div style="margin: 20px 0;">
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Nombre Completo *</label>
-                            <input type="text" id="nombreSimple" required style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
-                        </div>
-                        <div style="margin: 20px 0;">
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Email</label>
-                            <input type="email" id="emailSimple" style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
-                        </div>
-                        <div style="margin: 20px 0;">
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Teléfono</label>
-                            <input type="tel" id="telefonoSimple" style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
-                        </div>
-                        <div style="margin: 20px 0;">
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Fecha de Último Pago *</label>
-                            <input type="date" id="fechaPagoSimple" required style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
-                        </div>
-                        <div style="margin: 20px 0;">
-                            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Monto *</label>
-                            <input type="number" id="montoSimple" step="0.01" required style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
-                        </div>
-                        <div style="margin: 30px 0; display: flex; gap: 15px; flex-direction: column;">
-                            <button type="button" onclick="closeModalSimple()" style="padding: 15px; background: #6b7280; color: white; border: none; border-radius: 5px; font-size: 16px;">Cancelar</button>
-                            <button type="submit" style="padding: 15px; background: #dc2626; color: white; border: none; border-radius: 5px; font-size: 16px;">Guardar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        // Configurar fecha de hoy
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('fechaPagoSimple').value = today;
-        
-        // Configurar formulario
-        document.getElementById('alumnoFormSimple').addEventListener('submit', function(e) {
-            e.preventDefault();
-            saveAlumnoSimple();
-        });
-        
-        console.log('✅ Modal creado y configurado');
-    } else {
-        console.log('🔧 Usando modal existente...');
-        modal.style.display = 'block';
+    console.log('🔧 Abriendo modal principal...');
+
+    editingAlumno = null;
+
+    const modal = document.getElementById('alumnoModal');
+    const form = document.getElementById('alumnoForm');
+    const title = document.getElementById('modalTitle');
+
+    if (!modal || !form || !title) {
+        console.error('❌ No se encontró el modal o el formulario principal');
+        return;
     }
-    
-    // Enfocar primer input
+
+    // Limpiar formulario
+    form.reset();
+    document.getElementById('alumnoId').value = '';
+    title.textContent = 'Agregar Nuevo Alumno';
+
+    // Establecer valores iniciales
+    setTodayDate();
+    updateDiaPagoButtons();
+
+    // Mostrar modal
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+
+    // Enfocar primer campo
     setTimeout(() => {
-        const firstInput = document.getElementById('nombreSimple');
+        const firstInput = document.getElementById('nombre');
         if (firstInput) {
             firstInput.focus();
-            console.log('✅ Input enfocado');
         }
-    }, 100);
-    
-    console.log('✅ Modal abierto');
-}
+    }, 50);
 
-// Cerrar modal simple
-function closeModalSimple() {
-    console.log('🔧 Cerrando modal simple...');
-    const modal = document.getElementById('alumnoModal');
-    if (modal) {
-        modal.style.display = 'none';
-        console.log('✅ Modal cerrado');
-    }
+    console.log('✅ Modal principal abierto');
 }
-
-// Guardar alumno simple
-function saveAlumnoSimple() {
-    console.log('💾 Guardando alumno simple...');
-    
-    try {
-        const nombre = document.getElementById('nombreSimple').value.trim();
-        const email = document.getElementById('emailSimple').value.trim();
-        const telefono = document.getElementById('telefonoSimple').value.trim();
-        const fechaPago = document.getElementById('fechaPagoSimple').value;
-        const monto = parseFloat(document.getElementById('montoSimple').value);
-        
-        if (!nombre || !fechaPago || isNaN(monto) || monto <= 0) {
-            alert('Por favor completa todos los campos obligatorios correctamente');
-            return;
-        }
-        
-        const alumno = {
-            id: Date.now().toString(),
-            nombre: nombre,
-            email: email,
-            telefono: telefono,
-            fechaPago: fechaPago,
-            monto: monto,
-            fechaCreacion: new Date().toISOString()
-        };
-        
-        alumnos.push(alumno);
-        localStorage.setItem('alumnos', JSON.stringify(alumnos));
-        
-        closeModalSimple();
-        loadAlumnos();
-        showNotification('Alumno agregado correctamente');
-        
-        console.log('✅ Alumno guardado:', alumno);
-        
-    } catch (error) {
-        console.error('❌ Error al guardar:', error);
-        alert('Error al guardar: ' + error.message);
-    }
-}
-
 
 // Cerrar modal - VERSIÓN SIMPLE
 function closeModal() {
     console.log('🔧 Cerrando modal...');
-    
+
     const modal = document.getElementById('alumnoModal');
     if (modal) {
         modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        console.log('✅ Modal cerrado');
     }
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
     editingAlumno = null;
+    console.log('✅ Modal cerrado');
 }
 
 // Guardar alumno - VERSIÓN LIMPIA
-function saveAlumno(event) {
+async function saveAlumno(event) {
     event.preventDefault();
     console.log('💾 Iniciando guardado de alumno...');
-    
+
+    const isEditing = Boolean(editingAlumno);
+
     try {
         const formData = {
             id: editingAlumno || null,
@@ -405,10 +321,15 @@ function saveAlumno(event) {
         loadAlumnos();
         closeModal();
         console.log('✅ Alumno guardado exitosamente');
-        
+
         // Mostrar mensaje de éxito
-        alert(editingAlumno ? 'Alumno actualizado correctamente' : 'Alumno agregado correctamente');
-        
+        const message = isEditing ? 'Alumno actualizado correctamente' : 'Alumno agregado correctamente';
+        if (typeof showNotification === 'function') {
+            showNotification(message, 'success');
+        } else {
+            alert(message);
+        }
+
     } catch (error) {
         console.error('❌ Error al guardar alumno:', error);
         alert('Error al guardar el alumno: ' + error.message);
@@ -424,24 +345,31 @@ function editAlumno(id) {
     editingAlumno = id;
     
     document.getElementById('modalTitle').textContent = 'Editar Alumno';
+    document.getElementById('alumnoId').value = alumno.id;
     document.getElementById('nombre').value = alumno.nombre;
     document.getElementById('email').value = alumno.email || '';
     document.getElementById('telefono').value = alumno.telefono || '';
     document.getElementById('fechaPago').value = alumno.fechaPago;
     document.getElementById('monto').value = alumno.monto;
-    
-    document.getElementById('alumnoModal').style.display = 'block';
+
+    updateDiaPagoButtons();
+
+    const modal = document.getElementById('alumnoModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.classList.add('modal-open');
+    }
 }
 
 // Eliminar alumno
-function deleteAlumno(id) {
+async function deleteAlumno(id) {
     console.log('🗑️ Eliminando alumno:', id);
     if (confirm('¿Estás seguro de eliminar este alumno?')) {
         const alumnoEliminado = alumnos.find(a => a.id === id);
         alumnos = alumnos.filter(a => a.id !== id);
         localStorage.setItem('alumnos', JSON.stringify(alumnos));
         try { if (window.SUPA && SUPA.isConfigured()) { await SUPA.deleteAlumno(id); } } catch (e) { console.warn('Supabase delete fallo', e); }
-        loadAlumnos();
+        await loadAlumnos();
         alert(`Alumno ${alumnoEliminado ? alumnoEliminado.nombre : ''} eliminado correctamente`);
         console.log('✅ Alumno eliminado correctamente');
     }

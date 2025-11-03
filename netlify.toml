@@ -1,5 +1,7 @@
 [build]
+  base = "."
   publish = "."
+  command = ""
 
 [[headers]]
   for = "/sw.js"

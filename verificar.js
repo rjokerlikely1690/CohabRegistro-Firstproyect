@@ -270,9 +270,13 @@ function scanQRCode(video, canvas) {
 function buildStudentUrl(alumnoId) {
     // Base del sitio (maneja puertos y protocolo) o base configurada
     let baseUrl = getServerBaseUrl();
+    // Usar URLs "bonitas" en Netlify o si el usuario lo activó
+    const usePretty = (localStorage.getItem('usePrettyUrls') === '1') || (/\.netlify\.app$/i.test(window.location.hostname));
     // Normalizar doble barras
     if (!baseUrl.endsWith('/')) baseUrl += '/';
-    return `${baseUrl}usuario.html?id=${encodeURIComponent(alumnoId)}`;
+    return usePretty
+        ? `${baseUrl}alumno/${encodeURIComponent(alumnoId)}`
+        : `${baseUrl}usuario.html?id=${encodeURIComponent(alumnoId)}`;
 }
 
 // Alternar linterna si está disponible
@@ -342,7 +346,7 @@ function verificarManual() {
 }
 
 // Verificar alumno
-function verificarAlumno(id) {
+async function verificarAlumno(id) {
     // Recargar datos por si se actualizaron
     // Sincronizar desde Supabase si está disponible
     try {
@@ -732,7 +736,7 @@ function cerrarAlertaEmergencia() {
 }
 
 // Registrar pago
-function registrarPago() {
+async function registrarPago() {
     const resultado = document.getElementById('resultadoVerificacion');
     const alumnoId = resultado.dataset.alumnoId;
     
@@ -754,7 +758,7 @@ function registrarPago() {
         alert('¡Pago registrado exitosamente!');
         
         // Actualizar vista
-        verificarAlumno(alumnoId);
+        await verificarAlumno(alumnoId);
         loadTodosAlumnos();
     }
 }
