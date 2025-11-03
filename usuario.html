@@ -301,11 +301,26 @@
         let video, canvas, context, scanning = false;
         let currentStudent = null;
 
+        function getStudentIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const queryId = params.get('id');
+            if (queryId) {
+                return queryId;
+            }
+
+            const pathMatch = window.location.pathname.match(/\/alumno\/([^\/]+)/i);
+            if (pathMatch && pathMatch[1]) {
+                return decodeURIComponent(pathMatch[1]);
+            }
+
+            return null;
+        }
+
         // Verificar que el usuario tenga permisos de usuario
         function checkUserAccess() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.has('id')) {
-                return true;
+            const publicId = getStudentIdFromUrl();
+            if (publicId) {
+                return true; // acceso público vía QR o enlace directo
             }
 
             const userRole = localStorage.getItem('userRole');
@@ -313,8 +328,9 @@
                 return true;
             }
 
-            console.info('Acceso sin sesión: solo se mostrarán datos si ingresas un ID.');
-            return true;
+            alert('Acceso denegado. Inicia sesión como usuario para ver tu estado.');
+            window.location.href = 'login.html';
+            return false;
         }
 
         // Función de logout
@@ -631,11 +647,10 @@
         // Inicializar página
         document.addEventListener('DOMContentLoaded', function() {
             // Verificar si hay un ID en la URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const studentId = urlParams.get('id');
+            const studentId = getStudentIdFromUrl();
             
             if (studentId) {
-                // Si hay un ID en la URL, buscar automáticamente el alumno
+                // Si hay un ID en la URL (query o ruta bonita), buscar automáticamente el alumno
                 searchByUserId(studentId);
                 // Ocultar las opciones de búsqueda ya que ya tenemos el ID
                 document.querySelector('.search-section').style.display = 'none';
