@@ -213,51 +213,23 @@ function scanQRCode(video, canvas) {
         });
         
         if (code) {
-            // Código QR detectado
+            const rawData = String(code.data || '').trim();
+            console.log('QR detectado:', rawData);
             stopScanner();
-            
-            // Mostrar feedback visual
-            showToast('¡Código QR detectado!', 'success');
-            
-            // Si el QR contiene una URL válida a usuario.html, ir directo
-            const data = String(code.data || '').trim();
-            try {
-                // Intentar JSON con url
-                const parsed = JSON.parse(data);
-                if (parsed && parsed.url && /^https?:\/\//i.test(parsed.url)) {
-                    const urlObj = new URL(parsed.url);
-                    // Si apunta a localhost, reescribir con nuestra base
-                    if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') {
-                        const idParam = urlObj.searchParams.get('id');
-                        if (idParam) {
-                            window.location.href = buildStudentUrl(idParam);
-                            return;
-                        }
-                    }
-                    window.location.href = parsed.url;
-                    return;
-                }
-            } catch (_) {}
-            
-            if (/^https?:\/\//i.test(data)) {
-                // Es una URL directa; si es localhost, adaptarla al host actual
-                try {
-                    const urlObj = new URL(data);
-                    if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') {
-                        const idParam = urlObj.searchParams.get('id');
-                        if (idParam) {
-                            window.location.href = buildStudentUrl(idParam);
-                            return;
-                        }
-                    }
-                } catch (_) {}
-                window.location.href = data;
+
+            const alumnoId = extractAlumnoId(rawData);
+            if (alumnoId) {
+                window.location.href = buildStudentUrl(alumnoId);
                 return;
             }
-            
-            // Caso: es solo el ID → construir URL del alumno y redirigir
-            const studentUrl = buildStudentUrl(data);
-            window.location.href = studentUrl;
+
+            const alumnoUrl = extractAlumnoUrl(rawData);
+            if (alumnoUrl) {
+                window.location.href = alumnoUrl;
+                return;
+            }
+
+            showCustomAlert('Código QR desconocido', 'El QR escaneado no pertenece al sistema.', 'warning');
             return;
         }
     }
@@ -853,6 +825,57 @@ function filterStatus(status) {
     
     // Recargar lista
     loadTodosAlumnos();
+}
+
+// Helpers para interpretar datos QR	
+function extractAlumnoId(raw) {
+    if (!raw) return null;
+    const trimmed = raw.trim();
+
+    // Caso: JSON con { id }
+    try {
+        const json = JSON.parse(trimmed);
+        if (json && typeof json === 'object') {
+            if (json.id) return String(json.id);
+            if (json.url) return extractAlumnoId(json.url);
+        }
+    } catch (_) {}
+
+    // Caso: URL directa (bonita o con query)
+    if (/^https?:/i.test(trimmed)) {
+        try {
+            const url = new URL(trimmed);
+            const queryId = url.searchParams.get('id');
+            if (queryId) return queryId;
+            const pathMatch = url.pathname.match(/\/alumno\/([^\/]+)/i);
+            if (pathMatch && pathMatch[1]) return decodeURIComponent(pathMatch[1]);
+        } catch (_) {}
+    }
+
+    // Caso: ID plano
+    if (/^[0-9a-fA-F-]{8,}$/.test(trimmed)) {
+        return trimmed;
+    }
+
+    return null;
+}
+
+function extractAlumnoUrl(raw) {
+    if (!raw) return null;
+    const trimmed = raw.trim();
+
+    if (/^https?:/i.test(trimmed)) {
+        try {
+            const url = new URL(trimmed);
+            const id = extractAlumnoId(trimmed);
+            if (id) {
+                return buildStudentUrl(id);
+            }
+            return trimmed;
+        } catch (_) {}
+    }
+
+    return null;
 }
 
 
