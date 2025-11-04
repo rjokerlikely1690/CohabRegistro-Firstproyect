@@ -549,7 +549,7 @@ starCTYPE html>
         // Configurar MongoDB API
         function configureMongoDB() {
             const current = MONGO && MONGO.getApiUrl ? MONGO.getApiUrl() : '';
-            const url = prompt('URL de MongoDB API (ej: https://cohab-api.railway.app)', current);
+            const url = prompt('URL de MongoDB API (ej: https://cohab-api.railway.app)', current || 'https://cohabregistro-firstproyect-production.up.railway.app');
             if (url && /^https?:\/\//i.test(url)) {
                 MONGO.configure(url);
                 showNotification('MongoDB API configurada. La app usará MongoDB ahora.');
