@@ -229,6 +229,12 @@ starCTYPE html>
                 <div class="title">Configurar URL Base</div>
                 <div class="desc">Fijar URL para QRs (LAN o dominio)</div>
             </div>
+            
+            <div class="quick-action-btn" onclick="configureMongoDB()">
+                <div class="icon">🍃</div>
+                <div class="title">Configurar MongoDB</div>
+                <div class="desc">URL de API MongoDB (Railway/Render)</div>
+            </div>
         </section>
 
         <!-- Vista Rápida de Alumnos -->
@@ -249,6 +255,7 @@ starCTYPE html>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-client.js"></script>
+    <script src="mongodb-client.js"></script>
     <script src="alert-system.js"></script>
     <script src="app.js"></script>
     <script>
@@ -538,6 +545,18 @@ starCTYPE html>
                 showNotification('Supabase configurado. Puedes importar/exportar a la nube.');
             }
         })();
+
+        // Configurar MongoDB API
+        function configureMongoDB() {
+            const current = MONGO && MONGO.getApiUrl ? MONGO.getApiUrl() : '';
+            const url = prompt('URL de MongoDB API (ej: https://cohab-api.railway.app)', current);
+            if (url && /^https?:\/\//i.test(url)) {
+                MONGO.configure(url);
+                showNotification('MongoDB API configurada. La app usará MongoDB ahora.');
+            } else if (url) {
+                alert('URL inválida. Debe empezar con http:// o https://');
+            }
+        }
 
         function configureServerBaseUrl() {
             const current = localStorage.getItem('serverBaseUrl');

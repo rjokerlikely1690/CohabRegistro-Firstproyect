@@ -320,9 +320,17 @@ function verificarManual() {
 // Verificar alumno
 async function verificarAlumno(id) {
     // Recargar datos por si se actualizaron
-    // Sincronizar desde Supabase si está disponible
+    // Sincronizar desde MongoDB (prioridad) o Supabase si está disponible
     try {
-        if (window.SUPA && SUPA.isConfigured()) {
+        if (window.MONGO && MONGO.isConfigured()) {
+            const nube = await MONGO.listAlumnos();
+            if (Array.isArray(nube)) {
+                alumnos = nube;
+                localStorage.setItem('alumnos', JSON.stringify(alumnos));
+            } else {
+                alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            }
+        } else if (window.SUPA && SUPA.isConfigured()) {
             const nube = await SUPA.listAlumnos();
             if (Array.isArray(nube)) {
                 alumnos = nube;
@@ -725,7 +733,13 @@ async function registrarPago() {
         const index = alumnos.findIndex(a => a.id === alumnoId);
         alumnos[index] = alumno;
         localStorage.setItem('alumnos', JSON.stringify(alumnos));
-        try { if (window.SUPA && SUPA.isConfigured()) { await SUPA.registrarPago(alumnoId, alumno.fechaPago); } } catch (e) { console.warn('Supabase registrarPago fallo', e); }
+        try {
+            if (window.MONGO && MONGO.isConfigured()) {
+                await MONGO.registrarPago(alumnoId, alumno.fechaPago);
+            } else if (window.SUPA && SUPA.isConfigured()) {
+                await SUPA.registrarPago(alumnoId, alumno.fechaPago);
+            }
+        } catch (e) { console.warn('Registrar pago remoto fallo', e); }
         
         alert('¡Pago registrado exitosamente!');
         

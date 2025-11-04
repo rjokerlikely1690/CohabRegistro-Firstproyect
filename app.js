@@ -126,13 +126,26 @@ async function loadAlumnos() {
     
     grid.innerHTML = '';
     
-    // Si hay Supabase configurado, sincronizar desde la nube
+    // Si hay MongoDB configurado, priorizar MongoDB
     try {
-        if (window.SUPA && SUPA.isConfigured()) {
+        if (window.MONGO && MONGO.isConfigured()) {
+            const nube = await MONGO.listAlumnos();
+            if (Array.isArray(nube)) {
+                alumnos = nube;
+                localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                console.log('✅ Sincronizado desde MongoDB');
+            }
+        }
+    } catch (e) { console.warn('No se pudo sincronizar desde MongoDB', e); }
+    
+    // Si hay Supabase configurado (fallback o alternativo)
+    try {
+        if (alumnos.length === 0 && window.SUPA && SUPA.isConfigured()) {
             const nube = await SUPA.listAlumnos();
             if (Array.isArray(nube)) {
                 alumnos = nube;
                 localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                console.log('✅ Sincronizado desde Supabase');
             }
         }
     } catch (e) { console.warn('No se pudo sincronizar desde Supabase', e); }
@@ -318,10 +331,20 @@ async function saveAlumno(event) {
         } else {
             // Agregar nuevo alumno
             try {
-                if (window.SUPA && SUPA.isConfigured()) {
-                    // Si Supabase está configurado, permitir que la BD genere el ID (si tiene default)
+                if (window.MONGO && MONGO.isConfigured()) {
+                    // Priorizar MongoDB
                     const payload = { ...formData };
-                    delete payload.id; // no enviar id para que el servidor lo asigne si corresponde
+                    delete payload.id;
+                    const inserted = await MONGO.insertAlumnoReturningId(payload);
+                    if (inserted && inserted.id) {
+                        formData.id = inserted.id;
+                    } else {
+                        formData.id = generateId();
+                    }
+                } else if (window.SUPA && SUPA.isConfigured()) {
+                    // Fallback a Supabase
+                    const payload = { ...formData };
+                    delete payload.id;
                     const inserted = await SUPA.insertAlumnoReturningId(payload);
                     if (inserted && inserted.id) {
                         formData.id = inserted.id;
@@ -342,8 +365,14 @@ async function saveAlumno(event) {
         // Guardar en localStorage
         localStorage.setItem('alumnos', JSON.stringify(alumnos));
         
-        // Guardar en Supabase si está configurado
-        try { if (window.SUPA && SUPA.isConfigured()) { await SUPA.upsertAlumno(formData); } } catch (e) { console.warn('Supabase upsert fallo', e); }
+        // Guardar en MongoDB (prioridad) o Supabase si está configurado
+        try {
+            if (window.MONGO && MONGO.isConfigured()) {
+                await MONGO.upsertAlumno(formData);
+            } else if (window.SUPA && SUPA.isConfigured()) {
+                await SUPA.upsertAlumno(formData);
+            }
+        } catch (e) { console.warn('Upsert remoto fallo', e); }
         console.log('💾 Datos guardados en localStorage');
         
         // Recargar vista SIN llamar a funciones problemáticas
@@ -397,7 +426,13 @@ async function deleteAlumno(id) {
         const alumnoEliminado = alumnos.find(a => a.id === id);
         alumnos = alumnos.filter(a => a.id !== id);
         localStorage.setItem('alumnos', JSON.stringify(alumnos));
-        try { if (window.SUPA && SUPA.isConfigured()) { await SUPA.deleteAlumno(id); } } catch (e) { console.warn('Supabase delete fallo', e); }
+        try {
+            if (window.MONGO && MONGO.isConfigured()) {
+                await MONGO.deleteAlumno(id);
+            } else if (window.SUPA && SUPA.isConfigured()) {
+                await SUPA.deleteAlumno(id);
+            }
+        } catch (e) { console.warn('Delete remoto fallo', e); }
         await loadAlumnos();
         alert(`Alumno ${alumnoEliminado ? alumnoEliminado.nombre : ''} eliminado correctamente`);
         console.log('✅ Alumno eliminado correctamente');
