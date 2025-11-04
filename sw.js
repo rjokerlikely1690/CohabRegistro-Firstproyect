@@ -1,7 +1,7 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v4';
+const CACHE_NAME = 'academia-cohab-v5';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -48,6 +48,24 @@ self.addEventListener('activate', function(event) {
 // Interceptar requests
 self.addEventListener('fetch', function(event) {
   const req = event.request;
+  
+  // NO cachear requests que no sean GET (POST, PUT, DELETE, etc.)
+  if (req.method !== 'GET') {
+    event.respondWith(fetch(req));
+    return;
+  }
+  
+  // NO cachear requests a APIs externas (MongoDB, Supabase, etc.)
+  const url = new URL(req.url);
+  const isAPI = url.hostname.includes('railway.app') || 
+                url.hostname.includes('supabase.co') ||
+                url.hostname.includes('up.railway.app');
+  
+  if (isAPI) {
+    event.respondWith(fetch(req));
+    return;
+  }
+  
   const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
 
   if (isHTML) {
@@ -64,7 +82,7 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  // Cache-first para el resto
+  // Cache-first para archivos estáticos (CSS, JS, imágenes)
   event.respondWith(
     caches.match(req).then(resp => resp || fetch(req).then(res => {
       const resClone = res.clone();
