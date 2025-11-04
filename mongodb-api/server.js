@@ -166,6 +166,25 @@ app.patch('/alumnos/:id/pago', authMiddleware, async (req, res) => {
     }
 });
 
+// Ruta raíz - Información de la API
+app.get('/', (req, res) => {
+    res.json({
+        service: 'COHAB MongoDB API',
+        version: '1.0.0',
+        status: 'running',
+        database: db ? 'connected' : 'disconnected',
+        endpoints: {
+            'GET /alumnos': 'Listar todos los alumnos',
+            'POST /alumnos': 'Crear nuevo alumno',
+            'PUT /alumnos': 'Actualizar o crear alumno',
+            'DELETE /alumnos/:id': 'Eliminar alumno',
+            'PATCH /alumnos/:id/pago': 'Registrar pago',
+            'GET /health': 'Health check'
+        },
+        usage: 'Esta es una API backend. Usa los endpoints anteriores desde tu aplicación frontend.'
+    });
+});
+
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', db: db ? 'connected' : 'disconnected' });
