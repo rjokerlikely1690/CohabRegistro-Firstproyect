@@ -1,0 +1,9 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cd mongodb-api && npm install"
+
+[deploy]
+startCommand = "cd mongodb-api && node server.js"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+

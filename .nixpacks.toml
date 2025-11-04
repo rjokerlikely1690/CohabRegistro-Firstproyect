@@ -1,0 +1,9 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm"]
+
+[phases.install]
+cmds = ["cd mongodb-api && npm install"]
+
+[start]
+cmd = "cd mongodb-api && node server.js"
+
