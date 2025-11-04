@@ -367,12 +367,25 @@ async function saveAlumno(event) {
         
         // Guardar en MongoDB (prioridad) o Supabase si está configurado
         try {
+            console.log('🔍 Verificando MongoDB...', { 
+                MONGO: !!window.MONGO, 
+                isConfigured: window.MONGO ? MONGO.isConfigured() : false 
+            });
             if (window.MONGO && MONGO.isConfigured()) {
+                console.log('✅ MongoDB configurado, guardando en nube...');
                 await MONGO.upsertAlumno(formData);
+                console.log('✅ Alumno guardado en MongoDB');
             } else if (window.SUPA && SUPA.isConfigured()) {
+                console.log('✅ Supabase configurado, guardando en nube...');
                 await SUPA.upsertAlumno(formData);
+                console.log('✅ Alumno guardado en Supabase');
+            } else {
+                console.warn('⚠️ No hay backend configurado (MongoDB/Supabase)');
             }
-        } catch (e) { console.warn('Upsert remoto fallo', e); }
+        } catch (e) { 
+            console.error('❌ Error guardando en nube:', e);
+            console.warn('Upsert remoto fallo', e); 
+        }
         console.log('💾 Datos guardados en localStorage');
         
         // Recargar vista SIN llamar a funciones problemáticas
