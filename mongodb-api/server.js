@@ -21,12 +21,26 @@ let db = null;
 // Conectar a MongoDB
 async function connectDB() {
     try {
-        client = new MongoClient(MONGODB_URI);
+        // Opciones de conexión con SSL/TLS mejoradas
+        const clientOptions = {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+            tls: true,
+            tlsAllowInvalidCertificates: false,
+            retryWrites: true,
+            w: 'majority'
+        };
+        
+        client = new MongoClient(MONGODB_URI, clientOptions);
         await client.connect();
         db = client.db(DB_NAME);
         console.log('✅ Conectado a MongoDB');
     } catch (error) {
         console.error('❌ Error conectando a MongoDB:', error);
+        console.error('💡 Asegúrate de que:');
+        console.error('   1. La IP de Railway está permitida en MongoDB Atlas Network Access');
+        console.error('   2. MONGODB_URI está configurada correctamente');
+        console.error('   3. El usuario y contraseña son correctos');
         throw error;
     }
 }
