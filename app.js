@@ -1,8 +1,6 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 11 - Cálculo corregido de mes de pago
-
-console.log('✅ App.js cargado - Versión 11 - Cálculo corregido');
+// VERSIÓN: 12 - Cálculo corregido de mes de pago
 
 let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let editingAlumno = null;
@@ -30,39 +28,26 @@ function getServerBaseUrl() {
 
 // Cargar datos al iniciar
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Sistema COHAB iniciando...');
     loadAlumnos();
     updateDiaPagoButtons();
     
-    // Agregar listener de prueba para el botón
-    const addButton = document.querySelector('.btn-primary');
-    if (addButton) {
-        addButton.addEventListener('click', function() {
-            console.log('🔘 Botón tocado - listener funciona');
-        });
-    }
-    
     // Actualizar automáticamente los estados cada minuto
     setInterval(function() {
-        console.log('🔄 Actualizando estados automáticamente...');
         loadAlumnos(); // Recargar alumnos recalcula todos los estados
     }, 60000); // Cada 60 segundos (1 minuto)
     
     // Actualizar cuando la ventana recupera el foco (cuando vuelves a la pestaña)
     window.addEventListener('focus', function() {
-        console.log('👁️ Ventana recuperó foco, actualizando estados...');
         loadAlumnos();
     });
     
     // Actualizar cuando la página se vuelve visible (cambio de pestaña)
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
-            console.log('👀 Página visible, actualizando estados...');
             loadAlumnos();
         }
     });
     
-    console.log('✅ Sistema COHAB cargado correctamente');
 });
 
 // Establecer fecha de hoy
@@ -115,14 +100,6 @@ function calcularEstado(alumno) {
     // Usar el día de pago del alumno, no el global
     const diaPagoAlumno = parseInt(alumno.diaPago) || diaPagoGlobal;
     
-    // Debug: Solo para los primeros cálculos
-    if (!window._calculoDebug) {
-        window._calculoDebug = true;
-        console.log('🔍 DEBUG Cálculo - Alumno:', alumno.nombre);
-        console.log('  - Fecha último pago:', fechaPago.toLocaleDateString('es-ES'));
-        console.log('  - Día de pago:', diaPagoAlumno);
-        console.log('  - Hoy:', hoy.toLocaleDateString('es-ES'));
-    }
     
     // PASO 1: Determinar a qué mes corresponde realmente el último pago
     // Si pagaste el 2 de noviembre y tu vencimiento es el 30/31, ese pago corresponde a OCTUBRE
@@ -174,13 +151,6 @@ function calcularEstado(alumno) {
     
     proximoPago.setHours(0, 0, 0, 0);
     
-    // Debug
-    if (window._calculoDebug) {
-        console.log('  - Próximo pago calculado:', proximoPago.toLocaleDateString('es-ES'));
-        const diasRestantesDebug = Math.ceil((proximoPago - hoy) / (1000 * 60 * 60 * 24));
-        console.log('  - Días restantes:', diasRestantesDebug);
-        window._calculoDebug = false;
-    }
     
     // PASO 4: Calcular días restantes
     const diasRestantes = Math.ceil((proximoPago - hoy) / (1000 * 60 * 60 * 24));
@@ -208,10 +178,8 @@ function calcularEstado(alumno) {
 
 // Cargar alumnos - VERSIÓN LIMPIA CON ACTUALIZACIÓN AUTOMÁTICA
 async function loadAlumnos() {
-    console.log('📚 Cargando alumnos...');
     const grid = document.getElementById('alumnosGrid');
     if (!grid) {
-        console.error('❌ No se encontró alumnosGrid');
         return;
     }
     
@@ -224,10 +192,9 @@ async function loadAlumnos() {
             if (Array.isArray(nube)) {
                 alumnos = nube;
                 localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                console.log('✅ Sincronizado desde MongoDB');
             }
         }
-    } catch (e) { console.warn('No se pudo sincronizar desde MongoDB', e); }
+    } catch (e) {}
     
     // Si hay Supabase configurado (fallback o alternativo)
     try {
@@ -236,10 +203,9 @@ async function loadAlumnos() {
             if (Array.isArray(nube)) {
                 alumnos = nube;
                 localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                console.log('✅ Sincronizado desde Supabase');
             }
         }
-    } catch (e) { console.warn('No se pudo sincronizar desde Supabase', e); }
+    } catch (e) {}
     
     if (alumnos.length === 0) {
         grid.innerHTML = `
@@ -251,9 +217,6 @@ async function loadAlumnos() {
         `;
         return;
     }
-    
-    // Recalcular estados de TODOS los alumnos automáticamente
-    console.log(`🔄 Recalculando estados para ${alumnos.length} alumnos...`);
     
     alumnos.forEach(alumno => {
         // El estado se calcula automáticamente cada vez que se carga
@@ -325,14 +288,10 @@ async function loadAlumnos() {
         `;
         grid.appendChild(card);
     });
-    
-    console.log(`✅ ${alumnos.length} alumnos cargados`);
 }
 
 // Abrir modal para agregar alumno
 function openModal() {
-    console.log('🔧 Abriendo modal principal...');
-
     editingAlumno = null;
 
     const modal = document.getElementById('alumnoModal');
@@ -340,7 +299,6 @@ function openModal() {
     const title = document.getElementById('modalTitle');
 
     if (!modal || !form || !title) {
-        console.error('❌ No se encontró el modal o el formulario principal');
         return;
     }
 
@@ -364,14 +322,10 @@ function openModal() {
             firstInput.focus();
         }
     }, 50);
-
-    console.log('✅ Modal principal abierto');
 }
 
 // Cerrar modal - VERSIÓN SIMPLE
 function closeModal() {
-    console.log('🔧 Cerrando modal...');
-
     const modal = document.getElementById('alumnoModal');
     if (modal) {
         modal.style.display = 'none';
@@ -379,7 +333,6 @@ function closeModal() {
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     editingAlumno = null;
-    console.log('✅ Modal cerrado');
 }
 
 // Guardar alumno - VERSIÓN LIMPIA CON PREVENCIÓN DE DUPLICADOS
@@ -387,14 +340,11 @@ async function saveAlumno(event) {
     event.preventDefault();
     event.stopPropagation(); // Prevenir múltiples envíos
     
-    console.log('💾 Iniciando guardado de alumno...');
-
     const isEditing = Boolean(editingAlumno);
     
     // Prevenir múltiples envíos simultáneos
     const submitButton = event.target.querySelector('button[type="submit"]');
     if (submitButton && submitButton.disabled) {
-        console.warn('⚠️ Guardado ya en progreso, ignorando...');
         return;
     }
     if (submitButton) {
@@ -403,21 +353,31 @@ async function saveAlumno(event) {
     }
 
     try {
+        const fechaPagoInput = document.getElementById('fechaPago').value;
+        
         const formData = {
             id: editingAlumno || null,
             nombre: document.getElementById('nombre').value.trim(),
             email: document.getElementById('email').value.trim(),
             telefono: document.getElementById('telefono').value.trim(),
-            fechaPago: document.getElementById('fechaPago').value,
-            diaPago: diaPagoGlobal, // Usar el día de pago actual (global o del alumno si está editando)
+            fechaPago: fechaPagoInput,
+            diaPago: diaPagoGlobal, // Usar el día de pago actual (puede ser del alumno si está editando)
             monto: parseFloat(document.getElementById('monto').value)
         };
         
-        console.log('📝 Datos del formulario:', formData);
+        
+        // Validar que la fecha sea válida
+        if (!fechaPagoInput) {
+            alert('La fecha de pago es obligatoria');
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Guardar';
+            }
+            return;
+        }
         
         // Validaciones
         if (!formData.nombre) {
-            console.error('❌ Error: El nombre es obligatorio');
             alert('El nombre es obligatorio');
             if (submitButton) {
                 submitButton.disabled = false;
@@ -427,7 +387,6 @@ async function saveAlumno(event) {
         }
         
         if (formData.monto <= 0 || isNaN(formData.monto)) {
-            console.error('❌ Error: El monto debe ser mayor a 0');
             alert('El monto debe ser mayor a 0');
             if (submitButton) {
                 submitButton.disabled = false;
@@ -453,27 +412,22 @@ async function saveAlumno(event) {
             }
         }
         
-        console.log('✅ Validaciones pasadas, guardando alumno...');
-        
         if (editingAlumno) {
             // Editar alumno existente
             const index = alumnos.findIndex(a => a.id === editingAlumno);
             if (index !== -1) {
                 formData.id = editingAlumno; // Mantener el ID original
                 alumnos[index] = formData;
-                console.log('📝 Alumno editado:', formData);
                 
                 // Guardar en MongoDB/Supabase
                 try {
                     if (window.MONGO && MONGO.isConfigured()) {
                         await MONGO.upsertAlumno(formData);
-                        console.log('✅ Alumno actualizado en MongoDB');
                     } else if (window.SUPA && SUPA.isConfigured()) {
                         await SUPA.upsertAlumno(formData);
-                        console.log('✅ Alumno actualizado en Supabase');
                     }
                 } catch (e) {
-                    console.error('❌ Error actualizando en nube:', e);
+                    // Error silenciado
                 }
             }
         } else {
@@ -488,7 +442,6 @@ async function saveAlumno(event) {
                     const inserted = await MONGO.insertAlumnoReturningId(payload);
                     if (inserted && inserted.id) {
                         nuevoId = inserted.id;
-                        console.log('✅ Alumno insertado en MongoDB con ID:', nuevoId);
                     }
                 } else if (window.SUPA && SUPA.isConfigured()) {
                     // Fallback a Supabase
@@ -497,12 +450,9 @@ async function saveAlumno(event) {
                     const inserted = await SUPA.insertAlumnoReturningId(payload);
                     if (inserted && inserted.id) {
                         nuevoId = inserted.id;
-                        console.log('✅ Alumno insertado en Supabase con ID:', nuevoId);
                     }
                 }
-            } catch (e) {
-                console.warn('⚠️ Fallo insert remoto, se usará ID local', e);
-            }
+            } catch (e) {}
             
             // Si no se obtuvo ID de la nube, generar uno local
             if (!nuevoId) {
@@ -515,20 +465,29 @@ async function saveAlumno(event) {
             const yaExiste = alumnos.some(a => a.id === nuevoId);
             if (!yaExiste) {
                 alumnos.push(formData);
-                console.log('➕ Nuevo alumno agregado:', formData);
-            } else {
-                console.warn('⚠️ El alumno ya existe, omitiendo duplicado');
             }
         }
         
         // Guardar en localStorage
         localStorage.setItem('alumnos', JSON.stringify(alumnos));
-        console.log('💾 Datos guardados en localStorage');
         
-        // Recargar vista
+        // Forzar actualización: recargar alumnos desde MongoDB si está configurado
+        // Esto asegura que los datos estén sincronizados
+        try {
+            if (window.MONGO && MONGO.isConfigured()) {
+                const alumnosActualizados = await MONGO.listAlumnos();
+                if (Array.isArray(alumnosActualizados) && alumnosActualizados.length > 0) {
+                    alumnos = alumnosActualizados;
+                    localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                }
+            }
+        } catch (e) {
+            // Silenciar error de sincronización
+        }
+        
+        // Recargar vista con los datos actualizados
         await loadAlumnos();
         closeModal();
-        console.log('✅ Alumno guardado exitosamente');
 
         // Mostrar mensaje de éxito
         const message = isEditing ? 'Alumno actualizado correctamente' : 'Alumno agregado correctamente';
@@ -539,7 +498,6 @@ async function saveAlumno(event) {
         }
 
     } catch (error) {
-        console.error('❌ Error al guardar alumno:', error);
         alert('Error al guardar el alumno: ' + error.message);
     } finally {
         if (submitButton) {
@@ -551,7 +509,6 @@ async function saveAlumno(event) {
 
 // Editar alumno
 function editAlumno(id) {
-    console.log('✏️ Editando alumno:', id);
     const alumno = alumnos.find(a => a.id === id);
     if (!alumno) return;
     
@@ -580,7 +537,6 @@ function editAlumno(id) {
 
 // Eliminar alumno
 async function deleteAlumno(id) {
-    console.log('🗑️ Eliminando alumno:', id);
     if (confirm('¿Estás seguro de eliminar este alumno?')) {
         const alumnoEliminado = alumnos.find(a => a.id === id);
         alumnos = alumnos.filter(a => a.id !== id);
@@ -591,16 +547,14 @@ async function deleteAlumno(id) {
             } else if (window.SUPA && SUPA.isConfigured()) {
                 await SUPA.deleteAlumno(id);
             }
-        } catch (e) { console.warn('Delete remoto fallo', e); }
+        } catch (e) {}
         await loadAlumnos();
         alert(`Alumno ${alumnoEliminado ? alumnoEliminado.nombre : ''} eliminado correctamente`);
-        console.log('✅ Alumno eliminado correctamente');
     }
 }
 
 // Mostrar QR
 function showQR(id) {
-    console.log('🔲 Mostrando QR para:', id);
     const alumno = alumnos.find(a => a.id === id);
     if (!alumno) return;
     
@@ -694,7 +648,6 @@ function filterAlumnos() {
     const grid = document.getElementById('alumnosGrid');
     
     if (!grid) {
-        console.error('❌ No se encontró alumnosGrid');
         return;
     }
     
@@ -801,13 +754,10 @@ function filterAlumnos() {
         grid.appendChild(card);
     });
     
-    console.log(`✅ ${alumnosFiltrados.length} alumnos encontrados para "${searchTerm}"`);
 }
 
 // Función para actualizar base de datos y recalcular estados
 async function updateDatabase() {
-    console.log('🔄 Actualizando base de datos...');
-    
     try {
         // Recargar alumnos desde MongoDB si está configurado
         if (window.MONGO && MONGO.isConfigured()) {
@@ -815,14 +765,12 @@ async function updateDatabase() {
             if (Array.isArray(alumnosNube) && alumnosNube.length > 0) {
                 alumnos = alumnosNube;
                 localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                console.log('✅ Datos sincronizados desde MongoDB');
             }
         } else if (window.SUPA && SUPA.isConfigured()) {
             const alumnosNube = await SUPA.listAlumnos();
             if (Array.isArray(alumnosNube) && alumnosNube.length > 0) {
                 alumnos = alumnosNube;
                 localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                console.log('✅ Datos sincronizados desde Supabase');
             }
         }
         
@@ -835,12 +783,7 @@ async function updateDatabase() {
         } else {
             alert('Base de datos actualizada correctamente');
         }
-        
-        console.log('✅ Actualización completada');
     } catch (error) {
-        console.error('❌ Error al actualizar base de datos:', error);
         alert('Error al actualizar la base de datos: ' + error.message);
     }
 }
-
-console.log('🚀 Sistema COHAB - Versión limpia cargada correctamente');
