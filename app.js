@@ -591,6 +591,18 @@ async function saveAlumno(event) {
         // Recargar vista con los datos actualizados
         console.log('🔄 Recargando vista de alumnos...');
         await loadAlumnos();
+
+        if (formData.email) {
+            try {
+                if (window.MONGO && MONGO.isConfigured()) {
+                    await MONGO.enviarQr(formData.id);
+                    console.log(`📧 Email con QR enviado a ${formData.email}`);
+                }
+            } catch (e) {
+                console.warn('⚠️ No se pudo enviar el email con el QR:', e);
+            }
+        }
+
         closeModal();
 
         // Mostrar mensaje de éxito

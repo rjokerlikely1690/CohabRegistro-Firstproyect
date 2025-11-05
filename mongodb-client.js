@@ -75,6 +75,11 @@
         return true;
     }
 
+    async function enviarQr(id) {
+        await apiCall(`/alumnos/${id}/enviar-qr`, 'POST');
+        return true;
+    }
+
     function mapToDb(a) {
         return {
             id: a.id,
@@ -110,6 +115,7 @@
         upsertAlumno,
         deleteAlumno,
         registrarPago,
+        enviarQr,
         insertAlumnoReturningId,
         configure
     };

@@ -5,6 +5,8 @@
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const cors = require('cors');
+const QRCode = require('qrcode');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
@@ -17,6 +19,29 @@ const COLLECTION_NAME = process.env.COLLECTION_NAME || 'alumnos';
 
 let client = null;
 let db = null;
+
+const SEND_EMAILS = process.env.EMAIL_ENABLED === 'true';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'COHAB <no-reply@cohab.cl>';
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://cohabregistro-firstproyect.pages.dev/';
+let mailTransporter = null;
+
+if (SEND_EMAILS) {
+    try {
+        mailTransporter = nodemailer.createTransport({
+            host: process.env.EMAIL_HOST,
+            port: Number(process.env.EMAIL_PORT || 465),
+            secure: Number(process.env.EMAIL_PORT || 465) === 465,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+        console.log('📧 Servicio de correo habilitado.');
+    } catch (error) {
+        console.error('❌ No se pudo inicializar el transporter de correo:', error);
+        mailTransporter = null;
+    }
+}
 
 // Conectar a MongoDB
 async function connectDB() {
@@ -53,6 +78,61 @@ function authMiddleware(req, res, next) {
     next();
 }
 
+function buildStudentUrl(alumno) {
+    const base = PUBLIC_BASE_URL.endsWith('/') ? PUBLIC_BASE_URL : `${PUBLIC_BASE_URL}/`;
+    return `${base}usuario.html?id=${alumno.id}`;
+}
+
+async function generateQrBuffer(alumno) {
+    const url = buildStudentUrl(alumno);
+    return QRCode.toBuffer(url, {
+        type: 'png',
+        width: 400,
+        margin: 1
+    });
+}
+
+async function sendStudentEmail(alumno) {
+    if (!SEND_EMAILS) {
+        return;
+    }
+    if (!mailTransporter) {
+        console.warn('⚠️ Servicio de correo no configurado, omitiendo envío.');
+        return;
+    }
+    if (!alumno.email) {
+        console.warn('⚠️ Alumno sin email, no se enviará el QR.');
+        return;
+    }
+
+    const qrBuffer = await generateQrBuffer(alumno);
+    const alumnoUrl = buildStudentUrl(alumno);
+
+    await mailTransporter.sendMail({
+        from: EMAIL_FROM,
+        to: alumno.email,
+        subject: `Tu acceso a COHAB - ${alumno.nombre}`,
+        html: `
+            <p>Hola ${alumno.nombre},</p>
+            <p>Te enviamos tu acceso a COHAB. Con este QR o el enlace podrás consultar tus pagos en cualquier momento.</p>
+            <ul>
+                <li><strong>Nombre:</strong> ${alumno.nombre}</li>
+                <li><strong>Monto mensual:</strong> $${Number(alumno.monto || 0).toFixed(2)}</li>
+                <li><strong>Enlace directo:</strong> <a href="${alumnoUrl}">${alumnoUrl}</a></li>
+            </ul>
+            <p>Escanea el código adjunto para acceder desde tu teléfono.</p>
+            <p>Un abrazo,<br>Equipo COHAB</p>
+        `,
+        attachments: [
+            {
+                filename: `qr-${alumno.id}.png`,
+                content: qrBuffer,
+                contentType: 'image/png'
+            }
+        ]
+    });
+}
+
 // GET /alumnos - Listar todos los alumnos
 app.get('/alumnos', authMiddleware, async (req, res) => {
     try {
@@ -83,6 +163,14 @@ app.post('/alumnos', authMiddleware, async (req, res) => {
         const collection = db.collection(COLLECTION_NAME);
         const result = await collection.insertOne(alumno);
         
+        if (SEND_EMAILS && alumno.email) {
+            try {
+                await sendStudentEmail(alumno);
+            } catch (error) {
+                console.error('⚠️ No se pudo enviar email de bienvenida:', error.message);
+            }
+        }
+
         res.json({ 
             id: alumno.id,
             _id: result.insertedId 
@@ -114,6 +202,14 @@ app.put('/alumnos', authMiddleware, async (req, res) => {
             { upsert: true }
         );
         
+        if (SEND_EMAILS && alumno.email) {
+            try {
+                await sendStudentEmail(alumno);
+            } catch (error) {
+                console.error('⚠️ No se pudo enviar email actualizado:', error.message);
+            }
+        }
+
         res.json({ success: true, matched: result.matchedCount, modified: result.modifiedCount });
     } catch (error) {
         console.error('Error actualizando alumno:', error);
@@ -162,6 +258,34 @@ app.patch('/alumnos/:id/pago', authMiddleware, async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Error registrando pago:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/alumnos/:id/enviar-qr', authMiddleware, async (req, res) => {
+    try {
+        if (!SEND_EMAILS) {
+            return res.status(503).json({ error: 'Servicio de correo deshabilitado (EMAIL_ENABLED=false).' });
+        }
+        if (!mailTransporter) {
+            return res.status(503).json({ error: 'Transporte de correo no configurado.' });
+        }
+
+        const { id } = req.params;
+        const collection = db.collection(COLLECTION_NAME);
+        const alumno = await collection.findOne({ id });
+
+        if (!alumno) {
+            return res.status(404).json({ error: 'Alumno no encontrado' });
+        }
+        if (!alumno.email) {
+            return res.status(400).json({ error: 'El alumno no tiene email registrado' });
+        }
+
+        await sendStudentEmail(alumno);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error enviando email con QR:', error);
         res.status(500).json({ error: error.message });
     }
 });
