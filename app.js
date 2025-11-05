@@ -1,7 +1,7 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 14 - Lógica simplificada + logs de debug mejorados
-console.log('✅ App.js cargado - Versión 14 - Logs de debug activos');
+// VERSIÓN: 15 - Lógica corregida (mes anterior) + logs de debug
+console.log('✅ App.js cargado - Versión 15 - Logs de debug activos');
 
 let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let editingAlumno = null;
@@ -89,9 +89,8 @@ function generateId() {
 }
 
 // Calcular estado de pago
-// LÓGICA SIMPLIFICADA: Los planes siempre terminan el día 30 o 31
-// Si pagaste cualquier día del mes X, el próximo vencimiento es el 30/31 del mes X+1
-// Ejemplo: Si pagaste el 19 de noviembre, el próximo vencimiento es el 30/31 de diciembre
+// LÓGICA CORREGIDA: Los pagos hechos antes del día de vencimiento cuentan para el mes anterior
+// Ejemplo: Si vence el 30/31 y pagas el 2 de noviembre, ese pago corresponde a OCTUBRE
 function calcularEstado(alumno) {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0); // Normalizar a medianoche
@@ -121,34 +120,53 @@ function calcularEstado(alumno) {
     // Usar el día de pago del alumno (30 o 31)
     const diaPagoAlumno = parseInt(alumno.diaPago) || diaPagoGlobal;
     
-    // LÓGICA SIMPLE: El próximo vencimiento es el día 30/31 del mes SIGUIENTE a la fecha de pago
-    // Si pagaste el 19 de noviembre, el próximo vencimiento es el 30/31 de diciembre
-    // Si pagaste el 3 de noviembre, el próximo vencimiento es el 30/31 de diciembre
-    // Si pagaste el 30 de noviembre, el próximo vencimiento es el 30/31 de diciembre
-    let proximoPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth() + 1, diaPagoAlumno);
-    
-    // Si el día no existe en ese mes (ej: 31 en febrero), usar el último día del mes
-    if (proximoPago.getDate() !== diaPagoAlumno) {
-        proximoPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth() + 2, 0); // Último día del mes siguiente
+    // PASO 1: Determinar a qué mes corresponde realmente el último pago
+    let vencimientoMesActual = new Date(fechaPago.getFullYear(), fechaPago.getMonth(), diaPagoAlumno);
+    if (vencimientoMesActual.getDate() !== diaPagoAlumno) {
+        // Si el día no existe (ej: 31 en febrero) ajustar al último día del mes
+        vencimientoMesActual = new Date(fechaPago.getFullYear(), fechaPago.getMonth() + 1, 0);
     }
-    
-    // Si el próximo vencimiento ya pasó (es anterior a hoy), calcular el siguiente
-    // Esto puede pasar si el último pago fue hace mucho tiempo
+
+    let mesVencimientoPago;
+    if (fechaPago < vencimientoMesActual) {
+        // Pago realizado antes del día de vencimiento → corresponde al mes anterior
+        mesVencimientoPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth() - 1, diaPagoAlumno);
+        if (mesVencimientoPago.getDate() !== diaPagoAlumno) {
+            mesVencimientoPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth(), 0);
+        }
+    } else {
+        // Pago realizado el mismo día o después del vencimiento → corresponde al mes actual
+        mesVencimientoPago = new Date(vencimientoMesActual);
+    }
+
+    // PASO 2: Calcular el próximo vencimiento (mes siguiente al mes efectivo del pago)
+    let proximoPago = new Date(mesVencimientoPago.getFullYear(), mesVencimientoPago.getMonth() + 1, diaPagoAlumno);
+    if (proximoPago.getDate() !== diaPagoAlumno) {
+        proximoPago = new Date(mesVencimientoPago.getFullYear(), mesVencimientoPago.getMonth() + 2, 0);
+    }
+
+    // PASO 3: Si el próximo vencimiento ya pasó, seguir avanzando
     while (proximoPago < hoy) {
         proximoPago = new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, diaPagoAlumno);
-        // Verificar si el día existe en el nuevo mes
         if (proximoPago.getDate() !== diaPagoAlumno) {
-            proximoPago = new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, 0); // Último día del mes
+            proximoPago = new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, 0);
         }
     }
-    
+
     proximoPago.setHours(0, 0, 0, 0);
-    
+
     // Calcular días restantes
     const diasRestantes = Math.ceil((proximoPago - hoy) / (1000 * 60 * 60 * 24));
-    
-    // Debug: mostrar cálculo cuando se edita
-    console.log(`📅 ${alumno.nombre || 'Alumno'}: Fecha pago=${fechaPago.toISOString().split('T')[0]}, Próximo=${proximoPago.toLocaleDateString('es-ES')}, Días=${diasRestantes}`);
+
+    // Debug detallado
+    console.log(`📅 CALCULANDO ESTADO - ${alumno.nombre || 'Alumno'}:`);
+    console.log(`   - Fecha pago ingresada: ${alumno.fechaPago}`);
+    console.log(`   - Fecha pago parseada: ${fechaPago.toISOString().split('T')[0]}`);
+    console.log(`   - Día de pago: ${diaPagoAlumno}`);
+    console.log(`   - Vencimiento mes actual: ${vencimientoMesActual.toLocaleDateString('es-ES')}`);
+    console.log(`   - Mes efectivo del pago: ${mesVencimientoPago.toLocaleDateString('es-ES')}`);
+    console.log(`   - Próximo vencimiento calculado: ${proximoPago.toLocaleDateString('es-ES')}`);
+    console.log(`   - Días restantes: ${diasRestantes}`);
     
     if (diasRestantes < 0) {
         return {
