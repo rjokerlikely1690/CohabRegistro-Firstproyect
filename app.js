@@ -1,7 +1,7 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 15 - Lógica corregida (mes anterior) + logs de debug
-console.log('✅ App.js cargado - Versión 15 - Logs de debug activos');
+// VERSIÓN: 16 - Último pago visible + logs de depuración activos
+console.log('✅ App.js cargado - Versión 16 - Último pago visible con lógica mes-anterior');
 
 let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let editingAlumno = null;
