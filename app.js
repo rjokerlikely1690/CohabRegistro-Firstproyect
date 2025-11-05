@@ -235,6 +235,14 @@ async function loadAlumnos() {
         // El estado se calcula automáticamente cada vez que se carga
         // Esto asegura que siempre esté actualizado con la fecha actual
         const estado = calcularEstado(alumno);
+
+        let ultimoPagoTexto = '---';
+        if (alumno.fechaPago) {
+            const fechaUltimoPago = new Date(alumno.fechaPago);
+            if (!isNaN(fechaUltimoPago.getTime())) {
+                ultimoPagoTexto = fechaUltimoPago.toLocaleDateString('es-ES');
+            }
+        }
         const card = document.createElement('div');
         card.className = `alumno-card estado-${estado.clase}`;
         
@@ -265,6 +273,10 @@ async function loadAlumnos() {
                     <div class="info-item-compact">
                         <span class="info-icon">💰</span>
                         <span class="info-text">$${parseFloat(alumno.monto).toFixed(2)}</span>
+                    </div>
+                    <div class="info-item-compact">
+                        <span class="info-icon">🧾</span>
+                        <span class="info-text">Último: ${ultimoPagoTexto}</span>
                     </div>
                     <div class="info-item-compact">
                         <span class="info-icon">📅</span>
@@ -798,6 +810,10 @@ function filterAlumnos() {
                     <div class="info-item-compact">
                         <span class="info-icon">💰</span>
                         <span class="info-text">$${parseFloat(alumno.monto).toFixed(2)}</span>
+                    </div>
+                    <div class="info-item-compact">
+                        <span class="info-icon">📆</span>
+                        <span class="info-text">Pago: ${ultimoPagoTexto}</span>
                     </div>
                     <div class="info-item-compact">
                         <span class="info-icon">📅</span>
