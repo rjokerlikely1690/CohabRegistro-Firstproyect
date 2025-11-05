@@ -97,8 +97,8 @@
                 <div class="form-group">
                     <label for="diaPago">Día de Pago Mensual *</label>
                     <div style="display: flex; gap: 1rem; align-items: center;">
-                        <button type="button" class="btn btn-secondary" onclick="setDiaPago(30)" style="flex: 1;">Día 30</button>
-                        <button type="button" class="btn btn-secondary" onclick="setDiaPago(31)" style="flex: 1;">Día 31</button>
+                        <button type="button" id="btnDia30" class="btn btn-secondary" onclick="setDiaPago(30)" style="flex: 1;">Día 30</button>
+                        <button type="button" id="btnDia31" class="btn btn-secondary" onclick="setDiaPago(31)" style="flex: 1;">Día 31</button>
                     </div>
                     <small id="diaPagoInfo">Selecciona el día de pago para toda la academia</small>
                 </div>
@@ -131,7 +131,7 @@
     <script src="supabase-client.js"></script>
     <script src="mongodb-client.js"></script>
     <script src="alert-system.js"></script>
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=11"></script>
     
     <script>
         // Función para toggle del menú móvil

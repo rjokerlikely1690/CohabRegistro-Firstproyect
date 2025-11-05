@@ -157,20 +157,6 @@
             <h1>Sistema de Control de Mensualidades</h1>
             <p class="subtitle">Academia COHAB</p>
             
-            <!-- Botón para cargar datos de prueba -->
-            <div style="margin: 1rem 0;">
-                <button onclick="cargarDatosPrueba()" style="
-                    background: #10b981;
-                    color: white;
-                    border: none;
-                    padding: 0.75rem 1.5rem;
-                    border-radius: 0.5rem;
-                    font-size: 0.9rem;
-                    cursor: pointer;
-                    margin-bottom: 1rem;
-                ">📊 Cargar Datos de Prueba</button>
-            </div>
-            
             <div class="role-selector">
                 <h3>Selecciona tu tipo de acceso:</h3>
                 
@@ -187,11 +173,6 @@
                 <a href="index.html" class="role-button" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
                     👥 GESTIÓN DE ALUMNOS
                     <div class="role-description">Agregar, editar y gestionar alumnos</div>
-                </a>
-                
-                <a href="test-funciones-movil.html" class="role-button" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);">
-                    🧪 TEST FUNCIONES MÓVIL
-                    <div class="role-description">Probar funciones específicas en móvil</div>
                 </a>
             </div>
             
@@ -219,65 +200,7 @@
         </div>
     </div>
     
-    <script src="datos-prueba.js"></script>
     <script>
-        // Función para cargar datos de prueba
-        function cargarDatosPrueba() {
-            const datosPrueba = [
-                {
-                    id: "alumno001",
-                    nombre: "Juan Carlos Pérez",
-                    email: "juan.perez@email.com",
-                    telefono: "+52 555 123 4567",
-                    fechaPago: "2024-10-15",
-                    diaPago: 30,
-                    monto: 1200.00
-                },
-                {
-                    id: "alumno002", 
-                    nombre: "María González López",
-                    email: "maria.gonzalez@email.com",
-                    telefono: "+52 555 234 5678",
-                    fechaPago: "2024-09-25",
-                    diaPago: 30,
-                    monto: 1200.00
-                },
-                {
-                    id: "alumno003",
-                    nombre: "Carlos Rodríguez Martínez",
-                    email: "carlos.rodriguez@email.com",
-                    telefono: "+52 555 345 6789",
-                    fechaPago: "2024-10-01",
-                    diaPago: 30,
-                    monto: 1200.00
-                },
-                {
-                    id: "alumno004",
-                    nombre: "Ana Sofía Hernández",
-                    email: "ana.hernandez@email.com",
-                    telefono: "+52 555 456 7890",
-                    fechaPago: "2024-08-30",
-                    diaPago: 30,
-                    monto: 1200.00
-                },
-                {
-                    id: "alumno005",
-                    nombre: "Luis Miguel Torres",
-                    email: "luis.torres@email.com",
-                    telefono: "+52 555 567 8901",
-                    fechaPago: "2024-10-10",
-                    diaPago: 30,
-                    monto: 1200.00
-                }
-            ];
-            
-            localStorage.setItem('alumnos', JSON.stringify(datosPrueba));
-            localStorage.setItem('diaPagoGlobal', '30');
-            localStorage.setItem('datosPruebaCargados', 'true');
-            
-            alert('✅ Datos de prueba cargados correctamente. 5 alumnos agregados al sistema.');
-        }
-        
         // Guardar selección de rol en localStorage
         document.querySelectorAll('.role-button').forEach(button => {
             button.addEventListener('click', function(e) {
