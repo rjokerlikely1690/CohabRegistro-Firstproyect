@@ -1,7 +1,7 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v7';
+const CACHE_NAME = 'academia-cohab-v8';
 const urlsToCache = [
   '/',
   '/index.html',

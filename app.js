@@ -1,7 +1,7 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 16 - Último pago visible + logs de depuración activos
-console.log('✅ App.js cargado - Versión 16 - Último pago visible con lógica mes-anterior');
+// VERSIÓN: 17 - Fechas normalizadas usando UTC para evitar desfases
+console.log('✅ App.js cargado - Versión 17 - Fechas normalizadas con UTC');
 
 let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let editingAlumno = null;
@@ -24,6 +24,12 @@ function parseFechaLocal(valor) {
             const day = Number(match[3]);
             return new Date(year, month, day);
         }
+        if (valor.includes('T')) {
+            const parsedIso = new Date(valor);
+            if (!isNaN(parsedIso.getTime())) {
+                return new Date(parsedIso.getUTCFullYear(), parsedIso.getUTCMonth(), parsedIso.getUTCDate());
+            }
+        }
         const parsed = new Date(valor);
         if (!isNaN(parsed.getTime())) {
             return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
@@ -33,7 +39,7 @@ function parseFechaLocal(valor) {
 
     const parsed = new Date(valor);
     if (!isNaN(parsed.getTime())) {
-        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+        return new Date(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
     }
 
     return null;
