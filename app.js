@@ -437,19 +437,32 @@ async function saveAlumno(event) {
             // Editar alumno existente
             const index = alumnos.findIndex(a => a.id === editingAlumno);
             if (index !== -1) {
+                const fechaAnterior = alumnos[index].fechaPago;
+                console.log('🔄 ACTUALIZANDO ALUMNO:');
+                console.log('   - ID:', editingAlumno);
+                console.log('   - Nombre:', formData.nombre);
+                console.log('   - Fecha ANTERIOR:', fechaAnterior);
+                console.log('   - Fecha NUEVA:', formData.fechaPago);
+                
                 formData.id = editingAlumno; // Mantener el ID original
-                alumnos[index] = formData;
+                alumnos[index] = { ...formData }; // Crear copia
                 
                 // Guardar en MongoDB/Supabase
                 try {
                     if (window.MONGO && MONGO.isConfigured()) {
+                        console.log('💾 Guardando en MongoDB...');
                         await MONGO.upsertAlumno(formData);
+                        console.log('✅ Guardado exitoso en MongoDB');
                     } else if (window.SUPA && SUPA.isConfigured()) {
+                        console.log('💾 Guardando en Supabase...');
                         await SUPA.upsertAlumno(formData);
+                        console.log('✅ Guardado exitoso en Supabase');
                     }
                 } catch (e) {
-                    // Error silenciado
+                    console.error('❌ ERROR al guardar:', e);
                 }
+            } else {
+                console.error('❌ No se encontró el alumno con ID:', editingAlumno);
             }
         } else {
             // Agregar nuevo alumno - solo una vez
