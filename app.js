@@ -651,6 +651,18 @@ function showQR(id) {
     const alumno = alumnos.find(a => a.id === id);
     if (!alumno) return;
     
+    const estado = calcularEstado(alumno);
+    let ultimoPagoTexto = '---';
+    if (alumno.fechaPago) {
+        const fechaUltimoPago = new Date(alumno.fechaPago);
+        if (!isNaN(fechaUltimoPago.getTime())) {
+            ultimoPagoTexto = fechaUltimoPago.toLocaleDateString('es-ES');
+        }
+    }
+    const montoTexto = alumno.monto ? `$${parseFloat(alumno.monto).toFixed(2)}` : '---';
+    const proximoTexto = estado?.proximo || '---';
+    const diasTexto = typeof estado?.texto === 'string' ? estado.texto : '';
+    
     document.getElementById('qrNombre').textContent = `QR - ${alumno.nombre}`;
     
     const qrContainer = document.getElementById('qrcode');
@@ -690,6 +702,10 @@ function showQR(id) {
     infoDiv.innerHTML = `
         <div style="margin-bottom: 0.5rem;"><strong>ID:</strong> ${alumno.id}</div>
         <div style="margin-bottom: 0.5rem;"><strong>Nombre:</strong> ${alumno.nombre}</div>
+        <div style="margin-bottom: 0.5rem;"><strong>Último pago:</strong> ${ultimoPagoTexto}</div>
+        <div style="margin-bottom: 0.5rem;"><strong>Próximo pago:</strong> ${proximoTexto}</div>
+        <div style="margin-bottom: 0.5rem;"><strong>Monto:</strong> ${montoTexto}</div>
+        <div style="margin-bottom: 0.5rem;"><strong>Estado:</strong> ${diasTexto}</div>
         <div style="margin-bottom: 0.5rem; color: #dc2626; font-size: 0.8rem;"><strong>🔗 URL Directa:</strong></div>
         <div style="margin-bottom: 0.5rem; color: #666; font-size: 0.7rem; word-break: break-all; background: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem;">${studentUrl}</div>
         <div style="color: #666; font-size: 0.8rem;">Generado: ${new Date().toLocaleString()}</div>
