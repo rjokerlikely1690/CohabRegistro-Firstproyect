@@ -98,13 +98,21 @@ function calcularEstado(alumno) {
     // Obtener la fecha de último pago del alumno (la que el usuario ingresó)
     // Asegurar que la fecha esté en formato correcto (YYYY-MM-DD o Date)
     let fechaPago;
-    if (typeof alumno.fechaPago === 'string') {
+    if (!alumno.fechaPago) {
+        console.warn('⚠️ Alumno sin fechaPago:', alumno.nombre, 'Usando fecha de hoy');
+        fechaPago = new Date();
+    } else if (typeof alumno.fechaPago === 'string') {
         // Si es string, parsear como fecha
         fechaPago = new Date(alumno.fechaPago);
+        if (isNaN(fechaPago.getTime())) {
+            console.warn('⚠️ Fecha inválida en string:', alumno.fechaPago, 'Usando fecha de hoy');
+            fechaPago = new Date();
+        }
     } else if (alumno.fechaPago instanceof Date) {
         fechaPago = new Date(alumno.fechaPago);
     } else {
         // Fallback: usar fecha de hoy si no hay fecha válida
+        console.warn('⚠️ Tipo de fecha desconocido:', typeof alumno.fechaPago, 'Usando fecha de hoy');
         fechaPago = new Date();
     }
     fechaPago.setHours(0, 0, 0, 0);
@@ -386,6 +394,7 @@ async function saveAlumno(event) {
         };
         
         console.log('💾 Guardando alumno - Fecha ingresada:', fechaPagoValue, 'Día de pago:', diaPagoGlobal);
+        console.log('💾 Modo:', isEditing ? 'EDITANDO' : 'AGREGANDO', 'ID:', editingAlumno);
         
         // Validaciones
         if (!formData.nombre) {
@@ -490,13 +499,20 @@ async function saveAlumno(event) {
                 if (Array.isArray(alumnosActualizados) && alumnosActualizados.length > 0) {
                     alumnos = alumnosActualizados;
                     localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                    console.log('✅ Sincronizado desde MongoDB - Total alumnos:', alumnos.length);
+                    // Verificar que la fecha se guardó correctamente
+                    const alumnoGuardado = alumnos.find(a => a.id === formData.id || a.nombre === formData.nombre);
+                    if (alumnoGuardado) {
+                        console.log('✅ Alumno guardado encontrado:', alumnoGuardado.nombre, 'Fecha:', alumnoGuardado.fechaPago);
+                    }
                 }
             }
         } catch (e) {
-            // Silenciar error de sincronización
+            console.error('❌ Error al sincronizar:', e);
         }
         
         // Recargar vista con los datos actualizados
+        console.log('🔄 Recargando vista de alumnos...');
         await loadAlumnos();
         closeModal();
 
@@ -525,12 +541,34 @@ function editAlumno(id) {
     
     editingAlumno = id;
     
+    console.log('✏️ Editando alumno:', alumno.nombre, 'Fecha actual:', alumno.fechaPago);
+    
     document.getElementById('modalTitle').textContent = 'Editar Alumno';
     document.getElementById('alumnoId').value = alumno.id;
     document.getElementById('nombre').value = alumno.nombre;
     document.getElementById('email').value = alumno.email || '';
     document.getElementById('telefono').value = alumno.telefono || '';
-    document.getElementById('fechaPago').value = alumno.fechaPago;
+    
+    // Asegurar que la fecha esté en formato YYYY-MM-DD para el input type="date"
+    let fechaParaInput = alumno.fechaPago;
+    if (fechaParaInput) {
+        // Si es un string en formato ISO o similar, usarlo directamente
+        if (typeof fechaParaInput === 'string') {
+            // Si ya está en formato YYYY-MM-DD, usarlo
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaParaInput)) {
+                // Si no está en formato YYYY-MM-DD, convertir
+                const fechaObj = new Date(fechaParaInput);
+                if (!isNaN(fechaObj.getTime())) {
+                    fechaParaInput = fechaObj.toISOString().split('T')[0];
+                }
+            }
+        } else if (fechaParaInput instanceof Date) {
+            fechaParaInput = fechaParaInput.toISOString().split('T')[0];
+        }
+    }
+    
+    console.log('📅 Fecha para input:', fechaParaInput);
+    document.getElementById('fechaPago').value = fechaParaInput || '';
     document.getElementById('monto').value = alumno.monto;
 
     // Establecer el día de pago del alumno para edición
