@@ -1,6 +1,7 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 13 - Lógica simplificada: fecha del usuario se usa directamente para calcular días restantes
+// VERSIÓN: 14 - Lógica simplificada + logs de debug mejorados
+console.log('✅ App.js cargado - Versión 14 - Logs de debug activos');
 
 let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let editingAlumno = null;
