@@ -7,6 +7,48 @@ let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let editingAlumno = null;
 let diaPagoGlobal = parseInt(localStorage.getItem('diaPagoGlobal')) || 30;
 
+function parseFechaLocal(valor) {
+    if (!valor) {
+        return null;
+    }
+
+    if (valor instanceof Date) {
+        return new Date(valor.getFullYear(), valor.getMonth(), valor.getDate());
+    }
+
+    if (typeof valor === 'string') {
+        const match = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (match) {
+            const year = Number(match[1]);
+            const month = Number(match[2]) - 1;
+            const day = Number(match[3]);
+            return new Date(year, month, day);
+        }
+        const parsed = new Date(valor);
+        if (!isNaN(parsed.getTime())) {
+            return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+        }
+        return null;
+    }
+
+    const parsed = new Date(valor);
+    if (!isNaN(parsed.getTime())) {
+        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    }
+
+    return null;
+}
+
+function formatFechaLocal(fecha) {
+    if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
+        return '---';
+    }
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const anio = fecha.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+}
+
 // Obtener URL base del servidor para generar enlaces que funcionen en móviles
 function getServerBaseUrl() {
     let configured = localStorage.getItem('serverBaseUrl');
@@ -97,22 +139,9 @@ function calcularEstado(alumno) {
     
     // Obtener la fecha de último pago del alumno (la que el usuario ingresó)
     // Asegurar que la fecha esté en formato correcto (YYYY-MM-DD o Date)
-    let fechaPago;
-    if (!alumno.fechaPago) {
-        console.warn('⚠️ Alumno sin fechaPago:', alumno.nombre, 'Usando fecha de hoy');
-        fechaPago = new Date();
-    } else if (typeof alumno.fechaPago === 'string') {
-        // Si es string, parsear como fecha
-        fechaPago = new Date(alumno.fechaPago);
-        if (isNaN(fechaPago.getTime())) {
-            console.warn('⚠️ Fecha inválida en string:', alumno.fechaPago, 'Usando fecha de hoy');
-            fechaPago = new Date();
-        }
-    } else if (alumno.fechaPago instanceof Date) {
-        fechaPago = new Date(alumno.fechaPago);
-    } else {
-        // Fallback: usar fecha de hoy si no hay fecha válida
-        console.warn('⚠️ Tipo de fecha desconocido:', typeof alumno.fechaPago, 'Usando fecha de hoy');
+    let fechaPago = parseFechaLocal(alumno.fechaPago);
+    if (!fechaPago) {
+        console.warn('⚠️ Fecha de pago inválida para', alumno.nombre, 'valor recibido:', alumno.fechaPago);
         fechaPago = new Date();
     }
     fechaPago.setHours(0, 0, 0, 0);
@@ -161,7 +190,7 @@ function calcularEstado(alumno) {
     // Debug detallado
     console.log(`📅 CALCULANDO ESTADO - ${alumno.nombre || 'Alumno'}:`);
     console.log(`   - Fecha pago ingresada: ${alumno.fechaPago}`);
-    console.log(`   - Fecha pago parseada: ${fechaPago.toISOString().split('T')[0]}`);
+    console.log(`   - Fecha pago normalizada: ${formatFechaLocal(fechaPago)}`);
     console.log(`   - Día de pago: ${diaPagoAlumno}`);
     console.log(`   - Vencimiento mes actual: ${vencimientoMesActual.toLocaleDateString('es-ES')}`);
     console.log(`   - Mes efectivo del pago: ${mesVencimientoPago.toLocaleDateString('es-ES')}`);
@@ -237,11 +266,9 @@ async function loadAlumnos() {
         const estado = calcularEstado(alumno);
 
         let ultimoPagoTexto = '---';
-        if (alumno.fechaPago) {
-            const fechaUltimoPago = new Date(alumno.fechaPago);
-            if (!isNaN(fechaUltimoPago.getTime())) {
-                ultimoPagoTexto = fechaUltimoPago.toLocaleDateString('es-ES');
-            }
+        const fechaUltimoPago = parseFechaLocal(alumno.fechaPago);
+        if (fechaUltimoPago) {
+            ultimoPagoTexto = formatFechaLocal(fechaUltimoPago);
         }
         const card = document.createElement('div');
         card.className = `alumno-card estado-${estado.clase}`;
@@ -652,13 +679,8 @@ function showQR(id) {
     if (!alumno) return;
     
     const estado = calcularEstado(alumno);
-    let ultimoPagoTexto = '---';
-    if (alumno.fechaPago) {
-        const fechaUltimoPago = new Date(alumno.fechaPago);
-        if (!isNaN(fechaUltimoPago.getTime())) {
-            ultimoPagoTexto = fechaUltimoPago.toLocaleDateString('es-ES');
-        }
-    }
+    const fechaUltimoPago = parseFechaLocal(alumno.fechaPago);
+    const ultimoPagoTexto = formatFechaLocal(fechaUltimoPago);
     const montoTexto = alumno.monto ? `$${parseFloat(alumno.monto).toFixed(2)}` : '---';
     const proximoTexto = estado?.proximo || '---';
     const diasTexto = typeof estado?.texto === 'string' ? estado.texto : '';
