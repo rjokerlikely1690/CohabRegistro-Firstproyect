@@ -1,6 +1,6 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 12 - Cálculo corregido de mes de pago
+// VERSIÓN: 13 - Lógica simplificada: fecha del usuario se usa directamente para calcular días restantes
 
 let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
 let editingAlumno = null;
@@ -88,62 +88,46 @@ function generateId() {
 }
 
 // Calcular estado de pago
-// LÓGICA CORREGIDA: Los pagos realizados después del día de vencimiento corresponden al mes anterior
-// Ejemplo: Si vence el 30/31 de octubre y pagas el 2 de noviembre, ese pago es de OCTUBRE
+// LÓGICA SIMPLIFICADA: Los planes siempre terminan el día 30 o 31
+// Si pagaste cualquier día del mes X, el próximo vencimiento es el 30/31 del mes X+1
+// Ejemplo: Si pagaste el 19 de noviembre, el próximo vencimiento es el 30/31 de diciembre
 function calcularEstado(alumno) {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0); // Normalizar a medianoche
     
-    const fechaPago = new Date(alumno.fechaPago);
+    // Obtener la fecha de último pago del alumno (la que el usuario ingresó)
+    // Asegurar que la fecha esté en formato correcto (YYYY-MM-DD o Date)
+    let fechaPago;
+    if (typeof alumno.fechaPago === 'string') {
+        // Si es string, parsear como fecha
+        fechaPago = new Date(alumno.fechaPago);
+    } else if (alumno.fechaPago instanceof Date) {
+        fechaPago = new Date(alumno.fechaPago);
+    } else {
+        // Fallback: usar fecha de hoy si no hay fecha válida
+        fechaPago = new Date();
+    }
     fechaPago.setHours(0, 0, 0, 0);
     
-    // Usar el día de pago del alumno, no el global
+    // Usar el día de pago del alumno (30 o 31)
     const diaPagoAlumno = parseInt(alumno.diaPago) || diaPagoGlobal;
     
+    // LÓGICA SIMPLE: El próximo vencimiento es el día 30/31 del mes SIGUIENTE a la fecha de pago
+    // Si pagaste el 19 de noviembre, el próximo vencimiento es el 30/31 de diciembre
+    // Si pagaste el 3 de noviembre, el próximo vencimiento es el 30/31 de diciembre
+    // Si pagaste el 30 de noviembre, el próximo vencimiento es el 30/31 de diciembre
+    let proximoPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth() + 1, diaPagoAlumno);
     
-    // PASO 1: Determinar a qué mes corresponde realmente el último pago
-    // Si pagaste el 2 de noviembre y tu vencimiento es el 30/31, ese pago corresponde a OCTUBRE
-    
-    // Calcular el día de vencimiento del mes de la fecha de pago
-    let vencimientoMesActual = new Date(fechaPago.getFullYear(), fechaPago.getMonth(), diaPagoAlumno);
-    
-    // Si el día no existe (ej: 31 en febrero), ajustar al último día del mes
-    if (vencimientoMesActual.getDate() !== diaPagoAlumno) {
-        vencimientoMesActual = new Date(fechaPago.getFullYear(), fechaPago.getMonth() + 1, 0); // Último día del mes
-    }
-    
-    // Determinar el mes efectivo del pago
-    let mesVencimientoPago;
-    
-    // Si la fecha de pago es ANTES del día de vencimiento del mes, el pago corresponde al mes ANTERIOR
-    // Ejemplo: Si pagaste el 2 de noviembre y el vencimiento es el 30, ese pago es de octubre
-    if (fechaPago < vencimientoMesActual) {
-        // El pago corresponde al mes anterior
-        mesVencimientoPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth() - 1, diaPagoAlumno);
-        
-        // Si el día no existe en el mes anterior, usar el último día de ese mes
-        if (mesVencimientoPago.getDate() !== diaPagoAlumno) {
-            mesVencimientoPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth(), 0); // Último día del mes anterior
-        }
-    } else {
-        // El pago corresponde al mes de la fecha de pago
-        mesVencimientoPago = new Date(vencimientoMesActual);
-    }
-    
-    // PASO 2: Calcular el próximo vencimiento
-    // El próximo vencimiento es el día 30/31 del mes SIGUIENTE al mes efectivo del pago
-    let proximoPago = new Date(mesVencimientoPago.getFullYear(), mesVencimientoPago.getMonth() + 1, diaPagoAlumno);
-    
-    // Si el día del mes no existe (ej: 31 en febrero), ajustar al último día del mes
+    // Si el día no existe en ese mes (ej: 31 en febrero), usar el último día del mes
     if (proximoPago.getDate() !== diaPagoAlumno) {
-        proximoPago = new Date(mesVencimientoPago.getFullYear(), mesVencimientoPago.getMonth() + 2, 0); // Último día del mes siguiente
+        proximoPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth() + 2, 0); // Último día del mes siguiente
     }
     
-    // PASO 3: Si el próximo vencimiento ya pasó, calcular el siguiente
+    // Si el próximo vencimiento ya pasó (es anterior a hoy), calcular el siguiente
     // Esto puede pasar si el último pago fue hace mucho tiempo
     while (proximoPago < hoy) {
         proximoPago = new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, diaPagoAlumno);
-        // Verificar nuevamente si el día existe en el nuevo mes
+        // Verificar si el día existe en el nuevo mes
         if (proximoPago.getDate() !== diaPagoAlumno) {
             proximoPago = new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, 0); // Último día del mes
         }
@@ -151,9 +135,11 @@ function calcularEstado(alumno) {
     
     proximoPago.setHours(0, 0, 0, 0);
     
-    
-    // PASO 4: Calcular días restantes
+    // Calcular días restantes
     const diasRestantes = Math.ceil((proximoPago - hoy) / (1000 * 60 * 60 * 24));
+    
+    // Debug: mostrar cálculo cuando se edita
+    console.log(`📅 ${alumno.nombre || 'Alumno'}: Fecha pago=${fechaPago.toISOString().split('T')[0]}, Próximo=${proximoPago.toLocaleDateString('es-ES')}, Días=${diasRestantes}`);
     
     if (diasRestantes < 0) {
         return {
@@ -353,21 +339,12 @@ async function saveAlumno(event) {
     }
 
     try {
-        const fechaPagoInput = document.getElementById('fechaPago').value;
-        
-        const formData = {
-            id: editingAlumno || null,
-            nombre: document.getElementById('nombre').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            telefono: document.getElementById('telefono').value.trim(),
-            fechaPago: fechaPagoInput,
-            diaPago: diaPagoGlobal, // Usar el día de pago actual (puede ser del alumno si está editando)
-            monto: parseFloat(document.getElementById('monto').value)
-        };
-        
+        // Obtener la fecha directamente del input (el usuario puede cambiarla libremente)
+        const fechaPagoInput = document.getElementById('fechaPago');
+        const fechaPagoValue = fechaPagoInput ? fechaPagoInput.value.trim() : '';
         
         // Validar que la fecha sea válida
-        if (!fechaPagoInput) {
+        if (!fechaPagoValue) {
             alert('La fecha de pago es obligatoria');
             if (submitButton) {
                 submitButton.disabled = false;
@@ -375,6 +352,40 @@ async function saveAlumno(event) {
             }
             return;
         }
+        
+        // Validar formato de fecha (YYYY-MM-DD)
+        const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!fechaRegex.test(fechaPagoValue)) {
+            alert('El formato de fecha no es válido. Use YYYY-MM-DD');
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Guardar';
+            }
+            return;
+        }
+        
+        // Validar que la fecha sea una fecha válida
+        const fechaTest = new Date(fechaPagoValue);
+        if (isNaN(fechaTest.getTime())) {
+            alert('La fecha ingresada no es válida');
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Guardar';
+            }
+            return;
+        }
+        
+        const formData = {
+            id: editingAlumno || null,
+            nombre: document.getElementById('nombre').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            telefono: document.getElementById('telefono').value.trim(),
+            fechaPago: fechaPagoValue, // Guardar exactamente la fecha que el usuario ingresó (YYYY-MM-DD)
+            diaPago: diaPagoGlobal, // Usar el día de pago actual (puede ser del alumno si está editando)
+            monto: parseFloat(document.getElementById('monto').value)
+        };
+        
+        console.log('💾 Guardando alumno - Fecha ingresada:', fechaPagoValue, 'Día de pago:', diaPagoGlobal);
         
         // Validaciones
         if (!formData.nombre) {
