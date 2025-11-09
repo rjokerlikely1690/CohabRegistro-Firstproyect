@@ -23,11 +23,13 @@ let db = null;
 const SEND_EMAILS = process.env.EMAIL_ENABLED === 'true';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'COHAB <no-reply@cohab.cl>';
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://cohabregistro-firstproyect.pages.dev/';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const USE_RESEND_API = process.env.USE_RESEND_API === 'true';
 const MAILERSEND_API_TOKEN = process.env.MAILERSEND_API_TOKEN;
 const USE_MAILERSEND_API = process.env.USE_MAILERSEND_API === 'true';
 let mailTransporter = null;
 
-if (SEND_EMAILS && !USE_MAILERSEND_API) {
+if (SEND_EMAILS && !USE_RESEND_API && !USE_MAILERSEND_API) {
     try {
         const port = Number(process.env.EMAIL_PORT || 587);
         const isSecure = port === 465;
@@ -52,6 +54,12 @@ if (SEND_EMAILS && !USE_MAILERSEND_API) {
     } catch (error) {
         console.error('❌ No se pudo inicializar el transporter de correo:', error);
         mailTransporter = null;
+    }
+} else if (SEND_EMAILS && USE_RESEND_API) {
+    if (RESEND_API_KEY) {
+        console.log('📧 Servicio de correo Resend API habilitado.');
+    } else {
+        console.warn('⚠️ USE_RESEND_API=true pero RESEND_API_KEY no está configurado.');
     }
 } else if (SEND_EMAILS && USE_MAILERSEND_API) {
     if (MAILERSEND_API_TOKEN) {
@@ -122,6 +130,60 @@ async function sendStudentEmail(alumno) {
     const qrBuffer = await generateQrBuffer(alumno);
     const alumnoUrl = buildStudentUrl(alumno);
     const qrBase64 = qrBuffer.toString('base64');
+
+    // Usar API de Resend si está configurado (más simple y sin restricciones)
+    if (USE_RESEND_API && RESEND_API_KEY) {
+        try {
+            const emailHtml = `
+                <p>Hola ${alumno.nombre},</p>
+                <p>Te enviamos tu acceso a COHAB. Con este QR o el enlace podrás consultar tus pagos en cualquier momento.</p>
+                <ul>
+                    <li><strong>Nombre:</strong> ${alumno.nombre}</li>
+                    <li><strong>Monto mensual:</strong> $${Number(alumno.monto || 0).toFixed(2)}</li>
+                    <li><strong>Enlace directo:</strong> <a href="${alumnoUrl}">${alumnoUrl}</a></li>
+                </ul>
+                <p>Escanea el código adjunto para acceder desde tu teléfono.</p>
+                <p><img src="data:image/png;base64,${qrBase64}" alt="QR Code" style="max-width: 400px;" /></p>
+                <p>Un abrazo,<br>Equipo COHAB</p>
+            `;
+
+            // Extraer email del formato "COHAB <email@domain.com>" o usar directamente
+            let fromEmail = EMAIL_FROM;
+            if (EMAIL_FROM.includes('<')) {
+                const match = EMAIL_FROM.match(/<([^>]+)>/);
+                if (match) {
+                    fromEmail = match[1];
+                }
+            }
+            fromEmail = fromEmail.replace(/^"|"$/g, '').trim();
+
+            const response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${RESEND_API_KEY}`
+                },
+                body: JSON.stringify({
+                    from: fromEmail,
+                    to: [alumno.email],
+                    subject: `Tu acceso a COHAB - ${alumno.nombre}`,
+                    html: emailHtml
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Resend API error: ${response.status} - ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log(`✅ Email enviado a ${alumno.email} vía Resend API`);
+            return;
+        } catch (error) {
+            console.error('❌ Error enviando email vía Resend API:', error.message);
+            throw error;
+        }
+    }
 
     // Usar API de MailerSend si está configurado
     if (USE_MAILERSEND_API && MAILERSEND_API_TOKEN) {
