@@ -23,11 +23,11 @@ let db = null;
 const SEND_EMAILS = process.env.EMAIL_ENABLED === 'true';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'COHAB <no-reply@cohab.cl>';
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://cohabregistro-firstproyect.pages.dev/';
-const MAILERLITE_API_TOKEN = process.env.MAILERLITE_API_TOKEN;
-const USE_MAILERLITE_API = process.env.USE_MAILERLITE_API === 'true';
+const MAILERSEND_API_TOKEN = process.env.MAILERSEND_API_TOKEN;
+const USE_MAILERSEND_API = process.env.USE_MAILERSEND_API === 'true';
 let mailTransporter = null;
 
-if (SEND_EMAILS && !USE_MAILERLITE_API) {
+if (SEND_EMAILS && !USE_MAILERSEND_API) {
     try {
         const port = Number(process.env.EMAIL_PORT || 587);
         const isSecure = port === 465;
@@ -53,11 +53,11 @@ if (SEND_EMAILS && !USE_MAILERLITE_API) {
         console.error('❌ No se pudo inicializar el transporter de correo:', error);
         mailTransporter = null;
     }
-} else if (SEND_EMAILS && USE_MAILERLITE_API) {
-    if (MAILERLITE_API_TOKEN) {
-        console.log('📧 Servicio de correo MailerLite API habilitado.');
+} else if (SEND_EMAILS && USE_MAILERSEND_API) {
+    if (MAILERSEND_API_TOKEN) {
+        console.log('📧 Servicio de correo MailerSend API habilitado.');
     } else {
-        console.warn('⚠️ USE_MAILERLITE_API=true pero MAILERLITE_API_TOKEN no está configurado.');
+        console.warn('⚠️ USE_MAILERSEND_API=true pero MAILERSEND_API_TOKEN no está configurado.');
     }
 }
 
@@ -123,8 +123,8 @@ async function sendStudentEmail(alumno) {
     const alumnoUrl = buildStudentUrl(alumno);
     const qrBase64 = qrBuffer.toString('base64');
 
-    // Usar API de MailerLite si está configurado
-    if (USE_MAILERLITE_API && MAILERLITE_API_TOKEN) {
+    // Usar API de MailerSend si está configurado
+    if (USE_MAILERSEND_API && MAILERSEND_API_TOKEN) {
         try {
             const emailHtml = `
                 <p>Hola ${alumno.nombre},</p>
@@ -139,30 +139,43 @@ async function sendStudentEmail(alumno) {
                 <p>Un abrazo,<br>Equipo COHAB</p>
             `;
 
-            const response = await fetch('https://connect.mailerlite.com/api/emails', {
+            // Extraer email del formato "COHAB <email@domain.com>" o usar directamente
+            const fromEmail = EMAIL_FROM.includes('<') 
+                ? EMAIL_FROM.match(/<([^>]+)>/)[1] 
+                : EMAIL_FROM.replace(/^"|"$/g, '');
+
+            const response = await fetch('https://api.mailersend.com/v1/email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${MAILERLITE_API_TOKEN}`
+                    'Authorization': `Bearer ${MAILERSEND_API_TOKEN}`
                 },
                 body: JSON.stringify({
+                    from: {
+                        email: fromEmail,
+                        name: 'COHAB'
+                    },
+                    to: [
+                        {
+                            email: alumno.email,
+                            name: alumno.nombre
+                        }
+                    ],
                     subject: `Tu acceso a COHAB - ${alumno.nombre}`,
-                    from: EMAIL_FROM,
-                    to: alumno.email,
                     html: emailHtml
                 })
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`MailerLite API error: ${response.status} - ${errorText}`);
+                throw new Error(`MailerSend API error: ${response.status} - ${errorText}`);
             }
 
-            console.log(`✅ Email enviado a ${alumno.email} vía MailerLite API`);
+            const result = await response.json();
+            console.log(`✅ Email enviado a ${alumno.email} vía MailerSend API`);
             return;
         } catch (error) {
-            console.error('❌ Error enviando email vía MailerLite API:', error.message);
+            console.error('❌ Error enviando email vía MailerSend API:', error.message);
             throw error;
         }
     }
