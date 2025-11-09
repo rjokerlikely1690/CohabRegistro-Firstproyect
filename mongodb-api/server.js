@@ -23,23 +23,41 @@ let db = null;
 const SEND_EMAILS = process.env.EMAIL_ENABLED === 'true';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'COHAB <no-reply@cohab.cl>';
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://cohabregistro-firstproyect.pages.dev/';
+const MAILERLITE_API_TOKEN = process.env.MAILERLITE_API_TOKEN;
+const USE_MAILERLITE_API = process.env.USE_MAILERLITE_API === 'true';
 let mailTransporter = null;
 
-if (SEND_EMAILS) {
+if (SEND_EMAILS && !USE_MAILERLITE_API) {
     try {
+        const port = Number(process.env.EMAIL_PORT || 587);
+        const isSecure = port === 465;
+        
         mailTransporter = nodemailer.createTransport({
             host: process.env.EMAIL_HOST,
-            port: Number(process.env.EMAIL_PORT || 465),
-            secure: Number(process.env.EMAIL_PORT || 465) === 465,
+            port: port,
+            secure: isSecure,
+            requireTLS: !isSecure && port === 587,
+            tls: {
+                rejectUnauthorized: false
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
             }
         });
-        console.log('📧 Servicio de correo habilitado.');
+        console.log(`📧 Servicio de correo SMTP habilitado. Host: ${process.env.EMAIL_HOST}, Port: ${port}`);
     } catch (error) {
         console.error('❌ No se pudo inicializar el transporter de correo:', error);
         mailTransporter = null;
+    }
+} else if (SEND_EMAILS && USE_MAILERLITE_API) {
+    if (MAILERLITE_API_TOKEN) {
+        console.log('📧 Servicio de correo MailerLite API habilitado.');
+    } else {
+        console.warn('⚠️ USE_MAILERLITE_API=true pero MAILERLITE_API_TOKEN no está configurado.');
     }
 }
 
@@ -96,10 +114,6 @@ async function sendStudentEmail(alumno) {
     if (!SEND_EMAILS) {
         return;
     }
-    if (!mailTransporter) {
-        console.warn('⚠️ Servicio de correo no configurado, omitiendo envío.');
-        return;
-    }
     if (!alumno.email) {
         console.warn('⚠️ Alumno sin email, no se enviará el QR.');
         return;
@@ -107,6 +121,57 @@ async function sendStudentEmail(alumno) {
 
     const qrBuffer = await generateQrBuffer(alumno);
     const alumnoUrl = buildStudentUrl(alumno);
+    const qrBase64 = qrBuffer.toString('base64');
+
+    // Usar API de MailerLite si está configurado
+    if (USE_MAILERLITE_API && MAILERLITE_API_TOKEN) {
+        try {
+            const emailHtml = `
+                <p>Hola ${alumno.nombre},</p>
+                <p>Te enviamos tu acceso a COHAB. Con este QR o el enlace podrás consultar tus pagos en cualquier momento.</p>
+                <ul>
+                    <li><strong>Nombre:</strong> ${alumno.nombre}</li>
+                    <li><strong>Monto mensual:</strong> $${Number(alumno.monto || 0).toFixed(2)}</li>
+                    <li><strong>Enlace directo:</strong> <a href="${alumnoUrl}">${alumnoUrl}</a></li>
+                </ul>
+                <p>Escanea el código adjunto para acceder desde tu teléfono.</p>
+                <p><img src="data:image/png;base64,${qrBase64}" alt="QR Code" style="max-width: 400px;" /></p>
+                <p>Un abrazo,<br>Equipo COHAB</p>
+            `;
+
+            const response = await fetch('https://connect.mailerlite.com/api/emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${MAILERLITE_API_TOKEN}`
+                },
+                body: JSON.stringify({
+                    subject: `Tu acceso a COHAB - ${alumno.nombre}`,
+                    from: EMAIL_FROM,
+                    to: alumno.email,
+                    html: emailHtml
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`MailerLite API error: ${response.status} - ${errorText}`);
+            }
+
+            console.log(`✅ Email enviado a ${alumno.email} vía MailerLite API`);
+            return;
+        } catch (error) {
+            console.error('❌ Error enviando email vía MailerLite API:', error.message);
+            throw error;
+        }
+    }
+
+    // Fallback a SMTP si está configurado
+    if (!mailTransporter) {
+        console.warn('⚠️ Servicio de correo no configurado, omitiendo envío.');
+        return;
+    }
 
     await mailTransporter.sendMail({
         from: EMAIL_FROM,
