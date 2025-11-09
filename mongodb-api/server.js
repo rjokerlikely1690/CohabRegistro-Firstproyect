@@ -140,9 +140,17 @@ async function sendStudentEmail(alumno) {
             `;
 
             // Extraer email del formato "COHAB <email@domain.com>" o usar directamente
-            const fromEmail = EMAIL_FROM.includes('<') 
-                ? EMAIL_FROM.match(/<([^>]+)>/)[1] 
-                : EMAIL_FROM.replace(/^"|"$/g, '');
+            let fromEmail = EMAIL_FROM;
+            if (EMAIL_FROM.includes('<')) {
+                const match = EMAIL_FROM.match(/<([^>]+)>/);
+                if (match) {
+                    fromEmail = match[1];
+                }
+            }
+            // Limpiar comillas si las hay
+            fromEmail = fromEmail.replace(/^"|"$/g, '').trim();
+            
+            console.log(`📧 Intentando enviar email desde: ${fromEmail} a: ${alumno.email}`);
 
             const response = await fetch('https://api.mailersend.com/v1/email', {
                 method: 'POST',
