@@ -19,183 +19,315 @@
     <link rel="icon" type="image/png" href="logo_cohab.png">
     <link rel="apple-touch-icon" href="logo_cohab.png">
     
-    <link rel="stylesheet" href="styles.css">
     <style>
-        .login-container {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
             padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
         }
         
-        .login-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 3rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            max-width: 500px;
+        /* Efecto de fondo animado */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+            animation: pulse 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .login-container {
             width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Panel izquierdo - Logo y bienvenida */
+        .welcome-panel {
+            color: white;
             text-align: center;
         }
         
         .logo-container {
             margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out;
         }
         
         .logo-container img {
-            max-width: 200px;
+            max-width: 300px;
             height: auto;
+            filter: drop-shadow(0 10px 30px rgba(220, 38, 38, 0.3));
+            animation: float 3s ease-in-out infinite;
         }
         
-        .role-selector {
-            margin: 2rem 0;
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .welcome-panel h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        
+        .welcome-panel .subtitle {
+            font-size: 1.5rem;
+            color: #dc2626;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        
+        .welcome-panel .description {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+            max-width: 500px;
+            margin: 0 auto;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+        
+        /* Panel derecho - Accesos */
+        .access-panel {
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .role-selector h3 {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
         }
         
         .role-button {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
             width: 100%;
             padding: 1.5rem;
             margin: 1rem 0;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 1.2rem;
-            font-weight: bold;
+            border: 2px solid transparent;
+            border-radius: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             text-decoration: none;
             color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .role-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .role-button:hover::before {
+            left: 100%;
+        }
+        
+        .role-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .role-button:active {
+            transform: translateY(-1px);
         }
         
         .role-admin {
             background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-color: rgba(220, 38, 38, 0.5);
         }
         
         .role-admin:hover {
             background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
-            transform: translateY(-2px);
+            border-color: #dc2626;
         }
         
         .role-user {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-color: rgba(16, 185, 129, 0.5);
         }
         
         .role-user:hover {
             background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            transform: translateY(-2px);
+            border-color: #10b981;
+        }
+        
+        .role-management {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+        
+        .role-management:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            border-color: #6366f1;
+        }
+        
+        .role-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .role-content {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .role-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
         }
         
         .role-description {
             font-size: 0.9rem;
-            color: #666;
-            margin-top: 0.5rem;
+            opacity: 0.9;
+            font-weight: 400;
         }
         
-        .admin-features {
-            background: #f3f4f6;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            margin-top: 2rem;
-            text-align: left;
+        /* Responsive */
+        @media (max-width: 968px) {
+            .login-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .welcome-panel h1 {
+                font-size: 2rem;
+            }
+            
+            .welcome-panel .subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .logo-container img {
+                max-width: 200px;
+            }
         }
         
-        .admin-features h4 {
-            color: #dc2626;
-            margin-bottom: 1rem;
-        }
-        
-        .admin-features ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .admin-features li {
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .admin-features li:last-child {
-            border-bottom: none;
-        }
-        
-        .user-features {
-            background: #f0fdf4;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            margin-top: 2rem;
-            text-align: left;
-        }
-        
-        .user-features h4 {
-            color: #10b981;
-            margin-bottom: 1rem;
-        }
-        
-        .user-features ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .user-features li {
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .user-features li:last-child {
-            border-bottom: none;
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .role-button {
+                padding: 1.2rem;
+            }
+            
+            .role-title {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-card">
+        <!-- Panel izquierdo - Bienvenida -->
+        <div class="welcome-panel">
             <div class="logo-container">
                 <img src="logo_cohab.svg" alt="Academia COHAB" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
             </div>
-            
-            <h1>Sistema de Control de Mensualidades</h1>
+            <h1>Sistema de Control</h1>
             <p class="subtitle">Academia COHAB</p>
-            
-            <div class="role-selector">
-                <h3>Selecciona tu tipo de acceso:</h3>
-                
-                <a href="admin.html" class="role-button role-admin">
-                    👨‍💼 ACCESO ADMINISTRADOR
-                    <div class="role-description">Gestión completa del sistema</div>
-                </a>
-                
-                <a href="usuario.html" class="role-button role-user">
-                    👤 ACCESO USUARIO
-                    <div class="role-description">Verificar estado de pago</div>
-                </a>
-                
-                <a href="index.html" class="role-button" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
-                    👥 GESTIÓN DE ALUMNOS
-                    <div class="role-description">Agregar, editar y gestionar alumnos</div>
-                </a>
-            </div>
-            
-            <div class="admin-features">
-                <h4>🔧 Funciones de Administrador:</h4>
-                <ul>
-                    <li>✅ Gestión completa de alumnos</li>
-                    <li>✅ Generación de códigos QR</li>
-                    <li>✅ Control de pagos y estados</li>
-                    <li>✅ Sistema de alertas de emergencia</li>
-                    <li>✅ Reportes y estadísticas</li>
-                    <li>✅ Configuración del sistema</li>
-                </ul>
-            </div>
-            
-            <div class="user-features">
-                <h4>👤 Funciones de Usuario:</h4>
-                <ul>
-                    <li>📱 Verificar estado de pago</li>
-                    <li>🔍 Consultar información personal</li>
-                    <li>📅 Ver fechas de vencimiento</li>
-                    <li>💳 Verificar historial de pagos</li>
-                </ul>
+            <p class="description">
+                Gestiona tus mensualidades de forma eficiente y profesional. 
+                Accede a tu información de pagos, genera códigos QR y administra 
+                tu academia con herramientas diseñadas para ti.
+            </p>
+        </div>
+        
+        <!-- Panel derecho - Accesos -->
+        <div class="access-panel">
+            <div class="login-card">
+                <div class="role-selector">
+                    <h3>Selecciona tu acceso</h3>
+                    
+                    <a href="admin.html" class="role-button role-admin">
+                        <span class="role-icon">👨‍💼</span>
+                        <div class="role-content">
+                            <div class="role-title">ADMINISTRADOR</div>
+                            <div class="role-description">Gestión completa del sistema</div>
+                        </div>
+                    </a>
+                    
+                    <a href="index.html" class="role-button role-management">
+                        <span class="role-icon">👥</span>
+                        <div class="role-content">
+                            <div class="role-title">GESTIÓN DE ALUMNOS</div>
+                            <div class="role-description">Agregar, editar y gestionar alumnos</div>
+                        </div>
+                    </a>
+                    
+                    <a href="usuario.html" class="role-button role-user">
+                        <span class="role-icon">👤</span>
+                        <div class="role-content">
+                            <div class="role-title">VERIFICAR PAGO</div>
+                            <div class="role-description">Consulta tu estado de pago</div>
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -204,7 +336,15 @@
         // Guardar selección de rol en localStorage
         document.querySelectorAll('.role-button').forEach(button => {
             button.addEventListener('click', function(e) {
-                const role = this.textContent.includes('ADMIN') ? 'admin' : 'usuario';
+                const href = this.getAttribute('href');
+                let role = 'usuario';
+                
+                if (href.includes('admin')) {
+                    role = 'admin';
+                } else if (href.includes('index')) {
+                    role = 'management';
+                }
+                
                 localStorage.setItem('userRole', role);
                 localStorage.setItem('lastAccess', new Date().toISOString());
             });
@@ -222,6 +362,8 @@
             if (hoursDiff < 24) {
                 if (lastRole === 'admin') {
                     window.location.href = 'admin.html';
+                } else if (lastRole === 'management') {
+                    window.location.href = 'index.html';
                 } else {
                     window.location.href = 'usuario.html';
                 }

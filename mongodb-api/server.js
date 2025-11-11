@@ -413,10 +413,18 @@ app.patch('/alumnos/:id/pago', authMiddleware, async (req, res) => {
 app.post('/alumnos/:id/enviar-qr', authMiddleware, async (req, res) => {
     try {
         if (!SEND_EMAILS) {
-            return res.status(503).json({ error: 'Servicio de correo deshabilitado (EMAIL_ENABLED=false).' });
+            return res.status(503).json({ error: 'Servicio de correo deshabilitado (EMAIL_ENABLED=false). Configure EMAIL_ENABLED=true en las variables de entorno.' });
         }
-        if (!mailTransporter) {
-            return res.status(503).json({ error: 'Transporte de correo no configurado.' });
+        
+        // Verificar que al menos un servicio de email esté configurado
+        const hasResend = USE_RESEND_API && RESEND_API_KEY;
+        const hasMailerSend = USE_MAILERSEND_API && MAILERSEND_API_TOKEN;
+        const hasSMTP = mailTransporter !== null;
+        
+        if (!hasResend && !hasMailerSend && !hasSMTP) {
+            return res.status(503).json({ 
+                error: 'Ningún servicio de correo configurado. Configure USE_RESEND_API + RESEND_API_KEY, USE_MAILERSEND_API + MAILERSEND_API_TOKEN, o SMTP (EMAIL_HOST, EMAIL_USER, EMAIL_PASS).' 
+            });
         }
 
         const { id } = req.params;
@@ -426,15 +434,16 @@ app.post('/alumnos/:id/enviar-qr', authMiddleware, async (req, res) => {
         if (!alumno) {
             return res.status(404).json({ error: 'Alumno no encontrado' });
         }
-        if (!alumno.email) {
+        if (!alumno.email || !alumno.email.trim()) {
             return res.status(400).json({ error: 'El alumno no tiene email registrado' });
         }
 
         await sendStudentEmail(alumno);
-        res.json({ success: true });
+        console.log(`✅ QR enviado exitosamente a ${alumno.email}`);
+        res.json({ success: true, message: `QR enviado a ${alumno.email}` });
     } catch (error) {
-        console.error('Error enviando email con QR:', error);
-        res.status(500).json({ error: error.message });
+        console.error('❌ Error enviando email con QR:', error);
+        res.status(500).json({ error: error.message || 'Error al enviar el email' });
     }
 });
 
