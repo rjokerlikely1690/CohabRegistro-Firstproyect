@@ -805,27 +805,23 @@ function showQR(id) {
     qrContainer.innerHTML = '';
     
     // Crear URL directa para el alumno usando base configurada
-    let baseUrl = getServerBaseUrl();
-    console.log('🔗 URL base obtenida:', baseUrl);
+    // Prioridad: URL configurada > Cloudflare Pages por defecto
+    let baseUrl = localStorage.getItem('serverBaseUrl');
     
-    // Asegurar que la URL base sea correcta (siempre usar Cloudflare Pages si está configurado)
-    const configuredUrl = localStorage.getItem('serverBaseUrl');
-    if (configuredUrl && configuredUrl.includes('pages.dev')) {
-        baseUrl = configuredUrl.replace(/\/$/, '') + '/';
-        console.log('✅ Usando URL configurada de Cloudflare:', baseUrl);
+    // Si no hay URL configurada o no es Cloudflare Pages, usar la por defecto
+    if (!baseUrl || !baseUrl.includes('pages.dev')) {
+        baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
     }
     
-    // Asegurar base con trailing slash
-    try { 
-        if (!baseUrl.endsWith('/')) baseUrl += '/'; 
-    } catch(_) {
-        // Si hay error, usar Cloudflare Pages por defecto
-        baseUrl = 'https://cohabregistro-firstproyect.pages.dev/';
-        console.warn('⚠️ Error con URL base, usando Cloudflare Pages por defecto');
-    }
+    // Limpiar la URL: remover cualquier ruta adicional y trailing slash
+    baseUrl = baseUrl.replace(/\/verificar\/.*$/, ''); // Remover /verificar/ si existe
+    baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, ''); // Remover cualquier .html
+    baseUrl = baseUrl.replace(/\/$/, ''); // Remover trailing slash
     
-    // Siempre usar formato usuario.html?id= para Cloudflare Pages
-    const studentUrl = `${baseUrl}usuario.html?id=${encodeURIComponent(alumno.id)}`;
+    // Asegurar que termine sin slash para construir la URL correctamente
+    const studentUrl = `${baseUrl}/usuario.html?id=${encodeURIComponent(alumno.id)}`;
+    
+    console.log('🔗 URL base limpia:', baseUrl);
     console.log('🔗 URL del alumno generada:', studentUrl);
     
     // Generar QR

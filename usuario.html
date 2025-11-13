@@ -588,9 +588,21 @@
                 alertBanner.style.display = 'none';
             }
             
-            // Mostrar información
+            // Construir URL completa del alumno
+            const baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
+            const studentUrl = `${baseUrl}/usuario.html?id=${alumno.id}`;
+            
+            // Mostrar información completa
             const resultInfo = document.getElementById('resultInfo');
             resultInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="label">ID</div>
+                    <div class="value" style="font-family: monospace; font-size: 0.85rem; word-break: break-all;">${alumno.id}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Nombre</div>
+                    <div class="value" style="font-weight: bold; font-size: 1.1rem;">${alumno.nombre}</div>
+                </div>
                 <div class="info-item">
                     <div class="label">Email</div>
                     <div class="value">${alumno.email || 'No especificado'}</div>
@@ -609,11 +621,15 @@
                 </div>
                 <div class="info-item">
                     <div class="label">Monto Mensual</div>
-                    <div class="value">$${parseFloat(alumno.monto).toFixed(2)}</div>
+                    <div class="value" style="font-weight: bold; color: #dc2626; font-size: 1.1rem;">$${parseFloat(alumno.monto || 0).toFixed(2)}</div>
                 </div>
                 <div class="info-item">
-                    <div class="label">${estado.diasRestantes < 0 ? 'Días Atrasado' : 'Días Restantes'}</div>
-                    <div class="value">${estado.diasRestantes < 0 ? Math.abs(estado.diasRestantes) + ' días' : estado.diasRestantes + ' días'}</div>
+                    <div class="label">Estado</div>
+                    <div class="value" style="font-weight: bold;">${estado.texto || (estado.diasRestantes < 0 ? Math.abs(estado.diasRestantes) + ' días atrasado' : estado.diasRestantes + ' días restantes')}</div>
+                </div>
+                <div class="info-item" style="border-top: 2px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem;">
+                    <div class="label" style="color: #dc2626; font-weight: bold;">🔗 URL Directa</div>
+                    <div class="value" style="font-family: monospace; font-size: 0.8rem; word-break: break-all; background: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer;" onclick="navigator.clipboard.writeText('${studentUrl}').then(() => alert('✅ URL copiada al portapapeles')).catch(() => alert('URL: ' + '${studentUrl}'))" title="Clic para copiar">${studentUrl}</div>
                 </div>
             `;
             

@@ -268,20 +268,21 @@ function scanQRCode(video, canvas) {
 
 // Construir URL de alumno estable en el mismo host
 function buildStudentUrl(alumnoId) {
-    // Base del sitio (maneja puertos y protocolo) o base configurada
-    let baseUrl = getServerBaseUrl();
+    // Prioridad: URL configurada > Cloudflare Pages por defecto
+    let baseUrl = localStorage.getItem('serverBaseUrl');
     
-    // Asegurar que la URL base sea correcta (siempre usar Cloudflare Pages si está configurado)
-    const configuredUrl = localStorage.getItem('serverBaseUrl');
-    if (configuredUrl && configuredUrl.includes('pages.dev')) {
-        baseUrl = configuredUrl.replace(/\/$/, '') + '/';
+    // Si no hay URL configurada o no es Cloudflare Pages, usar la por defecto
+    if (!baseUrl || !baseUrl.includes('pages.dev')) {
+        baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
     }
     
-    // Normalizar doble barras
-    if (!baseUrl.endsWith('/')) baseUrl += '/';
+    // Limpiar la URL: remover cualquier ruta adicional y trailing slash
+    baseUrl = baseUrl.replace(/\/verificar\/.*$/, ''); // Remover /verificar/ si existe
+    baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, ''); // Remover cualquier .html
+    baseUrl = baseUrl.replace(/\/$/, ''); // Remover trailing slash
     
     // Siempre usar formato usuario.html?id= para Cloudflare Pages (más confiable)
-    return `${baseUrl}usuario.html?id=${encodeURIComponent(alumnoId)}`;
+    return `${baseUrl}/usuario.html?id=${encodeURIComponent(alumnoId)}`;
 }
 
 // Alternar linterna si está disponible
@@ -312,31 +313,59 @@ async function switchCamera(deviceId) {
 // Decodificar QR desde imagen
 function decodeFromImage(event) {
     const file = event.target.files && event.target.files[0];
-    if (!file) return;
+    if (!file) {
+        console.warn('⚠️ No se seleccionó ningún archivo');
+        return;
+    }
+    
+    console.log('📷 Procesando imagen subida:', file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
+    
     const img = new Image();
     const reader = new FileReader();
+    
     reader.onload = function(e) {
         img.onload = function() {
+            console.log('🖼️ Imagen cargada:', img.width, 'x', img.height);
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
+            
             try {
+                console.log('🔍 Escaneando QR en la imagen...');
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+                const code = jsQR(imageData.data, imageData.width, imageData.height, { 
+                    inversionAttempts: 'dontInvert' 
+                });
+                
                 if (code && code.data) {
+                    console.log('✅ QR detectado:', code.data.substring(0, 50) + '...');
                     showToast('Código QR detectado desde imagen', 'success');
                     verificarAlumno(code.data);
                 } else {
-                    showCustomAlert('QR no detectado', 'No se pudo detectar un código QR en la imagen seleccionada.', 'warning');
+                    console.warn('⚠️ No se detectó QR en la imagen');
+                    showCustomAlert('QR no detectado', 'No se pudo detectar un código QR en la imagen seleccionada. Asegúrate de que la imagen contenga un código QR válido.', 'warning');
                 }
             } catch (err) {
-                showCustomAlert('Error', 'Ocurrió un error al procesar la imagen.', 'error');
+                console.error('❌ Error al procesar imagen:', err);
+                showCustomAlert('Error', 'Ocurrió un error al procesar la imagen: ' + err.message, 'error');
             }
         };
+        
+        img.onerror = function() {
+            console.error('❌ Error al cargar la imagen');
+            showCustomAlert('Error', 'No se pudo cargar la imagen. Verifica que sea un formato válido (JPG, PNG, etc.)', 'error');
+        };
+        
         img.src = e.target.result;
     };
+    
+    reader.onerror = function() {
+        console.error('❌ Error al leer el archivo');
+        showCustomAlert('Error', 'No se pudo leer el archivo seleccionado.', 'error');
+    };
+    
     reader.readAsDataURL(file);
 }
 
@@ -350,55 +379,144 @@ function verificarManual() {
     verificarAlumno(id);
 }
 
-// Verificar alumno
-async function verificarAlumno(id) {
-    // Recargar datos por si se actualizaron
-    // Sincronizar desde MongoDB (prioridad) o Supabase si está disponible
-    try {
-        if (window.MONGO && MONGO.isConfigured()) {
-            const nube = await MONGO.listAlumnos();
-            if (Array.isArray(nube)) {
-                alumnos = nube;
-                localStorage.setItem('alumnos', JSON.stringify(alumnos));
-            } else {
-                alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            }
-        } else if (window.SUPA && SUPA.isConfigured()) {
-            const nube = await SUPA.listAlumnos();
-            if (Array.isArray(nube)) {
-                alumnos = nube;
-                localStorage.setItem('alumnos', JSON.stringify(alumnos));
-            } else {
-                alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            }
-        } else {
-            alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-        }
-    } catch (e) {
-        alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-    }
+// Limpiar y extraer ID de una URL o string
+function extractStudentId(input) {
+    if (!input) return null;
     
-    let alumnoId = id;
+    console.log('🔍 Extrayendo ID de:', input);
     
     // Intentar parsear como JSON (para QRs mejorados)
     try {
-        const qrData = JSON.parse(id);
+        const qrData = JSON.parse(input);
         if (qrData.id) {
-            alumnoId = qrData.id;
-            console.log('QR estructurado detectado:', qrData);
+            console.log('✅ QR estructurado detectado, ID:', qrData.id);
+            return qrData.id;
         }
     } catch (e) {
-        // Si no es JSON válido, usar el ID directamente
-        console.log('QR simple detectado:', id);
+        // No es JSON, continuar con otros métodos
     }
+    
+    // Si es una URL completa, extraer el ID del parámetro
+    if (input.includes('usuario.html?id=')) {
+        const match = input.match(/[?&]id=([^&]+)/);
+        if (match && match[1]) {
+            const extractedId = decodeURIComponent(match[1]);
+            console.log('✅ ID extraído de URL:', extractedId);
+            return extractedId;
+        }
+    }
+    
+    // Si es una URL con /alumno/
+    if (input.includes('/alumno/')) {
+        const match = input.match(/\/alumno\/([^\/\?]+)/);
+        if (match && match[1]) {
+            const extractedId = decodeURIComponent(match[1]);
+            console.log('✅ ID extraído de ruta bonita:', extractedId);
+            return extractedId;
+        }
+    }
+    
+    // Si parece una URL completa, intentar extraer el último segmento
+    if (input.startsWith('http')) {
+        try {
+            const url = new URL(input);
+            const idParam = url.searchParams.get('id');
+            if (idParam) {
+                console.log('✅ ID extraído de parámetro URL:', idParam);
+                return idParam;
+            }
+            
+            // Intentar desde pathname
+            const pathMatch = url.pathname.match(/\/alumno\/([^\/]+)/);
+            if (pathMatch && pathMatch[1]) {
+                const extractedId = decodeURIComponent(pathMatch[1]);
+                console.log('✅ ID extraído de pathname:', extractedId);
+                return extractedId;
+            }
+        } catch (e) {
+            // Si no es una URL válida, continuar
+            console.warn('⚠️ Error al parsear URL:', e);
+        }
+    }
+    
+    // Si no es una URL, devolver tal cual (limpio)
+    const cleanId = input.trim();
+    console.log('✅ ID usado directamente (limpio):', cleanId);
+    return cleanId;
+}
+
+// Verificar alumno
+async function verificarAlumno(id) {
+    console.log('🔍 Iniciando verificación con input:', id);
+    
+    // Recargar datos por si se actualizaron
+    // Sincronizar desde MongoDB (prioridad) o Supabase si está disponible
+    console.log('📥 Cargando alumnos desde la nube...');
+    try {
+        if (window.MONGO && MONGO.isConfigured()) {
+            console.log('💾 Intentando cargar desde MongoDB...');
+            const nube = await MONGO.listAlumnos();
+            if (Array.isArray(nube) && nube.length > 0) {
+                alumnos = nube;
+                localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                console.log(`✅ ${alumnos.length} alumnos cargados desde MongoDB`);
+            } else {
+                alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+                console.log(`⚠️ MongoDB no devolvió datos, usando localStorage (${alumnos.length} alumnos)`);
+            }
+        } else if (window.SUPA && SUPA.isConfigured()) {
+            console.log('💾 Intentando cargar desde Supabase...');
+            const nube = await SUPA.listAlumnos();
+            if (Array.isArray(nube) && nube.length > 0) {
+                alumnos = nube;
+                localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                console.log(`✅ ${alumnos.length} alumnos cargados desde Supabase`);
+            } else {
+                alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+                console.log(`⚠️ Supabase no devolvió datos, usando localStorage (${alumnos.length} alumnos)`);
+            }
+        } else {
+            alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            console.log(`ℹ️ MongoDB/Supabase no configurado, usando localStorage (${alumnos.length} alumnos)`);
+        }
+    } catch (e) {
+        alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+        console.error('❌ Error al cargar alumnos:', e);
+        console.log(`⚠️ Usando localStorage como fallback (${alumnos.length} alumnos)`);
+    }
+    
+    // Extraer el ID real del input (puede ser URL, JSON, o ID simple)
+    const alumnoId = extractStudentId(id);
+    
+    if (!alumnoId) {
+        showCustomAlert('ID inválido', 'No se pudo extraer un ID válido del código QR. Por favor intenta nuevamente.', 'error');
+        console.error('❌ No se pudo extraer ID del input:', id);
+        return;
+    }
+    
+    console.log('🔎 Buscando alumno con ID:', alumnoId);
+    console.log('📋 IDs disponibles:', alumnos.map(a => a.id).slice(0, 5), alumnos.length > 5 ? '...' : '');
     
     const alumno = alumnos.find(a => a.id === alumnoId);
     
     if (!alumno) {
-        showCustomAlert('Alumno no encontrado', `No se encontró un alumno con el ID: ${alumnoId}`, 'error');
+        console.error('❌ Alumno no encontrado');
+        console.log('ID buscado:', alumnoId);
+        console.log('Total de alumnos:', alumnos.length);
+        console.log('Primeros 5 IDs:', alumnos.slice(0, 5).map(a => a.id));
+        
+        let errorMessage = `No se encontró un alumno con el ID: ${alumnoId}`;
+        if (alumnos.length === 0) {
+            errorMessage += '\n\n⚠️ No hay alumnos cargados. Verifica la conexión a MongoDB/Supabase.';
+        } else {
+            errorMessage += `\n\nTotal de alumnos cargados: ${alumnos.length}`;
+        }
+        
+        showCustomAlert('Alumno no encontrado', errorMessage, 'error');
         return;
     }
     
+    console.log('✅ Alumno encontrado:', alumno.nombre);
     const estado = calcularEstado(alumno);
     mostrarResultado(alumno, estado);
 }
