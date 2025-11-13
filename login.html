@@ -47,8 +47,8 @@
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(220, 38, 38, 0.15) 0%, transparent 50%);
             animation: pulse 8s ease-in-out infinite;
             pointer-events: none;
         }
@@ -83,7 +83,7 @@
         .logo-container img {
             max-width: 300px;
             height: auto;
-            filter: drop-shadow(0 10px 30px rgba(220, 38, 38, 0.3));
+            filter: drop-shadow(0 10px 30px rgba(220, 38, 38, 0.4));
             animation: float 3s ease-in-out infinite;
         }
         
@@ -312,7 +312,7 @@
                         </div>
                     </a>
                     
-                    <a href="index.html" class="role-button role-management">
+                    <a href="gestion-alumnos.html" class="role-button role-management">
                         <span class="role-icon">👥</span>
                         <div class="role-content">
                             <div class="role-title">GESTIÓN DE ALUMNOS</div>
@@ -341,7 +341,7 @@
                 
                 if (href.includes('admin')) {
                     role = 'admin';
-                } else if (href.includes('index')) {
+                } else if (href.includes('gestion') || href.includes('index')) {
                     role = 'management';
                 }
                 
@@ -363,7 +363,7 @@
                 if (lastRole === 'admin') {
                     window.location.href = 'admin.html';
                 } else if (lastRole === 'management') {
-                    window.location.href = 'index.html';
+                    window.location.href = 'gestion-alumnos.html';
                 } else {
                     window.location.href = 'usuario.html';
                 }

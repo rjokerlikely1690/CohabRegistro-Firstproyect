@@ -57,22 +57,51 @@ function formatFechaLocal(fecha) {
 
 // Obtener URL base del servidor para generar enlaces que funcionen en móviles
 function getServerBaseUrl() {
+    // Prioridad 1: URL configurada manualmente
     let configured = localStorage.getItem('serverBaseUrl');
-    let base;
     if (configured && /^https?:\/\//i.test(configured)) {
-        base = configured;
-    } else {
-        // Si no está configurado y no es localhost, inicializar automáticamente
-        const isLoopback = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-        base = window.location.origin + window.location.pathname.replace('index.html', '');
-        if (!isLoopback) {
-            try {
-                localStorage.setItem('serverBaseUrl', base.replace(/\/$/, ''));
-            } catch (_) {}
-        }
+        const base = configured.replace(/\/$/, '');
+        return base + '/';
     }
-    if (!base.endsWith('/')) base += '/';
-    return base;
+    
+    // Prioridad 2: Detectar Cloudflare Pages automáticamente
+    const hostname = window.location.hostname;
+    if (hostname.includes('.pages.dev')) {
+        const cloudflareUrl = `https://${hostname}`;
+        try {
+            localStorage.setItem('serverBaseUrl', cloudflareUrl);
+        } catch (_) {}
+        return cloudflareUrl + '/';
+    }
+    
+    // Prioridad 3: Detectar Netlify automáticamente
+    if (hostname.includes('.netlify.app')) {
+        const netlifyUrl = `https://${hostname}`;
+        try {
+            localStorage.setItem('serverBaseUrl', netlifyUrl);
+        } catch (_) {}
+        return netlifyUrl + '/';
+    }
+    
+    // Prioridad 4: Si no es localhost, usar la URL actual
+    const isLoopback = /^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.)/i.test(hostname);
+    if (!isLoopback) {
+        const currentUrl = window.location.origin;
+        try {
+            localStorage.setItem('serverBaseUrl', currentUrl);
+        } catch (_) {}
+        return currentUrl + '/';
+    }
+    
+    // Prioridad 5: Localhost - usar URL configurada o pedir al usuario
+    // Si estamos en localhost, intentar usar la URL configurada si existe
+    if (configured && configured.includes('pages.dev')) {
+        return configured.replace(/\/$/, '') + '/';
+    }
+    
+    // Fallback: URL local (solo para desarrollo)
+    const base = window.location.origin + window.location.pathname.replace(/[^/]*\.html$/, '').replace(/[^/]*$/, '');
+    return base.replace(/\/$/, '') + '/';
 }
 
 // Cargar datos al iniciar
@@ -350,34 +379,63 @@ async function loadAlumnos() {
 
 // Abrir modal para agregar alumno
 function openModal() {
+    console.log('🔓 Abriendo modal para agregar alumno...');
     editingAlumno = null;
 
     const modal = document.getElementById('alumnoModal');
     const form = document.getElementById('alumnoForm');
     const title = document.getElementById('modalTitle');
 
-    if (!modal || !form || !title) {
+    if (!modal) {
+        console.error('❌ No se encontró el elemento #alumnoModal');
+        alert('Error: No se encontró el formulario. Verifica que la página esté cargada correctamente.');
+        return;
+    }
+    
+    if (!form) {
+        console.error('❌ No se encontró el elemento #alumnoForm');
+        alert('Error: No se encontró el formulario. Verifica que la página esté cargada correctamente.');
+        return;
+    }
+    
+    if (!title) {
+        console.error('❌ No se encontró el elemento #modalTitle');
+        alert('Error: No se encontró el título del modal. Verifica que la página esté cargada correctamente.');
         return;
     }
 
+    console.log('✅ Elementos del modal encontrados correctamente');
+
     // Limpiar formulario
     form.reset();
-    document.getElementById('alumnoId').value = '';
+    const alumnoIdInput = document.getElementById('alumnoId');
+    if (alumnoIdInput) {
+        alumnoIdInput.value = '';
+    }
     title.textContent = 'Agregar Nuevo Alumno';
 
     // Establecer valores iniciales
-    setTodayDate();
-    updateDiaPagoButtons();
+    try {
+        setTodayDate();
+        updateDiaPagoButtons();
+        console.log('✅ Valores iniciales establecidos');
+    } catch (e) {
+        console.error('⚠️ Error al establecer valores iniciales:', e);
+    }
 
     // Mostrar modal
     modal.style.display = 'flex';
     document.body.classList.add('modal-open');
+    console.log('✅ Modal mostrado');
 
     // Enfocar primer campo
     setTimeout(() => {
         const firstInput = document.getElementById('nombre');
         if (firstInput) {
             firstInput.focus();
+            console.log('✅ Campo nombre enfocado');
+        } else {
+            console.warn('⚠️ No se encontró el campo nombre');
         }
     }, 50);
 }
@@ -529,39 +587,61 @@ async function saveAlumno(event) {
             }
         } else {
             // Agregar nuevo alumno - solo una vez
+            console.log('➕ AGREGANDO NUEVO ALUMNO...');
             let nuevoId = null;
             
             try {
                 if (window.MONGO && MONGO.isConfigured()) {
+                    console.log('💾 Intentando guardar en MongoDB...');
                     // Priorizar MongoDB - solo insert, no upsert después
                     const payload = { ...formData };
                     delete payload.id;
+                    console.log('📦 Payload a enviar:', payload);
                     const inserted = await MONGO.insertAlumnoReturningId(payload);
+                    console.log('📥 Respuesta de MongoDB:', inserted);
                     if (inserted && inserted.id) {
                         nuevoId = inserted.id;
+                        console.log('✅ ID obtenido de MongoDB:', nuevoId);
+                    } else {
+                        console.warn('⚠️ MongoDB no devolvió ID, generando uno local');
                     }
                 } else if (window.SUPA && SUPA.isConfigured()) {
+                    console.log('💾 Intentando guardar en Supabase...');
                     // Fallback a Supabase
                     const payload = { ...formData };
                     delete payload.id;
+                    console.log('📦 Payload a enviar:', payload);
                     const inserted = await SUPA.insertAlumnoReturningId(payload);
+                    console.log('📥 Respuesta de Supabase:', inserted);
                     if (inserted && inserted.id) {
                         nuevoId = inserted.id;
+                        console.log('✅ ID obtenido de Supabase:', nuevoId);
+                    } else {
+                        console.warn('⚠️ Supabase no devolvió ID, generando uno local');
                     }
+                } else {
+                    console.log('ℹ️ MongoDB/Supabase no configurado, usando almacenamiento local');
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.error('❌ Error al guardar en la nube:', e);
+                console.log('⚠️ Continuando con almacenamiento local...');
+            }
             
             // Si no se obtuvo ID de la nube, generar uno local
             if (!nuevoId) {
                 nuevoId = generateId();
+                console.log('🆔 ID generado localmente:', nuevoId);
             }
             
             formData.id = nuevoId;
             
             // Verificar que no se haya duplicado antes de agregar
             const yaExiste = alumnos.some(a => a.id === nuevoId);
-            if (!yaExiste) {
+            if (yaExiste) {
+                console.warn('⚠️ El ID ya existe, saltando duplicado');
+            } else {
                 alumnos.push(formData);
+                console.log('✅ Alumno agregado a la lista local. Total:', alumnos.length);
             }
         }
         
@@ -614,7 +694,23 @@ async function saveAlumno(event) {
         }
 
     } catch (error) {
-        alert('Error al guardar el alumno: ' + error.message);
+        console.error('❌ ERROR completo al guardar alumno:', error);
+        console.error('❌ Stack trace:', error.stack);
+        
+        let errorMessage = 'Error al guardar el alumno: ' + error.message;
+        
+        // Mensajes más específicos según el tipo de error
+        if (error.message.includes('fetch')) {
+            errorMessage = '❌ Error de conexión. Verifica que MongoDB/Supabase esté configurado correctamente.';
+        } else if (error.message.includes('network')) {
+            errorMessage = '❌ Error de red. Verifica tu conexión a internet.';
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+            errorMessage = '❌ Error de autenticación. Verifica las credenciales de MongoDB/Supabase.';
+        } else if (error.message.includes('500')) {
+            errorMessage = '❌ Error del servidor. Verifica que el backend esté funcionando.';
+        }
+        
+        alert(errorMessage + '\n\nRevisa la consola del navegador (F12) para más detalles.');
     } finally {
         if (submitButton) {
             submitButton.disabled = false;
@@ -710,13 +806,27 @@ function showQR(id) {
     
     // Crear URL directa para el alumno usando base configurada
     let baseUrl = getServerBaseUrl();
-    // Usar URLs "bonitas" en Netlify o si el usuario lo activó
-    const usePretty = (localStorage.getItem('usePrettyUrls') === '1') || (/\.netlify\.app$/i.test(window.location.hostname));
+    console.log('🔗 URL base obtenida:', baseUrl);
+    
+    // Asegurar que la URL base sea correcta (siempre usar Cloudflare Pages si está configurado)
+    const configuredUrl = localStorage.getItem('serverBaseUrl');
+    if (configuredUrl && configuredUrl.includes('pages.dev')) {
+        baseUrl = configuredUrl.replace(/\/$/, '') + '/';
+        console.log('✅ Usando URL configurada de Cloudflare:', baseUrl);
+    }
+    
     // Asegurar base con trailing slash
-    try { if (!baseUrl.endsWith('/')) baseUrl += '/'; } catch(_) {}
-    const studentUrl = usePretty
-        ? `${baseUrl}alumno/${alumno.id}`
-        : `${baseUrl}usuario.html?id=${alumno.id}`;
+    try { 
+        if (!baseUrl.endsWith('/')) baseUrl += '/'; 
+    } catch(_) {
+        // Si hay error, usar Cloudflare Pages por defecto
+        baseUrl = 'https://cohabregistro-firstproyect.pages.dev/';
+        console.warn('⚠️ Error con URL base, usando Cloudflare Pages por defecto');
+    }
+    
+    // Siempre usar formato usuario.html?id= para Cloudflare Pages
+    const studentUrl = `${baseUrl}usuario.html?id=${encodeURIComponent(alumno.id)}`;
+    console.log('🔗 URL del alumno generada:', studentUrl);
     
     // Generar QR
     new QRCode(qrContainer, {
@@ -747,8 +857,9 @@ function showQR(id) {
         <div style="margin-bottom: 0.5rem;"><strong>Monto:</strong> ${montoTexto}</div>
         <div style="margin-bottom: 0.5rem;"><strong>Estado:</strong> ${diasTexto}</div>
         <div style="margin-bottom: 0.5rem; color: #dc2626; font-size: 0.8rem;"><strong>🔗 URL Directa:</strong></div>
-        <div style="margin-bottom: 0.5rem; color: #666; font-size: 0.7rem; word-break: break-all; background: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem;">${studentUrl}</div>
-        <div style="color: #666; font-size: 0.8rem;">Generado: ${new Date().toLocaleString()}</div>
+        <div style="margin-bottom: 0.5rem; color: #666; font-size: 0.7rem; word-break: break-all; background: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer;" onclick="navigator.clipboard.writeText('${studentUrl}').then(() => alert('✅ URL copiada al portapapeles')).catch(() => alert('URL: ' + '${studentUrl}'))" title="Clic para copiar">${studentUrl}</div>
+        <button onclick="navigator.clipboard.writeText('${studentUrl}').then(() => alert('✅ URL copiada al portapapeles')).catch(() => alert('URL: ' + '${studentUrl}'))" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; margin-top: 0.5rem; font-size: 0.8rem;">📋 Copiar URL</button>
+        <div style="color: #666; font-size: 0.8rem; margin-top: 0.5rem;">Generado: ${new Date().toLocaleString()}</div>
     `;
     
     qrContainer.appendChild(infoDiv);

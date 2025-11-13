@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obtener IDs de Alumnos - COHAB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .alumno-item {
+            background: white;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .id-box {
+            background: #f0f0f0;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            user-select: all;
+        }
+        .id-box:hover {
+            background: #e0e0e0;
+        }
+        button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <h1>📋 IDs de Alumnos</h1>
+    <p>Haz clic en cualquier ID para copiarlo</p>
+    <div id="alumnosList"></div>
+    
+    <script src="mongodb-client.js"></script>
+    <script src="supabase-client.js"></script>
+    <script>
+        async function loadAlumnos() {
+            let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            
+            // Intentar cargar desde MongoDB/Supabase
+            try {
+                if (window.MONGO && MONGO.isConfigured()) {
+                    const alumnosCloud = await MONGO.listAlumnos();
+                    if (Array.isArray(alumnosCloud) && alumnosCloud.length > 0) {
+                        alumnos = alumnosCloud;
+                        localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                    }
+                } else if (window.SUPA && SUPA.isConfigured()) {
+                    const alumnosCloud = await SUPA.listAlumnos();
+                    if (Array.isArray(alumnosCloud) && alumnosCloud.length > 0) {
+                        alumnos = alumnosCloud;
+                        localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando desde la nube:', error);
+            }
+            
+            const container = document.getElementById('alumnosList');
+            
+            if (alumnos.length === 0) {
+                container.innerHTML = '<p>No hay alumnos registrados</p>';
+                return;
+            }
+            
+            container.innerHTML = alumnos.map(alumno => `
+                <div class="alumno-item">
+                    <div>
+                        <strong>${alumno.nombre}</strong><br>
+                        <small style="color: #666;">${alumno.email || 'Sin email'}</small>
+                    </div>
+                    <div class="id-box" onclick="copyToClipboard('${alumno.id}')" title="Clic para copiar">
+                        ${alumno.id}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ ID copiado: ' + text);
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ ID copiado: ' + text);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadAlumnos);
+    </script>
+</body>
+</html>
+

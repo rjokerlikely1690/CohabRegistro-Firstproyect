@@ -9,22 +9,50 @@ let currentDeviceId = null;
 
 // URL base del servidor para construir enlaces válidos en móviles
 function getServerBaseUrl() {
+    // Prioridad 1: URL configurada manualmente
     let configured = localStorage.getItem('serverBaseUrl');
-    let base;
     if (configured && /^https?:\/\//i.test(configured)) {
-        base = configured;
-    } else {
-        // Si no está configurado y no es localhost, inicializar automáticamente
-        const isLoopback = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-        base = window.location.origin + window.location.pathname.replace('verificar.html', '');
-        if (!isLoopback) {
-            try {
-                localStorage.setItem('serverBaseUrl', base.replace(/\/$/, ''));
-            } catch (_) {}
-        }
+        const base = configured.replace(/\/$/, '');
+        return base + '/';
     }
-    if (!base.endsWith('/')) base += '/';
-    return base;
+    
+    // Prioridad 2: Detectar Cloudflare Pages automáticamente
+    const hostname = window.location.hostname;
+    if (hostname.includes('.pages.dev')) {
+        const cloudflareUrl = `https://${hostname}`;
+        try {
+            localStorage.setItem('serverBaseUrl', cloudflareUrl);
+        } catch (_) {}
+        return cloudflareUrl + '/';
+    }
+    
+    // Prioridad 3: Detectar Netlify automáticamente
+    if (hostname.includes('.netlify.app')) {
+        const netlifyUrl = `https://${hostname}`;
+        try {
+            localStorage.setItem('serverBaseUrl', netlifyUrl);
+        } catch (_) {}
+        return netlifyUrl + '/';
+    }
+    
+    // Prioridad 4: Si no es localhost, usar la URL actual
+    const isLoopback = /^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.)/i.test(hostname);
+    if (!isLoopback) {
+        const currentUrl = window.location.origin;
+        try {
+            localStorage.setItem('serverBaseUrl', currentUrl);
+        } catch (_) {}
+        return currentUrl + '/';
+    }
+    
+    // Prioridad 5: Localhost - usar URL configurada de Cloudflare si existe
+    if (configured && configured.includes('pages.dev')) {
+        return configured.replace(/\/$/, '') + '/';
+    }
+    
+    // Fallback: URL local (solo para desarrollo)
+    const base = window.location.origin + window.location.pathname.replace(/[^/]*\.html$/, '').replace(/[^/]*$/, '');
+    return base.replace(/\/$/, '') + '/';
 }
 
 // Cargar al iniciar
@@ -242,13 +270,18 @@ function scanQRCode(video, canvas) {
 function buildStudentUrl(alumnoId) {
     // Base del sitio (maneja puertos y protocolo) o base configurada
     let baseUrl = getServerBaseUrl();
-    // Usar URLs "bonitas" en Netlify o si el usuario lo activó
-    const usePretty = (localStorage.getItem('usePrettyUrls') === '1') || (/\.netlify\.app$/i.test(window.location.hostname));
+    
+    // Asegurar que la URL base sea correcta (siempre usar Cloudflare Pages si está configurado)
+    const configuredUrl = localStorage.getItem('serverBaseUrl');
+    if (configuredUrl && configuredUrl.includes('pages.dev')) {
+        baseUrl = configuredUrl.replace(/\/$/, '') + '/';
+    }
+    
     // Normalizar doble barras
     if (!baseUrl.endsWith('/')) baseUrl += '/';
-    return usePretty
-        ? `${baseUrl}alumno/${encodeURIComponent(alumnoId)}`
-        : `${baseUrl}usuario.html?id=${encodeURIComponent(alumnoId)}`;
+    
+    // Siempre usar formato usuario.html?id= para Cloudflare Pages (más confiable)
+    return `${baseUrl}usuario.html?id=${encodeURIComponent(alumnoId)}`;
 }
 
 // Alternar linterna si está disponible

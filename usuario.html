@@ -297,22 +297,93 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="alert-system.js"></script>
+    <!-- Scripts necesarios para MongoDB/Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="mongodb-client.js"></script>
+    
     <script>
         let video, canvas, context, scanning = false;
         let currentStudent = null;
 
+        // Limpiar y extraer ID de una URL o string
+        function extractStudentId(input) {
+            if (!input) return null;
+            
+            // Si es una URL completa, extraer el ID del parámetro
+            if (input.includes('usuario.html?id=')) {
+                const match = input.match(/[?&]id=([^&]+)/);
+                if (match && match[1]) {
+                    return decodeURIComponent(match[1]);
+                }
+            }
+            
+            // Si es una URL con /alumno/
+            if (input.includes('/alumno/')) {
+                const match = input.match(/\/alumno\/([^\/\?]+)/);
+                if (match && match[1]) {
+                    return decodeURIComponent(match[1]);
+                }
+            }
+            
+            // Si parece una URL completa, intentar extraer el último segmento
+            if (input.startsWith('http')) {
+                try {
+                    const url = new URL(input);
+                    const idParam = url.searchParams.get('id');
+                    if (idParam) return idParam;
+                    
+                    // Intentar desde pathname
+                    const pathMatch = url.pathname.match(/\/alumno\/([^\/]+)/);
+                    if (pathMatch && pathMatch[1]) {
+                        return decodeURIComponent(pathMatch[1]);
+                    }
+                } catch (e) {
+                    // Si no es una URL válida, continuar
+                }
+            }
+            
+            // Si no es una URL, devolver tal cual (limpio)
+            return input.trim();
+        }
+
         function getStudentIdFromUrl() {
+            // Intentar obtener desde query parameter
             const params = new URLSearchParams(window.location.search);
             const queryId = params.get('id');
             if (queryId) {
-                return queryId;
+                // Limpiar el ID por si acaso viene con una URL completa
+                return extractStudentId(queryId) || queryId;
             }
 
+            // Intentar obtener desde pathname (/alumno/ID)
             const pathMatch = window.location.pathname.match(/\/alumno\/([^\/]+)/i);
             if (pathMatch && pathMatch[1]) {
                 return decodeURIComponent(pathMatch[1]);
             }
 
+            return null;
+        }
+        
+        // Cargar alumnos desde MongoDB/Supabase si están disponibles
+        async function loadAlumnosFromCloud() {
+            try {
+                if (window.MONGO && MONGO.isConfigured()) {
+                    const alumnos = await MONGO.listAlumnos();
+                    if (Array.isArray(alumnos) && alumnos.length > 0) {
+                        localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                        return alumnos;
+                    }
+                } else if (window.SUPA && SUPA.isConfigured()) {
+                    const alumnos = await SUPA.listAlumnos();
+                    if (Array.isArray(alumnos) && alumnos.length > 0) {
+                        localStorage.setItem('alumnos', JSON.stringify(alumnos));
+                        return alumnos;
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando alumnos desde la nube:', error);
+            }
             return null;
         }
 
@@ -417,9 +488,9 @@
         }
 
         // Buscar por ID de usuario
-        function searchByUserId(userId) {
+        async function searchByUserId(userId) {
             if (!userId) {
-                userId = document.getElementById('userIdInput').value.trim();
+                userId = document.getElementById('userIdInput') ? document.getElementById('userIdInput').value.trim() : null;
             }
             
             if (!userId) {
@@ -427,13 +498,35 @@
                 return;
             }
             
-            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            const alumno = alumnos.find(a => a.id === userId);
+            // Limpiar y extraer el ID real
+            const cleanId = extractStudentId(userId);
+            if (!cleanId) {
+                showCustomAlert('ID inválido', 'El ID proporcionado no es válido', 'error');
+                return;
+            }
+            
+            console.log('Buscando alumno con ID:', cleanId);
+            
+            // Primero buscar en localStorage
+            let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+            let alumno = alumnos.find(a => a.id === cleanId);
+            
+            // Si no se encuentra, intentar cargar desde MongoDB/Supabase
+            if (!alumno) {
+                console.log('Alumno no encontrado en localStorage, cargando desde la nube...');
+                const alumnosCloud = await loadAlumnosFromCloud();
+                if (alumnosCloud) {
+                    alumnos = alumnosCloud;
+                    alumno = alumnos.find(a => a.id === cleanId);
+                }
+            }
             
             if (!alumno) {
-                showCustomAlert('Alumno no encontrado', `No se encontró un alumno con el ID: ${userId}`, 'error');
+                console.error('Alumno no encontrado. ID buscado:', cleanId);
+                console.log('Alumnos disponibles:', alumnos.map(a => a.id));
+                showCustomAlert('Alumno no encontrado', `No se encontró un alumno con el ID: ${cleanId}`, 'error');
                 // Si se accedió desde URL, redirigir a la página principal
-                if (window.location.search.includes('id=')) {
+                if (window.location.search.includes('id=') || window.location.pathname.includes('/alumno/')) {
                     setTimeout(() => {
                         window.location.href = 'usuario.html';
                     }, 3000);
@@ -667,22 +760,30 @@
         }
 
         // Inicializar página
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Verificar si hay un ID en la URL
             const studentId = getStudentIdFromUrl();
             
             if (studentId) {
                 // Si hay un ID en la URL (query o ruta bonita), buscar automáticamente el alumno
-                searchByUserId(studentId);
+                // Primero intentar cargar desde la nube si está disponible
+                await loadAlumnosFromCloud();
+                await searchByUserId(studentId);
                 // Ocultar las opciones de búsqueda ya que ya tenemos el ID
-                document.querySelector('.search-section').style.display = 'none';
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.style.display = 'none';
+                }
                 // Cambiar el título de la página
-                document.querySelector('.user-welcome h1').textContent = '📱 Estado de Pago';
-                document.querySelector('.user-welcome p').textContent = 'Consulta tu información de pago';
+                const welcomeH1 = document.querySelector('.user-welcome h1');
+                const welcomeP = document.querySelector('.user-welcome p');
+                if (welcomeH1) welcomeH1.textContent = '📱 Estado de Pago';
+                if (welcomeP) welcomeP.textContent = 'Consulta tu información de pago';
             } else {
                 // Comportamiento normal para usuarios
                 if (checkUserAccess()) {
-                    // Página lista para usar
+                    // Cargar alumnos desde la nube si está disponible
+                    await loadAlumnosFromCloud();
                 }
             }
         });

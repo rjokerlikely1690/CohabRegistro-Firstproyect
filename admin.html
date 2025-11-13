@@ -320,14 +320,37 @@
                 return;
             }
             
-            if (confirm(`¿Generar códigos QR para ${alumnos.length} alumnos?`)) {
+            // Verificar que la URL base esté configurada
+            const baseUrl = localStorage.getItem('serverBaseUrl');
+            if (!baseUrl || !baseUrl.includes('pages.dev') && !baseUrl.includes('netlify.app') && !baseUrl.includes('http://') && baseUrl.includes('localhost')) {
+                if (!confirm('⚠️ La URL base no está configurada correctamente.\n\n¿Quieres configurarla ahora antes de generar los QRs?')) {
+                    return;
+                }
+                configureServerBaseUrl();
+                // Verificar nuevamente después de configurar
+                const newBaseUrl = localStorage.getItem('serverBaseUrl');
+                if (!newBaseUrl || newBaseUrl.includes('localhost')) {
+                    alert('❌ Por favor configura la URL de Cloudflare Pages primero.\n\nVe a: Configurar URL Base');
+                    return;
+                }
+            }
+            
+            if (confirm(`¿Generar códigos QR para ${alumnos.length} alumnos?\n\nURL que se usará: ${localStorage.getItem('serverBaseUrl') || 'No configurada'}`)) {
                 generarQRsMasivo(alumnos);
             }
         }
 
         // Función para generar QR masivo
         function generarQRsMasivo(alumnos) {
-            const ventanaQR = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');            const fecha = new Date().toLocaleDateString();
+            // Obtener URL base configurada
+            let baseUrl = localStorage.getItem('serverBaseUrl');
+            if (!baseUrl || baseUrl.includes('localhost')) {
+                baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
+            }
+            baseUrl = baseUrl.replace(/\/$/, '') + '/';
+            
+            const ventanaQR = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+            const fecha = new Date().toLocaleDateString();
             const alumnosJson = JSON.stringify(alumnos).replace(/</g, '\\x3C').replace(/>/g, '\\x3E');
             
             ventanaQR.document.write('<!DOCTYPE html><html><head><title>Códigos QR - Academia COHAB</title>');
@@ -337,20 +360,23 @@
             ventanaQR.document.write('<button class="print-btn" onclick="window.print()">Imprimir Todos</button>');
             ventanaQR.document.write('<h1>Códigos QR - Academia COHAB</h1>');
             ventanaQR.document.write('<p>Generados el ' + fecha + '</p>');
+            ventanaQR.document.write('<p style="color:#666;font-size:0.9rem;">URL base: ' + baseUrl + '</p>');
             ventanaQR.document.write('<div class="qr-grid" id="qrGrid"></div>');
             ventanaQR.document.write('<scr' + 'ipt>');
             ventanaQR.document.write('const alumnos=' + alumnosJson + ';');
+            ventanaQR.document.write('const baseUrl="' + baseUrl + '";');
             ventanaQR.document.write('alumnos.forEach(function(alumno,index){');
             ventanaQR.document.write('var qrItem=document.createElement("div");');
             ventanaQR.document.write('qrItem.className="qr-item";');
+            ventanaQR.document.write('var studentUrl=baseUrl+"usuario.html?id="+alumno.id;');
             ventanaQR.document.write('qrItem.innerHTML="<h3>"+alumno.nombre+"</h3>"+"<div id=\\"qr-"+index+"\\"></div>"+"<p><strong>ID:</strong> "+alumno.id+"</p>"+"<p><strong>Email:</strong> "+(alumno.email||"No especificado")+"</p>"+"<p><strong>Tel:</strong> "+(alumno.telefono||"No especificado")+"</p>";');
             ventanaQR.document.write('document.getElementById("qrGrid").appendChild(qrItem);');
-            ventanaQR.document.write('new QRCode(qrItem.querySelector("#qr-"+index),{text:alumno.id,width:150,height:150,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});');
+            ventanaQR.document.write('new QRCode(qrItem.querySelector("#qr-"+index),{text:studentUrl,width:150,height:150,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});');
             ventanaQR.document.write('});');
             ventanaQR.document.write('</scr' + 'ipt></body></html>');
             ventanaQR.document.close();
             
-            showNotification('Códigos QR generados para ' + alumnos.length + ' alumnos');
+            showNotification('Códigos QR generados para ' + alumnos.length + ' alumnos usando: ' + baseUrl);
         }
 
         // Exportar datos
@@ -593,20 +619,45 @@ ${(JSON.parse(localStorage.getItem('alumnos')) || []).length} alumnos
 
         function configureServerBaseUrl() {
             const current = localStorage.getItem('serverBaseUrl');
-            if (!current) {
-                const isLoopback = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-                if (!isLoopback) {
-                    const autoBase = (window.location.origin + window.location.pathname.replace('admin.html','')).replace(/\/$/,'');
-                    try { localStorage.setItem('serverBaseUrl', autoBase); } catch(_) {}
-                    showNotification('URL base configurada automáticamente: ' + autoBase);
+            const cloudflareUrl = 'https://cohabregistro-firstproyect.pages.dev';
+            
+            // Si estamos en Cloudflare Pages, configurar automáticamente
+            if (window.location.hostname.includes('.pages.dev')) {
+                const detectedUrl = `https://${window.location.hostname}`;
+                localStorage.setItem('serverBaseUrl', detectedUrl);
+                showNotification('✅ URL base configurada automáticamente: ' + detectedUrl);
+                return;
+            }
+            
+            // Si estamos en localhost y no hay URL configurada, sugerir Cloudflare
+            const isLocalhost = /^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.)/i.test(window.location.hostname);
+            if (isLocalhost && !current) {
+                if (confirm(`¿Configurar la URL de Cloudflare Pages?\n\n${cloudflareUrl}\n\nEsto hará que los QRs funcionen desde cualquier dispositivo.`)) {
+                    localStorage.setItem('serverBaseUrl', cloudflareUrl);
+                    showNotification('✅ URL base configurada: ' + cloudflareUrl);
                     return;
                 }
             }
-            const value = prompt('URL base para QRs (ej. http://192.168.1.10:8080 o https://tu-dominio.com)', current || 'http://');
+            
+            const value = prompt(
+                'URL base para QRs (debe ser accesible desde internet):\n\n' +
+                'Ejemplos:\n' +
+                '- Cloudflare Pages: https://cohabregistro-firstproyect.pages.dev\n' +
+                '- Netlify: https://tu-sitio.netlify.app\n' +
+                '- Tu dominio: https://tudominio.com\n\n' +
+                'URL actual: ' + (current || 'No configurada'),
+                current || cloudflareUrl
+            );
+            
             if (!value) return;
-            if (!/^https?:\/\//i.test(value)) { alert('URL inválida. Debe comenzar con http:// o https://'); return; }
-            localStorage.setItem('serverBaseUrl', value.trim().replace(/\/$/, ''));
-            showNotification('URL base guardada. Nuevos QRs usarán esta URL.');
+            if (!/^https?:\/\//i.test(value)) { 
+                alert('❌ URL inválida. Debe comenzar con http:// o https://'); 
+                return; 
+            }
+            
+            const cleanUrl = value.trim().replace(/\/$/, '');
+            localStorage.setItem('serverBaseUrl', cleanUrl);
+            showNotification('✅ URL base guardada: ' + cleanUrl + '\n\nLos nuevos QRs usarán esta URL.');
         }
 
         // Inicializar página
