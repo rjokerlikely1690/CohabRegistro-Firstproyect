@@ -850,6 +850,11 @@ function showQR(id) {
     const whatsappMessage = encodeURIComponent(`🔲 Código QR - ${alumno.nombre}\n\nID: ${alumno.id}\nURL: ${studentUrl}`);
     const whatsappUrl = `https://wa.me/?text=${whatsappMessage}`;
     
+    // Preparar mensaje para Gmail
+    const gmailSubject = encodeURIComponent(`Código QR - ${alumno.nombre} - Academia COHAB`);
+    const gmailBody = encodeURIComponent(`Hola,\n\nTe comparto tu código QR para verificar el estado de pago:\n\n🔲 Código QR - ${alumno.nombre}\nID: ${alumno.id}\n\nURL: ${studentUrl}\n\nEscanea este código QR o visita la URL para verificar tu estado de pago.\n\nSaludos,\nAcademia COHAB`);
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${alumno.email || ''}&su=${gmailSubject}&body=${gmailBody}`;
+    
     infoDiv.innerHTML = `
         <div style="margin-bottom: 0.5rem;"><strong>ID:</strong> ${alumno.id}</div>
         <div style="margin-bottom: 0.5rem;"><strong>Nombre:</strong> ${alumno.nombre}</div>
@@ -861,9 +866,12 @@ function showQR(id) {
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 0.5rem;">
                 <button onclick="navigator.clipboard.writeText('${studentUrl}').then(() => { if(typeof showToast === 'function') showToast('✅ URL copiada', 'success'); else alert('✅ URL copiada'); }).catch(() => alert('URL: ' + '${studentUrl}'))" style="background: #6366f1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📋 Copiar URL</button>
                 <button onclick="window.open('${whatsappUrl}', '_blank')" style="background: #25D366; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📱 WhatsApp</button>
-                <button onclick="imprimirQR('${alumno.id}')" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">🖨️ Imprimir</button>
+                <button onclick="window.open('${gmailUrl}', '_blank')" style="background: #EA4335; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📧 Gmail</button>
             </div>
-            ${alumno.email ? `<button onclick="enviarQRPorEmail('${alumno.id}')" style="background: #f59e0b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; width: 100%; margin-top: 0.5rem;">📧 Enviar por Email</button>` : ''}
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 0.5rem;">
+                <button onclick="imprimirQR('${alumno.id}')" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">🖨️ Imprimir</button>
+                ${alumno.email ? `<button onclick="enviarQRPorEmail('${alumno.id}')" style="background: #f59e0b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">✉️ Email API</button>` : ''}
+            </div>
         </div>
         <div style="color: #666; font-size: 0.8rem; margin-top: 0.5rem;">Generado: ${new Date().toLocaleString()}</div>
     `;
