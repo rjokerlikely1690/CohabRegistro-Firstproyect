@@ -242,22 +242,25 @@ function scanQRCode(video, canvas) {
         
         if (code) {
             const rawData = String(code.data || '').trim();
-            console.log('QR detectado:', rawData);
+            console.log('✅ QR detectado:', rawData);
             stopScanner();
+            
+            // Mostrar notificación de éxito
+            if (typeof showToast === 'function') {
+                showToast('Código QR detectado', 'success');
+            }
 
-            const alumnoId = extractAlumnoId(rawData);
+            // Usar la función mejorada extractStudentId para extraer el ID
+            const alumnoId = extractStudentId(rawData);
             if (alumnoId) {
-                window.location.href = buildStudentUrl(alumnoId);
+                console.log('🔍 ID extraído del QR:', alumnoId);
+                // Verificar el alumno en la misma página en lugar de redirigir
+                verificarAlumno(alumnoId);
                 return;
             }
 
-            const alumnoUrl = extractAlumnoUrl(rawData);
-            if (alumnoUrl) {
-                window.location.href = alumnoUrl;
-                return;
-            }
-
-            showCustomAlert('Código QR desconocido', 'El QR escaneado no pertenece al sistema.', 'warning');
+            // Si no se pudo extraer el ID, mostrar error
+            showCustomAlert('Código QR desconocido', 'El QR escaneado no pertenece al sistema o no se pudo extraer el ID del alumno.', 'warning');
             return;
         }
     }
