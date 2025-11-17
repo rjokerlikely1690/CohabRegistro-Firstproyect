@@ -562,7 +562,19 @@ async function verificarAlumno(id) {
 // Mostrar resultado
 function mostrarResultado(alumno, estado) {
     const resultado = document.getElementById('resultadoVerificacion');
+    
+    // Verificar que el elemento existe
+    if (!resultado) {
+        console.error('❌ No se encontró el elemento resultadoVerificacion');
+        showCustomAlert('Error', 'No se pudo mostrar el resultado. El elemento no existe en la página.', 'error');
+        return;
+    }
+    
     const header = document.getElementById('resultadoHeader');
+    if (!header) {
+        console.error('❌ No se encontró el elemento resultadoHeader');
+        return;
+    }
     
     // Configurar header con color según estado
     header.className = `resultado-header ${estado.clase}`;
@@ -634,11 +646,22 @@ function mostrarResultado(alumno, estado) {
         mostrarAlertaEmergencia(alumno, estado);
     }
     
+    // Asegurar que el resultado sea visible
     resultado.style.display = 'block';
-    resultado.scrollIntoView({ behavior: 'smooth' });
+    
+    // Hacer scroll suave hacia el resultado
+    setTimeout(() => {
+        resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
     
     // Mostrar toast de confirmación
-    showToast(`Estado verificado: ${alumno.nombre}`, 'success');
+    if (typeof showToast === 'function') {
+        showToast(`Estado verificado: ${alumno.nombre}`, 'success');
+    } else if (typeof showCustomAlert === 'function') {
+        showCustomAlert('Alumno encontrado', `Estado verificado: ${alumno.nombre}`, 'success');
+    }
+    
+    console.log('✅ Resultado mostrado para:', alumno.nombre);
 }
 
 // Generar QR en el resultado
