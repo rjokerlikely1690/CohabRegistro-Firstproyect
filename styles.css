@@ -54,6 +54,7 @@ body::before {
     border-bottom: 4px solid var(--logo-red);
     position: relative;
     backdrop-filter: blur(10px);
+    overflow: hidden; /* Evitar elementos que se salgan */
 }
 
 .navbar::after {
@@ -75,6 +76,14 @@ body::before {
     justify-content: space-between;
     align-items: center;
     min-height: 120px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Asegurar que solo haya un logo visible */
+.navbar .logo {
+    position: relative;
+    z-index: 2;
 }
 
 .logo {
@@ -96,6 +105,16 @@ body::before {
     list-style: none;
     gap: 2rem;
     align-items: center;
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 .nav-links a {
@@ -106,6 +125,25 @@ body::before {
     padding: 0.75rem 1.5rem;
     border-radius: 0.5rem;
     font-size: 1.1rem;
+    display: block;
+    white-space: nowrap;
+}
+
+/* Botón móvil oculto por defecto (escritorio) */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 1001;
+}
+
+/* Menú móvil oculto por defecto */
+.mobile-menu {
+    display: none;
 }
 
 .nav-links a:hover,
@@ -854,15 +892,17 @@ body.modal-open .navbar { pointer-events: none; }
         margin-top: 30px;
     }
     
-    /* Navbar más simple */
+    /* Navbar más simple - ocultar links de escritorio */
     .nav-links {
-        display: none;
+        display: none !important;
     }
     
+    /* Mostrar botón hamburguesa en móvil */
     .mobile-menu-btn {
         display: block !important;
         font-size: 24px;
         padding: 15px;
+        z-index: 1001;
     }
     
     /* Cards de alumnos más simples */
@@ -1842,7 +1882,7 @@ body.modal-open .navbar { pointer-events: none; }
         max-width: 100%;
     }
     
-    /* NAVEGACIÓN MÓVIL MEJORADA */
+    /* NAVEGACIÓN MÓVIL MEJORADA - Consolidado */
     .navbar {
         position: sticky;
         top: 0;
@@ -1852,6 +1892,7 @@ body.modal-open .navbar { pointer-events: none; }
         background: linear-gradient(135deg, #1b1b1b 0%, #2a2a2a 100%);
         padding: 0.75rem 1rem;
         box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        margin-bottom: 0;
     }
 
     .navbar .container {
@@ -1860,6 +1901,7 @@ body.modal-open .navbar { pointer-events: none; }
         align-items: center;
         justify-content: space-between;
         gap: 0.75rem;
+        min-height: auto;
     }
     
     .logo {
@@ -1867,21 +1909,24 @@ body.modal-open .navbar { pointer-events: none; }
         width: auto;
     }
     
+    /* Ocultar navegación de escritorio en móvil */
     .nav-links {
-        display: none; /* Ocultar navegación en móvil */
+        display: none !important;
     }
     
-    /* MENÚ HAMBURGUESA */
+    /* Mostrar botón hamburguesa en móvil */
     .mobile-menu-btn {
-        display: block;
+        display: block !important;
         background: none;
         border: none;
         color: white;
         font-size: 1.5rem;
         cursor: pointer;
         padding: 0.5rem;
+        z-index: 1001;
     }
     
+    /* Menú móvil desplegable */
     .mobile-menu {
         position: fixed;
         top: 60px;
@@ -1906,8 +1951,10 @@ body.modal-open .navbar { pointer-events: none; }
         font-size: 1.1rem;
     }
     
-    .mobile-menu a:hover {
+    .mobile-menu a:hover,
+    .mobile-menu a.active {
         background: #333;
+        color: var(--primary-color);
     }
     
     /* CONTENIDO PRINCIPAL CON ESPACIADO PARA NAV FIJA */
