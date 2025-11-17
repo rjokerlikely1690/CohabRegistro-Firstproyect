@@ -373,13 +373,26 @@ function decodeFromImage(event) {
 function verificarManual() {
     const id = document.getElementById('manualId').value.trim();
     if (!id) {
-        alert('Por favor ingresa un ID válido');
+        showCustomAlert('ID requerido', 'Por favor ingresa un ID de alumno o escanea un código QR', 'warning');
         return;
     }
-    verificarAlumno(id);
+    
+    // Extraer el ID limpio antes de verificar
+    const cleanId = extractStudentId(id);
+    if (!cleanId) {
+        showCustomAlert('ID inválido', 'El ID proporcionado no es válido. Asegúrate de ingresar un ID correcto o escanear un código QR válido.', 'error');
+        return;
+    }
+    
+    // Si el ID extraído es diferente al ingresado, actualizar el campo
+    if (cleanId !== id) {
+        document.getElementById('manualId').value = cleanId;
+    }
+    
+    verificarAlumno(cleanId);
 }
 
-// Limpiar y extraer ID de una URL o string
+// Limpiar y extraer ID de una URL o string (mejorada para manejar todos los casos)
 function extractStudentId(input) {
     if (!input) return null;
     
@@ -392,41 +405,27 @@ function extractStudentId(input) {
             console.log('✅ QR estructurado detectado, ID:', qrData.id);
             return qrData.id;
         }
+        if (qrData.url) {
+            // Si el JSON tiene una URL, extraer el ID de esa URL
+            return extractStudentId(qrData.url);
+        }
     } catch (e) {
         // No es JSON, continuar con otros métodos
     }
     
-    // Si es una URL completa, extraer el ID del parámetro
-    if (input.includes('usuario.html?id=')) {
-        const match = input.match(/[?&]id=([^&]+)/);
-        if (match && match[1]) {
-            const extractedId = decodeURIComponent(match[1]);
-            console.log('✅ ID extraído de URL:', extractedId);
-            return extractedId;
-        }
-    }
-    
-    // Si es una URL con /alumno/
-    if (input.includes('/alumno/')) {
-        const match = input.match(/\/alumno\/([^\/\?]+)/);
-        if (match && match[1]) {
-            const extractedId = decodeURIComponent(match[1]);
-            console.log('✅ ID extraído de ruta bonita:', extractedId);
-            return extractedId;
-        }
-    }
-    
-    // Si parece una URL completa, intentar extraer el último segmento
-    if (input.startsWith('http')) {
+    // Si es una URL completa, intentar parsearla primero
+    if (input.startsWith('http') || input.includes('://')) {
         try {
             const url = new URL(input);
+            // Buscar el parámetro 'id' en la query string
             const idParam = url.searchParams.get('id');
             if (idParam) {
-                console.log('✅ ID extraído de parámetro URL:', idParam);
-                return idParam;
+                const extractedId = decodeURIComponent(idParam).trim();
+                console.log('✅ ID extraído de parámetro URL:', extractedId);
+                return extractedId;
             }
             
-            // Intentar desde pathname
+            // Intentar desde pathname (/alumno/ID o /usuario.html?id=...)
             const pathMatch = url.pathname.match(/\/alumno\/([^\/]+)/);
             if (pathMatch && pathMatch[1]) {
                 const extractedId = decodeURIComponent(pathMatch[1]);
@@ -434,13 +433,49 @@ function extractStudentId(input) {
                 return extractedId;
             }
         } catch (e) {
-            // Si no es una URL válida, continuar
+            // Si no es una URL válida, continuar con métodos de string
             console.warn('⚠️ Error al parsear URL:', e);
         }
     }
     
-    // Si no es una URL, devolver tal cual (limpio)
+    // Buscar patrones comunes en strings (incluso si no es una URL completa)
+    // Buscar usuario.html?id= o verificar/usuario.html?id=
+    if (input.includes('usuario.html?id=') || input.includes('verificar/usuario.html?id=')) {
+        const match = input.match(/[?&]id=([^&]+)/);
+        if (match && match[1]) {
+            const extractedId = decodeURIComponent(match[1]).trim();
+            console.log('✅ ID extraído de URL con usuario.html:', extractedId);
+            return extractedId;
+        }
+    }
+    
+    // Si es una URL con /alumno/
+    if (input.includes('/alumno/')) {
+        const match = input.match(/\/alumno\/([^\/\?&]+)/);
+        if (match && match[1]) {
+            const extractedId = decodeURIComponent(match[1]).trim();
+            console.log('✅ ID extraído de ruta bonita:', extractedId);
+            return extractedId;
+        }
+    }
+    
+    // Si no es una URL, devolver tal cual (limpio) - puede ser un ID directo
     const cleanId = input.trim();
+    // Si el ID limpio parece una URL completa pero no se pudo parsear, intentar extraer el último segmento
+    if (cleanId.includes('/') && cleanId.length > 50) {
+        // Podría ser una URL mal formada, intentar extraer el último segmento
+        const segments = cleanId.split('/');
+        const lastSegment = segments[segments.length - 1];
+        if (lastSegment && lastSegment.length > 8) {
+            // Si el último segmento parece un UUID o ID largo, usarlo
+            const possibleId = lastSegment.split('?')[0].split('&')[0];
+            if (possibleId.length > 8) {
+                console.log('✅ ID extraído del último segmento:', possibleId);
+                return possibleId;
+            }
+        }
+    }
+    
     console.log('✅ ID usado directamente (limpio):', cleanId);
     return cleanId;
 }
