@@ -555,8 +555,23 @@ async function verificarAlumno(id) {
     }
     
     console.log('✅ Alumno encontrado:', alumno.nombre);
-    const estado = calcularEstado(alumno);
-    mostrarResultado(alumno, estado);
+    
+    try {
+        const estado = calcularEstado(alumno);
+        console.log('📊 Estado calculado:', estado);
+        
+        // Verificar que el estado tenga las propiedades necesarias
+        if (!estado || !estado.clase) {
+            console.error('❌ Estado inválido:', estado);
+            showCustomAlert('Error', 'No se pudo calcular el estado del alumno. Verifica los datos.', 'error');
+            return;
+        }
+        
+        mostrarResultado(alumno, estado);
+    } catch (error) {
+        console.error('❌ Error al calcular estado o mostrar resultado:', error);
+        showCustomAlert('Error', 'Ocurrió un error al procesar el alumno: ' + error.message, 'error');
+    }
 }
 
 // Mostrar resultado
@@ -606,10 +621,24 @@ function mostrarResultado(alumno, estado) {
     document.getElementById('alumnoEmail').textContent = alumno.email || 'No especificado';
     document.getElementById('alumnoTelefono').textContent = alumno.telefono || 'No especificado';
     
-    // Estado de pago
-    document.getElementById('ultimoPago').textContent = formatDate(alumno.fechaPago);
-    document.getElementById('proximoPago').textContent = formatDate(estado.proximoPago);
-    document.getElementById('montoMensual').textContent = '$' + parseFloat(alumno.monto).toFixed(2);
+    // Estado de pago - con validación
+    try {
+        const ultimoPagoEl = document.getElementById('ultimoPago');
+        const proximoPagoEl = document.getElementById('proximoPago');
+        const montoMensualEl = document.getElementById('montoMensual');
+        
+        if (ultimoPagoEl) {
+            ultimoPagoEl.textContent = formatDate(alumno.fechaPago);
+        }
+        if (proximoPagoEl && estado.proximoPago) {
+            proximoPagoEl.textContent = formatDate(estado.proximoPago);
+        }
+        if (montoMensualEl) {
+            montoMensualEl.textContent = '$' + parseFloat(alumno.monto || 0).toFixed(2);
+        }
+    } catch (e) {
+        console.error('Error al actualizar estado de pago:', e);
+    }
     
     // Generar y mostrar QR
     generarQRResultado(alumno);
@@ -646,22 +675,46 @@ function mostrarResultado(alumno, estado) {
         mostrarAlertaEmergencia(alumno, estado);
     }
     
-    // Asegurar que el resultado sea visible
+    // Asegurar que el resultado sea visible - FORZAR VISIBILIDAD
     resultado.style.display = 'block';
+    resultado.style.visibility = 'visible';
+    resultado.style.opacity = '1';
+    
+    // Forzar que todos los elementos hijos también sean visibles
+    const resultadoCard = resultado.querySelector('.resultado-card');
+    if (resultadoCard) {
+        resultadoCard.style.display = 'block';
+    }
+    
+    console.log('✅ Mostrando resultado para:', alumno.nombre);
+    console.log('✅ Elemento resultado display:', resultado.style.display);
+    console.log('✅ Elemento resultado visible:', window.getComputedStyle(resultado).display);
     
     // Hacer scroll suave hacia el resultado
     setTimeout(() => {
-        resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+        try {
+            resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) {
+            // Fallback si scrollIntoView falla
+            window.scrollTo({
+                top: resultado.offsetTop - 20,
+                behavior: 'smooth'
+            });
+        }
+    }, 200);
     
     // Mostrar toast de confirmación
-    if (typeof showToast === 'function') {
-        showToast(`Estado verificado: ${alumno.nombre}`, 'success');
-    } else if (typeof showCustomAlert === 'function') {
-        showCustomAlert('Alumno encontrado', `Estado verificado: ${alumno.nombre}`, 'success');
-    }
+    setTimeout(() => {
+        if (typeof showToast === 'function') {
+            showToast(`✅ Estado verificado: ${alumno.nombre}`, 'success');
+        } else if (typeof showCustomAlert === 'function') {
+            showCustomAlert('Alumno encontrado', `Estado verificado: ${alumno.nombre}`, 'success');
+        } else {
+            alert(`✅ Estado verificado: ${alumno.nombre}`);
+        }
+    }, 300);
     
-    console.log('✅ Resultado mostrado para:', alumno.nombre);
+    console.log('✅ Resultado mostrado completamente para:', alumno.nombre);
 }
 
 // Generar QR en el resultado
