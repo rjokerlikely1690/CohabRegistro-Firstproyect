@@ -846,14 +846,9 @@ function showQR(id) {
         text-align: center;
     `;
     
-    // Preparar mensaje para WhatsApp
-    const whatsappMessage = encodeURIComponent(`🔲 Código QR - ${alumno.nombre}\n\nID: ${alumno.id}\nURL: ${studentUrl}`);
-    const whatsappUrl = `https://wa.me/?text=${whatsappMessage}`;
-    
-    // Preparar mensaje para Gmail
-    const gmailSubject = encodeURIComponent(`Código QR - ${alumno.nombre} - Academia COHAB`);
-    const gmailBody = encodeURIComponent(`Hola,\n\nTe comparto tu código QR para verificar el estado de pago:\n\n🔲 Código QR - ${alumno.nombre}\nID: ${alumno.id}\n\nURL: ${studentUrl}\n\nEscanea este código QR o visita la URL para verificar tu estado de pago.\n\nSaludos,\nAcademia COHAB`);
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${alumno.email || ''}&su=${gmailSubject}&body=${gmailBody}`;
+    // Guardar datos del alumno para funciones adicionales (antes de generar el HTML)
+    qrContainer.dataset.alumnoId = alumno.id;
+    qrContainer.dataset.studentUrl = studentUrl;
     
     infoDiv.innerHTML = `
         <div style="margin-bottom: 0.5rem;"><strong>ID:</strong> ${alumno.id}</div>
@@ -865,8 +860,8 @@ function showQR(id) {
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 0.5rem;">
                 <button onclick="navigator.clipboard.writeText('${studentUrl}').then(() => { if(typeof showToast === 'function') showToast('✅ URL copiada', 'success'); else alert('✅ URL copiada'); }).catch(() => alert('URL: ' + '${studentUrl}'))" style="background: #6366f1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📋 Copiar URL</button>
-                <button onclick="window.open('${whatsappUrl}', '_blank')" style="background: #25D366; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📱 WhatsApp</button>
-                <button onclick="window.open('${gmailUrl}', '_blank')" style="background: #EA4335; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📧 Gmail</button>
+                <button onclick="compartirQRWhatsApp('${alumno.id}')" style="background: #25D366; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📱 WhatsApp</button>
+                <button onclick="compartirQRGmail('${alumno.id}')" style="background: #EA4335; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📧 Gmail</button>
             </div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 0.5rem;">
                 <button onclick="imprimirQR('${alumno.id}')" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">🖨️ Imprimir</button>
@@ -877,10 +872,6 @@ function showQR(id) {
     `;
     
     qrContainer.appendChild(infoDiv);
-    
-    // Guardar datos del alumno para funciones adicionales
-    qrContainer.dataset.alumnoId = alumno.id;
-    qrContainer.dataset.studentUrl = studentUrl;
     
     document.getElementById('qrModal').style.display = 'block';
 }
@@ -980,6 +971,132 @@ function imprimirQR(id) {
         </html>
     `);
     ventanaImpresion.document.close();
+}
+
+// Helper para construir URL del estudiante
+function buildStudentUrl(alumnoId) {
+    let baseUrl = localStorage.getItem('serverBaseUrl');
+    
+    // Si no hay URL configurada o no es Cloudflare Pages, usar la por defecto
+    if (!baseUrl || !baseUrl.includes('pages.dev')) {
+        baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
+    }
+    
+    // Limpiar la URL: remover cualquier ruta adicional y trailing slash
+    baseUrl = baseUrl.replace(/\/verificar\/.*$/, '');
+    baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, '');
+    baseUrl = baseUrl.replace(/\/$/, '');
+    
+    return `${baseUrl}/usuario.html?id=${encodeURIComponent(alumnoId)}`;
+}
+
+// Compartir QR por WhatsApp con imagen
+async function compartirQRWhatsApp(id) {
+    const alumno = alumnos.find(a => a.id === id);
+    if (!alumno) return;
+    
+    // Obtener el canvas del QR
+    const canvas = document.querySelector('#qrcode canvas');
+    if (!canvas) {
+        alert('⚠️ Primero genera el QR del alumno');
+        return;
+    }
+    
+    // Convertir canvas a blob
+    canvas.toBlob(async (blob) => {
+        if (!blob) {
+            alert('❌ Error al generar la imagen del QR');
+            return;
+        }
+        
+        // Obtener URL del alumno
+        const qrContainer = document.querySelector('#qrcode');
+        const studentUrl = qrContainer.dataset.studentUrl || buildStudentUrl(alumno.id);
+        const mensaje = `🔲 Código QR - ${alumno.nombre}\n\nID: ${alumno.id}\nURL: ${studentUrl}\n\nEscanea este código QR para verificar tu estado de pago.`;
+        
+        // Intentar usar Web Share API (soporta imágenes en algunos navegadores)
+        if (navigator.share && navigator.canShare) {
+            try {
+                const file = new File([blob], `qr-${alumno.nombre.replace(/\s+/g, '-')}.png`, { type: 'image/png' });
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: `QR - ${alumno.nombre}`,
+                        text: mensaje
+                    });
+                    if (typeof showToast === 'function') {
+                        showToast('✅ QR compartido por WhatsApp', 'success');
+                    }
+                    return;
+                }
+            } catch (e) {
+                console.log('Web Share API no soporta archivos, usando método alternativo');
+            }
+        }
+        
+        // Método alternativo: descargar imagen y abrir WhatsApp con mensaje
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `qr-${alumno.nombre.replace(/\s+/g, '-')}.png`;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        // Esperar un momento y abrir WhatsApp
+        setTimeout(() => {
+            const whatsappMessage = encodeURIComponent(mensaje);
+            const whatsappUrl = `https://wa.me/?text=${whatsappMessage}`;
+            window.open(whatsappUrl, '_blank');
+            
+            if (typeof showToast === 'function') {
+                showToast('📱 Imagen descargada. Ábrela y compártela por WhatsApp', 'info');
+            } else {
+                alert('📱 La imagen del QR se ha descargado. Ábrela desde tu galería y compártela por WhatsApp junto con el mensaje que se abrió.');
+            }
+        }, 500);
+    }, 'image/png');
+}
+
+// Compartir QR por Gmail con imagen
+function compartirQRGmail(id) {
+    const alumno = alumnos.find(a => a.id === id);
+    if (!alumno) return;
+    
+    // Obtener el canvas del QR
+    const canvas = document.querySelector('#qrcode canvas');
+    if (!canvas) {
+        alert('⚠️ Primero genera el QR del alumno');
+        return;
+    }
+    
+    // Obtener URL del alumno
+    const qrContainer = document.querySelector('#qrcode');
+    const studentUrl = qrContainer ? (qrContainer.dataset.studentUrl || buildStudentUrl(alumno.id)) : buildStudentUrl(alumno.id);
+    
+    // Crear mensaje de texto plano
+    const mensajeTexto = `Hola,\n\nTe comparto tu código QR para verificar el estado de pago:\n\n🔲 Código QR - ${alumno.nombre}\nID: ${alumno.id}\n\nURL: ${studentUrl}\n\nEscanea este código QR o visita la URL para verificar tu estado de pago.\n\nSaludos,\nAcademia COHAB`;
+    
+    // Primero descargar la imagen del QR
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    const nombreArchivo = `qr-${alumno.nombre.replace(/\s+/g, '-')}-${alumno.id.substring(0, 8)}.png`;
+    link.download = nombreArchivo;
+    link.click();
+    
+    // Esperar un momento y abrir Gmail
+    setTimeout(() => {
+        const gmailSubject = encodeURIComponent(`Código QR - ${alumno.nombre} - Academia COHAB`);
+        const gmailBody = encodeURIComponent(mensajeTexto);
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${alumno.email || ''}&su=${gmailSubject}&body=${gmailBody}`;
+        
+        window.open(gmailUrl, '_blank');
+        
+        if (typeof showToast === 'function') {
+            showToast('📧 Imagen descargada. Ábrela y adjúntala al email que se abrió', 'info');
+        } else {
+            alert('📧 La imagen del QR se ha descargado. Ábrela desde tu carpeta de descargas y adjúntala al email de Gmail que se abrió.');
+        }
+    }, 500);
 }
 
 // Enviar QR por Email
