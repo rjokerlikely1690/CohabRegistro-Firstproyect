@@ -141,9 +141,27 @@ body::before {
     z-index: 1001;
 }
 
-/* Menú móvil oculto por defecto */
+/* Menú móvil oculto por defecto (escritorio) */
 .mobile-menu {
-    display: none;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Asegurar que los enlaces del menú móvil no se muestren en escritorio */
+.mobile-menu a {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
 }
 
 .nav-links a:hover,
@@ -1926,29 +1944,44 @@ body.modal-open .navbar { pointer-events: none; }
         z-index: 1001;
     }
     
-    /* Menú móvil desplegable */
+    /* Menú móvil desplegable - Solo visible en móvil */
     .mobile-menu {
-        position: fixed;
-        top: 60px;
-        left: 0;
-        right: 0;
+        position: fixed !important;
+        top: 60px !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
         background: #1a1a1a;
         border-top: 1px solid #333;
-        display: none;
+        display: none !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
         z-index: 999;
     }
     
     .mobile-menu.active {
-        display: block;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
     }
     
     .mobile-menu a {
-        display: block;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
+        overflow: visible !important;
         padding: 1rem;
         color: white;
         text-decoration: none;
         border-bottom: 1px solid #333;
         font-size: 1.1rem;
+        width: 100% !important;
     }
     
     .mobile-menu a:hover,
