@@ -720,33 +720,46 @@ function mostrarResultado(alumno, estado) {
 // Generar QR en el resultado
 function generarQRResultado(alumno) {
     const qrContainer = document.getElementById('qrDisplay');
+    if (!qrContainer) {
+        console.warn('⚠️ No se encontró el contenedor de QR');
+        return;
+    }
+    
     qrContainer.innerHTML = '';
+    
+    // Verificar que QRCode esté disponible
+    if (typeof QRCode === 'undefined') {
+        console.error('❌ QRCode no está disponible. Verifica que la librería esté cargada.');
+        qrContainer.innerHTML = '<p style="color: #dc2626; padding: 1rem;">⚠️ Error: Librería QRCode no cargada</p>';
+        return;
+    }
     
     // Crear URL directa para el alumno usando base configurada
     const studentUrl = buildStudentUrl(alumno.id);
     
-    // Crear información estructurada para el QR
-    const qrData = {
-        id: alumno.id,
-        nombre: alumno.nombre,
-        fechaGeneracion: new Date().toISOString(),
-        version: "1.0",
-        url: studentUrl
-    };
-    
-    // Generar QR con URL directa
-    new QRCode(qrContainer, {
-        text: studentUrl, // Usar la URL directa como texto del QR
-        width: 120,
-        height: 120,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H,
-        margin: 1
-    });
-    
-    // Actualizar ID en la sección QR
-    document.getElementById('qrId').textContent = alumno.id;
+    try {
+        // Generar QR con URL directa
+        new QRCode(qrContainer, {
+            text: studentUrl,
+            width: 120,
+            height: 120,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H,
+            margin: 1
+        });
+        
+        // Actualizar ID en la sección QR
+        const qrIdEl = document.getElementById('qrId');
+        if (qrIdEl) {
+            qrIdEl.textContent = alumno.id;
+        }
+        
+        console.log('✅ QR generado correctamente para:', alumno.nombre);
+    } catch (error) {
+        console.error('❌ Error al generar QR:', error);
+        qrContainer.innerHTML = '<p style="color: #dc2626; padding: 1rem;">⚠️ Error al generar QR: ' + error.message + '</p>';
+    }
 }
 
 // Mostrar QR completo en modal
