@@ -835,7 +835,7 @@ function showQR(id) {
         margin: 2
     });
     
-    // Agregar información
+    // Agregar información y botones de acción
     const infoDiv = document.createElement('div');
     infoDiv.style.cssText = `
         margin-top: 1rem;
@@ -845,6 +845,11 @@ function showQR(id) {
         font-size: 0.9rem;
         text-align: center;
     `;
+    
+    // Preparar mensaje para WhatsApp
+    const whatsappMessage = encodeURIComponent(`🔲 Código QR - ${alumno.nombre}\n\nID: ${alumno.id}\nURL: ${studentUrl}`);
+    const whatsappUrl = `https://wa.me/?text=${whatsappMessage}`;
+    
     infoDiv.innerHTML = `
         <div style="margin-bottom: 0.5rem;"><strong>ID:</strong> ${alumno.id}</div>
         <div style="margin-bottom: 0.5rem;"><strong>Nombre:</strong> ${alumno.nombre}</div>
@@ -852,13 +857,22 @@ function showQR(id) {
         <div style="margin-bottom: 0.5rem;"><strong>Próximo pago:</strong> ${proximoTexto}</div>
         <div style="margin-bottom: 0.5rem;"><strong>Monto:</strong> ${montoTexto}</div>
         <div style="margin-bottom: 0.5rem;"><strong>Estado:</strong> ${diasTexto}</div>
-        <div style="margin-bottom: 0.5rem; color: #dc2626; font-size: 0.8rem;"><strong>🔗 URL Directa:</strong></div>
-        <div style="margin-bottom: 0.5rem; color: #666; font-size: 0.7rem; word-break: break-all; background: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer;" onclick="navigator.clipboard.writeText('${studentUrl}').then(() => alert('✅ URL copiada al portapapeles')).catch(() => alert('URL: ' + '${studentUrl}'))" title="Clic para copiar">${studentUrl}</div>
-        <button onclick="navigator.clipboard.writeText('${studentUrl}').then(() => alert('✅ URL copiada al portapapeles')).catch(() => alert('URL: ' + '${studentUrl}'))" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; margin-top: 0.5rem; font-size: 0.8rem;">📋 Copiar URL</button>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 0.5rem;">
+                <button onclick="navigator.clipboard.writeText('${studentUrl}').then(() => { if(typeof showToast === 'function') showToast('✅ URL copiada', 'success'); else alert('✅ URL copiada'); }).catch(() => alert('URL: ' + '${studentUrl}'))" style="background: #6366f1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📋 Copiar URL</button>
+                <button onclick="window.open('${whatsappUrl}', '_blank')" style="background: #25D366; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">📱 WhatsApp</button>
+                <button onclick="imprimirQR('${alumno.id}')" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; flex: 1; min-width: 120px;">🖨️ Imprimir</button>
+            </div>
+            ${alumno.email ? `<button onclick="enviarQRPorEmail('${alumno.id}')" style="background: #f59e0b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; width: 100%; margin-top: 0.5rem;">📧 Enviar por Email</button>` : ''}
+        </div>
         <div style="color: #666; font-size: 0.8rem; margin-top: 0.5rem;">Generado: ${new Date().toLocaleString()}</div>
     `;
     
     qrContainer.appendChild(infoDiv);
+    
+    // Guardar datos del alumno para funciones adicionales
+    qrContainer.dataset.alumnoId = alumno.id;
+    qrContainer.dataset.studentUrl = studentUrl;
     
     document.getElementById('qrModal').style.display = 'block';
 }
@@ -873,9 +887,117 @@ function downloadQR() {
     const canvas = document.querySelector('#qrcode canvas');
     if (canvas) {
         const link = document.createElement('a');
-        link.download = 'qr-alumno.png';
+        const alumnoId = document.querySelector('#qrcode').dataset.alumnoId;
+        const alumno = alumnos.find(a => a.id === alumnoId);
+        const nombreArchivo = alumno ? `qr-${alumno.nombre.replace(/\s+/g, '-')}-${alumnoId.substring(0, 8)}.png` : 'qr-alumno.png';
+        link.download = nombreArchivo;
         link.href = canvas.toDataURL();
         link.click();
+        if (typeof showToast === 'function') {
+            showToast('QR descargado exitosamente', 'success');
+        }
+    }
+}
+
+// Imprimir QR
+function imprimirQR(id) {
+    const alumno = alumnos.find(a => a.id === id);
+    if (!alumno) return;
+    
+    const canvas = document.querySelector('#qrcode canvas');
+    if (!canvas) {
+        alert('Primero genera el QR del alumno');
+        return;
+    }
+    
+    // Crear ventana de impresión
+    const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
+    const qrImage = canvas.toDataURL();
+    
+    ventanaImpresion.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>QR - ${alumno.nombre}</title>
+            <style>
+                @media print {
+                    body { margin: 0; padding: 20px; }
+                    .no-print { display: none; }
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                    padding: 40px;
+                }
+                .qr-container {
+                    margin: 20px 0;
+                }
+                .qr-info {
+                    margin-top: 20px;
+                    font-size: 14px;
+                    color: #333;
+                }
+                .qr-info h3 {
+                    margin: 10px 0;
+                    color: #dc2626;
+                }
+                button {
+                    background: #dc2626;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    margin: 20px 10px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="no-print">
+                <h2>🔲 Código QR - ${alumno.nombre}</h2>
+                <button onclick="window.print()">🖨️ Imprimir</button>
+                <button onclick="window.close()">Cerrar</button>
+            </div>
+            <div class="qr-container">
+                <img src="${qrImage}" alt="QR Code" style="max-width: 400px; width: 100%;">
+            </div>
+            <div class="qr-info">
+                <h3>${alumno.nombre}</h3>
+                <p><strong>ID:</strong> ${alumno.id}</p>
+                <p><strong>Academia COHAB</strong></p>
+                <p style="font-size: 12px; color: #666; margin-top: 20px;">Escanea este código para verificar el estado de pago</p>
+            </div>
+        </body>
+        </html>
+    `);
+    ventanaImpresion.document.close();
+}
+
+// Enviar QR por Email
+async function enviarQRPorEmail(id) {
+    const alumno = alumnos.find(a => a.id === id);
+    if (!alumno) return;
+    
+    if (!alumno.email || !alumno.email.trim()) {
+        alert('⚠️ Este alumno no tiene email registrado. Agrega un email primero.');
+        return;
+    }
+    
+    if (!window.MONGO || !MONGO.isConfigured()) {
+        alert('⚠️ MongoDB no está configurado. Configura la API de MongoDB primero en el Panel Admin.');
+        return;
+    }
+    
+    if (confirm(`¿Enviar código QR por email a ${alumno.nombre}?\n\nEmail: ${alumno.email}`)) {
+        try {
+            showNotification('Enviando QR por email...', 'info');
+            await MONGO.enviarQr(id);
+            showNotification('✅ QR enviado por email exitosamente', 'success');
+        } catch (error) {
+            console.error('Error enviando QR:', error);
+            alert('❌ Error al enviar QR por email: ' + error.message);
+        }
     }
 }
 
