@@ -1,7 +1,7 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 24 - MongoDB como única fuente de verdad
-console.log('✅ App.js cargado - Versión 24 - MongoDB única fuente de verdad');
+// VERSIÓN: 25 - MongoDB ÚNICO - Sin fallback a localStorage
+console.log('✅ App.js cargado - Versión 25 - MongoDB ÚNICO (sin fallback)');
 
 // ⚠️ NO usar localStorage para datos de negocio
 // MongoDB es la única fuente de verdad
@@ -262,69 +262,61 @@ async function loadAlumnos() {
         return;
     }
     
-    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">⏳ Cargando alumnos...</div>';
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">⏳ Cargando alumnos desde MongoDB...</div>';
     
-    // ✅ Intentar cargar desde MongoDB primero
+    // ✅ MongoDB es la ÚNICA fuente de verdad - SIN FALLBACK
     try {
-        if (window.MONGO && MONGO.isConfigured()) {
-            const nube = await MONGO.listAlumnos();
-            
-            if (Array.isArray(nube) && nube.length > 0) {
-                alumnos = nube;
-                // Guardar en localStorage como backup
-                localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
-            } else {
-                throw new Error('MongoDB no devolvió alumnos');
-            }
-        } else {
-            throw new Error('MongoDB no está configurado');
+        if (!window.MONGO || !MONGO.isConfigured()) {
+            throw new Error('MongoDB no está configurado. Verifica que el servidor backend esté corriendo en http://localhost:3000');
         }
+        
+        const nube = await MONGO.listAlumnos();
+        
+        if (!Array.isArray(nube)) {
+            throw new Error('Respuesta inválida del servidor MongoDB');
+        }
+        
+        alumnos = nube;
+        console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
+        
+        // Mostrar mensaje de conexión exitosa
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = 'background: #d1fae5; border-left: 4px solid #10b981; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; color: #065f46;';
+        successMsg.innerHTML = `
+            <strong>✅ Conectado a MongoDB</strong><br>
+            <small>${alumnos.length} alumnos cargados correctamente</small>
+        `;
+        grid.parentElement.insertBefore(successMsg, grid);
+        
+        // Remover mensaje después de 3 segundos
+        setTimeout(() => {
+            successMsg.remove();
+        }, 3000);
+        
     } catch (error) {
-        console.warn('⚠️ Error al cargar desde MongoDB:', error.message);
+        console.error('❌ Error al cargar desde MongoDB:', error);
         
-        // 🔄 FALLBACK: Cargar desde localStorage
-        const alumnosLocal = localStorage.getItem('alumnos');
-        if (alumnosLocal) {
-            try {
-                alumnos = JSON.parse(alumnosLocal);
-                if (Array.isArray(alumnos) && alumnos.length > 0) {
-                    console.log('📦 Alumnos cargados desde localStorage (backup):', alumnos.length);
-                    
-                    // Mostrar mensaje informativo
-                    const mensaje = document.createElement('div');
-                    mensaje.style.cssText = 'background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; color: #856404;';
-                    mensaje.innerHTML = `
-                        <strong>⚠️ Modo sin conexión</strong><br>
-                        Mostrando ${alumnos.length} alumnos guardados localmente.<br>
-                        <small>MongoDB no está disponible. Los cambios se guardarán cuando vuelva la conexión.</small>
-                    `;
-                    grid.parentElement.insertBefore(mensaje, grid);
-                } else {
-                    throw new Error('No hay alumnos en localStorage');
-                }
-            } catch (e) {
-                console.error('❌ Error al cargar desde localStorage:', e);
-                alumnos = [];
-            }
-        } else {
-            alumnos = [];
-        }
-        
-        // Si no hay alumnos en ningún lado, mostrar error
-        if (alumnos.length === 0) {
-            grid.innerHTML = `
-                <div class="empty-state error-state" style="grid-column: 1/-1;">
-                    <div class="empty-state-icon">❌</div>
-                    <h3>No se pudieron cargar alumnos</h3>
-                    <p>MongoDB no está disponible y no hay datos guardados localmente.</p>
-                    <button onclick="loadAlumnos()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
-                        🔄 Reintentar
-                    </button>
+        // Mostrar error EXPLÍCITO - NO usar localStorage
+        grid.innerHTML = `
+            <div class="empty-state error-state" style="grid-column: 1/-1;">
+                <div class="empty-state-icon">❌</div>
+                <h3>Error de conexión con MongoDB</h3>
+                <p style="color: #dc2626; font-weight: bold;">${error.message}</p>
+                <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 1rem; margin: 1rem 0; text-align: left;">
+                    <strong>Soluciones:</strong>
+                    <ol style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        <li>Verifica que el servidor backend esté corriendo</li>
+                        <li>Abre una terminal y ejecuta:<br><code style="background: #1f2937; color: #10b981; padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; margin-top: 0.5rem;">cd mongodb-api && PORT=3000 node server.js</code></li>
+                        <li>Verifica que MongoDB Atlas esté accesible</li>
+                    </ol>
                 </div>
-            `;
-            return;
-        }
+                <button onclick="loadAlumnos()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: bold;">
+                    🔄 Reintentar Conexión
+                </button>
+            </div>
+        `;
+        alumnos = [];
+        return;
     }
     
     if (alumnos.length === 0) {

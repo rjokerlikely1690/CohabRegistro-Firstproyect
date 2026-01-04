@@ -200,7 +200,7 @@
             
     <!-- MongoDB Client -->
     <script src="mongodb-client.js?v=3"></script>
-    <script src="app.js?v=24"></script>
+    <script src="app.js?v=25"></script>
     
     <script>
         // ⚠️ MongoDB es la única fuente de verdad
@@ -255,22 +255,22 @@
                     throw new Error('Respuesta inválida del servidor');
                 }
                 
-                let total = alumnos.length;
-                let aldia = 0;
-                let proximo = 0;
-                let atrasados = 0;
+            let total = alumnos.length;
+            let aldia = 0;
+            let proximo = 0;
+            let atrasados = 0;
                 
-                alumnos.forEach(alumno => {
-                    const estado = calcularEstado(alumno);
-                    if (estado.clase === 'aldia') aldia++;
-                    else if (estado.clase === 'proximo') proximo++;
-                    else if (estado.clase === 'atrasado') atrasados++;
-                });
+            alumnos.forEach(alumno => {
+                const estado = calcularEstado(alumno);
+                if (estado.clase === 'aldia') aldia++;
+                else if (estado.clase === 'proximo') proximo++;
+                else if (estado.clase === 'atrasado') atrasados++;
+            });
                 
-                document.getElementById('totalAlumnos').textContent = total;
-                document.getElementById('alumnosAldia').textContent = aldia;
-                document.getElementById('alumnosProximo').textContent = proximo;
-                document.getElementById('alumnosAtrasados').textContent = atrasados;
+            document.getElementById('totalAlumnos').textContent = total;
+            document.getElementById('alumnosAldia').textContent = aldia;
+            document.getElementById('alumnosProximo').textContent = proximo;
+            document.getElementById('alumnosAtrasados').textContent = atrasados;
                 
                 console.log('✅ Estadísticas actualizadas desde MongoDB:', { total, aldia, proximo, atrasados });
                 
