@@ -17,8 +17,8 @@
     function getApiUrl() {
         const stored = getStored('mongodbApiUrl');
         if (stored) return stored;
-        // URL por defecto de Railway (se puede sobrescribir en admin.html)
-        return 'https://cohabregistro-firstproyect-production.up.railway.app';
+        // URL por defecto: servidor local para desarrollo
+        return 'http://localhost:3000';
     }
 
     async function apiCall(endpoint, method = 'GET', body = null) {
