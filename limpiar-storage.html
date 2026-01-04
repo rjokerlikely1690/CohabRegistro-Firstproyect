@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Limpiar LocalStorage</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 2rem; 
+            background: #1a1a1a; 
+            color: #fff;
+            text-align: center;
+        }
+        .btn {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            margin: 1rem;
+        }
+        .btn:hover {
+            background: #b91c1c;
+        }
+        .success {
+            background: #10b981;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 2rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧹 Limpiar LocalStorage</h1>
+    <p>Esto eliminará todos los datos guardados en el navegador</p>
+    
+    <button class="btn" onclick="limpiarTodo()">🗑️ Limpiar LocalStorage</button>
+    
+    <div class="success" id="success">
+        ✅ LocalStorage limpiado exitosamente<br>
+        <small>Ahora ve a: <a href="gestion-alumnos.html" style="color: #60a5fa;">Gestión de Alumnos</a></small>
+    </div>
+    
+    <script>
+        function limpiarTodo() {
+            try {
+                // Limpiar localStorage
+                localStorage.clear();
+                
+                // También limpiar sessionStorage
+                sessionStorage.clear();
+                
+                // Mostrar éxito
+                document.getElementById('success').style.display = 'block';
+                
+                console.log('✅ LocalStorage y SessionStorage limpiados');
+                
+                // Opcional: recargar después de 2 segundos
+                setTimeout(() => {
+                    window.location.href = 'gestion-alumnos.html';
+                }, 2000);
+                
+            } catch (error) {
+                alert('❌ Error al limpiar: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+

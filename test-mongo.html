@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test MongoDB Connection</title>
+    <style>
+        body { font-family: monospace; padding: 2rem; background: #1a1a1a; color: #fff; }
+        .log { background: #2a2a2a; padding: 1rem; margin: 0.5rem 0; border-radius: 0.5rem; }
+        .error { border-left: 4px solid #dc2626; }
+        .success { border-left: 4px solid #10b981; }
+        .info { border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test de Conexión MongoDB</h1>
+    <div id="logs"></div>
+    
+    <script src="mongodb-client.js?v=2"></script>
+    <script>
+        const logsDiv = document.getElementById('logs');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> ${message}`;
+            logsDiv.appendChild(div);
+            console.log(message);
+        }
+        
+        async function testConnection() {
+            log('🔌 Iniciando test de conexión...', 'info');
+            
+            // Test 1: Verificar que MONGO existe
+            if (typeof window.MONGO === 'undefined') {
+                log('❌ ERROR: window.MONGO no está definido', 'error');
+                log('❌ El archivo mongodb-client.js no se cargó correctamente', 'error');
+                return;
+            }
+            log('✅ window.MONGO está disponible', 'success');
+            
+            // Test 2: Verificar configuración
+            const configured = MONGO.isConfigured();
+            log(`📋 isConfigured: ${configured}`, configured ? 'success' : 'error');
+            
+            // Test 3: Obtener URL de la API
+            const apiUrl = localStorage.getItem('mongodbApiUrl') || 'http://localhost:3000';
+            log(`🌐 API URL: ${apiUrl}`, 'info');
+            
+            // Test 4: Intentar cargar alumnos
+            try {
+                log('📡 Llamando a MONGO.listAlumnos()...', 'info');
+                const alumnos = await MONGO.listAlumnos();
+                
+                if (Array.isArray(alumnos)) {
+                    log(`✅ SUCCESS: ${alumnos.length} alumnos cargados`, 'success');
+                    log(`📊 Primeros 3 alumnos:`, 'info');
+                    alumnos.slice(0, 3).forEach((a, i) => {
+                        log(`   ${i + 1}. ${a.nombre} (${a.id})`, 'info');
+                    });
+                } else {
+                    log(`⚠️ Respuesta no es un array: ${typeof alumnos}`, 'error');
+                    log(`📦 Respuesta: ${JSON.stringify(alumnos).slice(0, 200)}`, 'info');
+                }
+            } catch (error) {
+                log(`❌ ERROR al cargar alumnos: ${error.message}`, 'error');
+                log(`📦 Stack: ${error.stack}`, 'error');
+            }
+            
+            // Test 5: Test directo con fetch
+            try {
+                log('🔄 Test directo con fetch()...', 'info');
+                const response = await fetch('http://localhost:3000/alumnos');
+                log(`📡 Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const data = await response.json();
+                log(`📦 Tipo de respuesta: ${typeof data}`, 'info');
+                log(`📦 Keys: ${Object.keys(data).join(', ')}`, 'info');
+                
+                if (data.data && Array.isArray(data.data)) {
+                    log(`✅ data.data contiene ${data.data.length} alumnos`, 'success');
+                } else {
+                    log(`⚠️ data.data no es un array`, 'error');
+                }
+            } catch (error) {
+                log(`❌ ERROR en fetch directo: ${error.message}`, 'error');
+                log(`   Esto puede ser un problema de CORS`, 'error');
+            }
+        }
+        
+        // Ejecutar tests cuando la página carga
+        window.addEventListener('DOMContentLoaded', testConnection);
+    </script>
+</body>
+</html>
+

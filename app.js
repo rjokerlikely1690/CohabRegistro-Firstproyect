@@ -1,7 +1,7 @@
-image.png// Sistema COHAB - Academia de BJJ
+// Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 22 - MongoDB como única fuente de verdad
-console.log('✅ App.js cargado - Versión 22 - MongoDB única fuente de verdad');
+// VERSIÓN: 24 - MongoDB como única fuente de verdad
+console.log('✅ App.js cargado - Versión 24 - MongoDB única fuente de verdad');
 
 // ⚠️ NO usar localStorage para datos de negocio
 // MongoDB es la única fuente de verdad
