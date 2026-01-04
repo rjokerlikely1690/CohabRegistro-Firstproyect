@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico MongoDB - COHAB</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .test-item {
+            background: #2a2a2a;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid #666;
+            border-radius: 0.5rem;
+        }
+        .test-item.success {
+            border-left-color: #10b981;
+        }
+        .test-item.error {
+            border-left-color: #dc2626;
+            color: #ff4444;
+        }
+        .test-item.warning {
+            border-left-color: #f59e0b;
+            color: #ffaa00;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 1rem 0;
+        }
+        button:hover {
+            background: #059669;
+        }
+        pre {
+            background: #000;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            color: #00ff00;
+        }
+        .loading {
+            color: #ffaa00;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnóstico de Conexión MongoDB</h1>
+    <p>Este script verifica la conexión con tu backend de MongoDB</p>
+    
+    <button onclick="runDiagnostics()">▶️ Ejecutar Diagnóstico</button>
+    
+    <div id="results"></div>
+    
+    <script src="mongodb-client.js?v=3"></script>
+    <script>
+        async function runDiagnostics() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p class="loading">⏳ Ejecutando diagnóstico...</p>';
+            
+            const results = [];
+            
+            // Test 1: Verificar configuración
+            results.push({
+                test: 'Configuración de MongoDB Client',
+                status: 'info',
+                message: `URL configurada: ${window.MONGO?.getApiUrl ? window.MONGO.getApiUrl() : 'NO DISPONIBLE'}`
+            });
+            
+            results.push({
+                test: 'MongoDB Client cargado',
+                status: window.MONGO ? 'success' : 'error',
+                message: window.MONGO ? '✅ mongodb-client.js está cargado' : '❌ mongodb-client.js NO está cargado'
+            });
+            
+            results.push({
+                test: 'MongoDB configurado',
+                status: window.MONGO && MONGO.isConfigured() ? 'success' : 'error',
+                message: window.MONGO && MONGO.isConfigured() ? '✅ MongoDB está configurado' : '❌ MongoDB NO está configurado'
+            });
+            
+            // Test 2: Verificar conectividad básica al servidor
+            if (window.MONGO && MONGO.isConfigured()) {
+                const apiUrl = MONGO.getApiUrl();
+                
+                try {
+                    const healthResponse = await fetch(`${apiUrl}/health`);
+                    if (healthResponse.ok) {
+                        const healthData = await healthResponse.json();
+                        results.push({
+                            test: 'Health Check del servidor',
+                            status: 'success',
+                            message: '✅ Servidor responde correctamente',
+                            detail: JSON.stringify(healthData, null, 2)
+                        });
+                    } else {
+                        results.push({
+                            test: 'Health Check del servidor',
+                            status: 'error',
+                            message: `❌ Servidor respondió con status ${healthResponse.status}`,
+                            detail: await healthResponse.text()
+                        });
+                    }
+                } catch (error) {
+                    results.push({
+                        test: 'Health Check del servidor',
+                        status: 'error',
+                        message: '❌ No se puede conectar con el servidor',
+                        detail: error.message
+                    });
+                }
+                
+                // Test 3: Verificar endpoint raíz
+                try {
+                    const rootResponse = await fetch(apiUrl);
+                    if (rootResponse.ok) {
+                        const rootData = await rootResponse.json();
+                        results.push({
+                            test: 'Endpoint raíz (/)',
+                            status: 'success',
+                            message: '✅ API responde correctamente',
+                            detail: JSON.stringify(rootData, null, 2)
+                        });
+                    } else {
+                        results.push({
+                            test: 'Endpoint raíz (/)',
+                            status: 'warning',
+                            message: `⚠️ Status: ${rootResponse.status}`,
+                            detail: await rootResponse.text()
+                        });
+                    }
+                } catch (error) {
+                    results.push({
+                        test: 'Endpoint raíz (/)',
+                        status: 'error',
+                        message: '❌ Error al conectar',
+                        detail: error.message
+                    });
+                }
+                
+                // Test 4: Intentar listar alumnos
+                try {
+                    const alumnos = await MONGO.listAlumnos();
+                    results.push({
+                        test: 'Listar alumnos (GET /alumnos)',
+                        status: 'success',
+                        message: `✅ ${Array.isArray(alumnos) ? alumnos.length : 0} alumnos encontrados`,
+                        detail: Array.isArray(alumnos) ? 
+                            alumnos.slice(0, 3).map(a => `- ${a.nombre} (${a.id})`).join('\n') + 
+                            (alumnos.length > 3 ? `\n... y ${alumnos.length - 3} más` : '') :
+                            'Respuesta no es un array'
+                    });
+                } catch (error) {
+                    results.push({
+                        test: 'Listar alumnos (GET /alumnos)',
+                        status: 'error',
+                        message: '❌ Error al listar alumnos',
+                        detail: error.message + '\n\nStack: ' + error.stack
+                    });
+                }
+                
+                // Test 5: Verificar CORS
+                results.push({
+                    test: 'Verificación CORS',
+                    status: 'info',
+                    message: 'Si ves errores de CORS en la consola, el servidor necesita configurar CORS correctamente'
+                });
+            }
+            
+            // Renderizar resultados
+            resultsDiv.innerHTML = results.map(r => `
+                <div class="test-item ${r.status}">
+                    <h3>${r.test}</h3>
+                    <p>${r.message}</p>
+                    ${r.detail ? `<pre>${r.detail}</pre>` : ''}
+                </div>
+            `).join('');
+            
+            // Log en consola
+            console.log('📊 Resultados del diagnóstico:', results);
+        }
+        
+        // Ejecutar automáticamente al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runDiagnostics, 500);
+        });
+    </script>
+</body>
+</html>
+
