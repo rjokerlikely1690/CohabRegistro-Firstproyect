@@ -335,8 +335,76 @@ async function loadAlumnos() {
                 <p>Haz clic en "Agregar Alumno" para comenzar</p>
             </div>
         `;
+        updateDashboardStats();
         return;
     }
+    
+    // Renderizar alumnos
+    renderizarTodosLosAlumnos();
+    updateDashboardStats();
+}
+
+// Función para calcular estado (solo para UI local, la validación real es en backend)
+function calcularEstado(alumno) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    const fechaPago = parseFechaLocal(alumno.fechaPago);
+    if (!fechaPago) {
+        return {
+            texto: 'Sin pago registrado',
+            clase: 'atrasado',
+            proximo: '---',
+            diasRestantes: -999
+        };
+    }
+    
+    const diaPago = alumno.diaPago || diaPagoGlobal;
+    
+    // Calcular próximo pago
+    let proximoPago = new Date(fechaPago);
+    proximoPago.setMonth(proximoPago.getMonth() + 1);
+    proximoPago.setDate(Math.min(diaPago, new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, 0).getDate()));
+    proximoPago.setHours(0, 0, 0, 0);
+    
+    // Si el próximo pago ya pasó, avanzar al siguiente mes
+    while (proximoPago < hoy) {
+        proximoPago.setMonth(proximoPago.getMonth() + 1);
+        proximoPago.setDate(Math.min(diaPago, new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, 0).getDate()));
+    }
+    
+    const diffTime = proximoPago - hoy;
+    const diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    let texto, clase;
+    if (diasRestantes < 0) {
+        texto = `Vencido hace ${Math.abs(diasRestantes)} días`;
+        clase = 'atrasado';
+    } else if (diasRestantes === 0) {
+        texto = 'Vence hoy';
+        clase = 'proximo';
+    } else if (diasRestantes <= 7) {
+        texto = `${diasRestantes} días restantes`;
+        clase = 'proximo';
+    } else {
+        texto = `${diasRestantes} días restantes`;
+        clase = 'al-dia';
+    }
+    
+    return {
+        texto,
+        clase,
+        proximo: formatFechaLocal(proximoPago),
+        diasRestantes
+    };
+}
+
+// Renderizar todos los alumnos en el grid
+function renderizarTodosLosAlumnos() {
+    const grid = document.getElementById('alumnosGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
     
     alumnos.forEach(alumno => {
         // El estado se calcula automáticamente cada vez que se carga
