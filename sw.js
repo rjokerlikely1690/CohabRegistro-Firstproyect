@@ -1,10 +1,11 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v8';
+const CACHE_NAME = 'academia-cohab-v10';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/usuario.html',
   '/verificar.html',
   '/app.js',
   '/verificar.js',
@@ -70,15 +71,34 @@ self.addEventListener('fetch', function(event) {
 
   if (isHTML) {
     // Network-first para HTML (evita UI vieja en móvil)
-    event.respondWith(
-      fetch(req)
-        .then(res => {
-          const resClone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(req, resClone));
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
+    // ESPECIALMENTE para index.html que debe ser siempre la versión más reciente
+    const isIndexHtml = url.pathname === '/' || url.pathname === '/index.html';
+    
+    if (isIndexHtml) {
+      // Para index.html: SIEMPRE network-first, nunca cache
+      event.respondWith(
+        fetch(req)
+          .then(res => {
+            // No cachear index.html para asegurar que siempre sea la versión más reciente
+            return res;
+          })
+          .catch(() => {
+            // Solo usar cache como último recurso si no hay red
+            return caches.match(req);
+          })
+      );
+    } else {
+      // Para otros HTML: network-first con cache
+      event.respondWith(
+        fetch(req)
+          .then(res => {
+            const resClone = res.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, resClone));
+            return res;
+          })
+          .catch(() => caches.match(req))
+      );
+    }
     return;
   }
 

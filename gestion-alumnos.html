@@ -20,7 +20,7 @@
     <link rel="icon" type="image/png" href="logo_cohab.png">
     <link rel="apple-touch-icon" href="logo_cohab.png">
     
-    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
     <nav class="navbar">
@@ -48,18 +48,59 @@
     </nav>
 
     <main class="container">
+        <!-- Dashboard de Estadísticas -->
+        <section class="dashboard-stats" id="dashboardStats">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3 id="totalAlumnos">0</h3>
+                    <p>Total Alumnos</p>
+                </div>
+            </div>
+            <div class="stat-card stat-success">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3 id="alumnosAlDia">0</h3>
+                    <p>Al Día</p>
+                </div>
+            </div>
+            <div class="stat-card stat-warning">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-info">
+                    <h3 id="alumnosVencidos">0</h3>
+                    <p>Vencidos</p>
+                </div>
+            </div>
+            <div class="stat-card stat-danger">
+                <div class="stat-icon">🔴</div>
+                <div class="stat-info">
+                    <h3 id="alumnosMorosos">0</h3>
+                    <p>Morosos</p>
+                </div>
+            </div>
+        </section>
+
         <section class="header-section">
             <h2>Gestión de Alumnos</h2>
             <div class="header-actions">
-                <button class="btn btn-secondary" onclick="updateDatabase()" title="Actualizar base de datos y recalcular estados">Actualizar</button>
+                <button class="btn btn-secondary" onclick="updateDatabase()" title="Actualizar base de datos y recalcular estados">🔄 Actualizar</button>
+                <button class="btn btn-info" onclick="exportarDatos()" title="Exportar datos a CSV">📥 Exportar</button>
                 <button class="btn btn-primary" onclick="openModal()">+ Agregar Alumno</button>
-                
-                <!-- Script temporal eliminado; ahora usamos openModal() de app.js -->
             </div>
         </section>
 
         <section class="search-section">
-            <input type="text" id="searchInput" placeholder="🔍 Buscar alumno..." onkeyup="filterAlumnos()">
+            <div class="search-filters">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar por nombre, email o teléfono..." onkeyup="filterAlumnos()">
+                <select id="filterEstado" onchange="filterAlumnos()" class="filter-select">
+                    <option value="">Todos los estados</option>
+                    <option value="al-dia">✅ Al Día</option>
+                    <option value="por-vencer">⚠️ Por Vencer</option>
+                    <option value="vencido">🔴 Vencido</option>
+                    <option value="moroso">⛔ Moroso</option>
+                </select>
+                <button class="btn btn-small" onclick="clearFilters()">Limpiar Filtros</button>
+            </div>
         </section>
 
         <section class="alumnos-grid" id="alumnosGrid">
@@ -132,7 +173,7 @@
     <script src="supabase-client.js"></script>
     <script src="mongodb-client.js"></script>
     <script src="alert-system.js"></script>
-    <script src="app.js?v=18"></script>
+    <script src="app.js?v=20"></script>
     
     <script>
         // Función para toggle del menú móvil

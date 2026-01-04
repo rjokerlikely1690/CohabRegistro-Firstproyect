@@ -27,8 +27,8 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #0f0f0f 25%, #1a1a1a 50%, #0f0f0f 75%, #000000 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -38,32 +38,40 @@
             overflow-x: hidden;
         }
         
-        /* Efecto de fondo animado */
+        /* Efecto de fondo profesional */
         body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(220, 38, 38, 0.15) 0%, transparent 50%);
-            animation: pulse 8s ease-in-out infinite;
+                radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(220, 38, 38, 0.08) 0%, transparent 50%);
             pointer-events: none;
+            z-index: 0;
         }
         
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+            pointer-events: none;
+            z-index: 0;
         }
         
         .login-container {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1400px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 3rem;
+            gap: 4rem;
             align-items: center;
             position: relative;
             z-index: 1;
@@ -72,104 +80,115 @@
         /* Panel izquierdo - Logo y bienvenida */
         .welcome-panel {
             color: white;
-            text-align: center;
+            text-align: left;
+            padding: 2rem;
         }
         
         .logo-container {
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.8s ease-out;
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
         
         .logo-container img {
-            max-width: 300px;
+            max-width: 120px;
             height: auto;
-            filter: drop-shadow(0 10px 30px rgba(220, 38, 38, 0.4));
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            filter: drop-shadow(0 4px 20px rgba(220, 38, 38, 0.3));
         }
         
         .welcome-panel h1 {
-            font-size: 3rem;
-            font-weight: 900;
+            font-size: 3.5rem;
+            font-weight: 700;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: fadeInUp 0.8s ease-out 0.2s both;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            text-shadow: 0 2px 20px rgba(220, 38, 38, 0.2),
+                         0 4px 40px rgba(0, 0, 0, 0.5);
         }
         
         .welcome-panel .subtitle {
             font-size: 1.5rem;
             color: #dc2626;
             font-weight: 600;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.8s ease-out 0.4s both;
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.01em;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid rgba(220, 38, 38, 0.3);
         }
         
         .welcome-panel .description {
-            font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, 0.85);
             line-height: 1.8;
-            max-width: 500px;
-            margin: 0 auto;
-            animation: fadeInUp 0.8s ease-out 0.6s both;
+            max-width: 550px;
+            margin: 0;
+            font-weight: 400;
+        }
+        
+        .welcome-panel .description strong {
+            color: #ffffff;
+            font-weight: 600;
         }
         
         /* Panel derecho - Accesos */
         .access-panel {
-            animation: fadeInUp 0.8s ease-out 0.8s both;
+            position: relative;
         }
         
         .login-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(145deg, rgba(15, 15, 15, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 2rem;
-            padding: 3rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border-top: 3px solid #dc2626;
+            border-radius: 16px;
+            padding: 3.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+        
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #dc2626, transparent);
+            opacity: 0.6;
         }
         
         .role-selector h3 {
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
+            color: #ffffff;
+            font-size: 1.75rem;
+            margin-bottom: 2.5rem;
             text-align: center;
             font-weight: 600;
+            letter-spacing: -0.01em;
         }
         
         .role-button {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 1.25rem;
             width: 100%;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            border: 2px solid transparent;
-            border-radius: 1rem;
+            padding: 1.75rem;
+            margin: 1.25rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
             color: white;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         
         .role-button::before {
@@ -179,8 +198,8 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transition: left 0.6s;
         }
         
         .role-button:hover::before {
@@ -188,47 +207,57 @@
         }
         
         .role-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        0 4px 16px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
         }
         
         .role-button:active {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
         
         .role-admin {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            border-color: rgba(220, 38, 38, 0.5);
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+            border-left: 4px solid #ef4444;
         }
         
         .role-admin:hover {
-            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
-            border-color: #dc2626;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+            border-left-color: #fca5a5;
+            box-shadow: 0 8px 32px rgba(220, 38, 38, 0.4),
+                        0 4px 16px rgba(0, 0, 0, 0.3);
         }
         
         .role-user {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border-color: rgba(16, 185, 129, 0.5);
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+            border-left: 4px solid #34d399;
         }
         
         .role-user:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            border-color: #10b981;
+            background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+            border-left-color: #6ee7b7;
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4),
+                        0 4px 16px rgba(0, 0, 0, 0.3);
         }
         
         .role-management {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-            border-color: rgba(99, 102, 241, 0.5);
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+            border-left: 4px solid #818cf8;
         }
         
         .role-management:hover {
-            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-            border-color: #6366f1;
+            background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%);
+            border-left-color: #a5b4fc;
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4),
+                        0 4px 16px rgba(0, 0, 0, 0.3);
         }
         
         .role-icon {
-            font-size: 2rem;
+            font-size: 2.5rem;
             flex-shrink: 0;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
         }
         
         .role-content {
@@ -237,47 +266,79 @@
         }
         
         .role-title {
-            font-size: 1.2rem;
-            margin-bottom: 0.3rem;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
         }
         
         .role-description {
-            font-size: 0.9rem;
-            opacity: 0.9;
+            font-size: 0.95rem;
+            opacity: 0.95;
             font-weight: 400;
+            line-height: 1.5;
         }
         
         /* Responsive */
         @media (max-width: 968px) {
             .login-container {
                 grid-template-columns: 1fr;
-                gap: 2rem;
+                gap: 3rem;
+            }
+            
+            .welcome-panel {
+                text-align: center;
             }
             
             .welcome-panel h1 {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
             
             .welcome-panel .subtitle {
-                font-size: 1.2rem;
+                font-size: 1.3rem;
+            }
+            
+            .welcome-panel .description {
+                max-width: 100%;
+            }
+            
+            .logo-container {
+                justify-content: center;
             }
             
             .logo-container img {
-                max-width: 200px;
+                max-width: 100px;
             }
         }
         
         @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+            }
+            
             .login-card {
                 padding: 2rem 1.5rem;
             }
             
             .role-button {
-                padding: 1.2rem;
+                padding: 1.5rem;
+                gap: 1rem;
+            }
+            
+            .role-icon {
+                font-size: 2rem;
             }
             
             .role-title {
-                font-size: 1rem;
+                font-size: 1.1rem;
+            }
+            
+            .role-description {
+                font-size: 0.9rem;
+            }
+            
+            .welcome-panel h1 {
+                font-size: 2rem;
             }
         }
     </style>
@@ -289,12 +350,13 @@
             <div class="logo-container">
                 <img src="logo_cohab.svg" alt="Academia COHAB" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
             </div>
-            <h1>Sistema de Control</h1>
+            <h1>Sistema de Control y Verificación</h1>
             <p class="subtitle">Academia COHAB</p>
             <p class="description">
-                Gestiona tus mensualidades de forma eficiente y profesional. 
-                Accede a tu información de pagos, genera códigos QR y administra 
-                tu academia con herramientas diseñadas para ti.
+                Plataforma institucional para la gestión de suscripciones y control de acceso. 
+                <strong>Transparencia, orden y disciplina</strong> en cada operación. 
+                Accede a las herramientas correspondientes a tu rol y mantén el control 
+                total de tu academia.
             </p>
         </div>
         
@@ -308,7 +370,7 @@
                         <span class="role-icon">👨‍💼</span>
                         <div class="role-content">
                             <div class="role-title">ADMINISTRADOR</div>
-                            <div class="role-description">Gestión completa del sistema</div>
+                            <div class="role-description">Acceso completo al sistema. Configuración, reportes y gestión total.</div>
                         </div>
                     </a>
                     
@@ -316,7 +378,7 @@
                         <span class="role-icon">👥</span>
                         <div class="role-content">
                             <div class="role-title">GESTIÓN DE ALUMNOS</div>
-                            <div class="role-description">Agregar, editar y gestionar alumnos</div>
+                            <div class="role-description">Registro, edición y administración de alumnos y suscripciones.</div>
                         </div>
                     </a>
                     
@@ -324,7 +386,7 @@
                         <span class="role-icon">👤</span>
                         <div class="role-content">
                             <div class="role-title">VERIFICAR PAGO</div>
-                            <div class="role-description">Consulta tu estado de pago</div>
+                            <div class="role-description">Consulta el estado de tu suscripción y fecha de próximo pago.</div>
                         </div>
                     </a>
                 </div>

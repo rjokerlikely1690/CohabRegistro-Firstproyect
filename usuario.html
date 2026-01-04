@@ -19,7 +19,7 @@
     <link rel="icon" type="image/png" href="logo_cohab.png">
     <link rel="apple-touch-icon" href="logo_cohab.png">
     
-    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=9">
     <style>
         .user-header {
             background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%);
@@ -220,10 +220,21 @@
     </style>
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <img src="logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            <ul class="nav-links">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="usuario.html" class="active">Mi Estado</a></li>
+                <li><a href="login.html">Acceso Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
     <div class="user-header" style="background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%) !important;">
         <div class="container">
             <div class="user-nav">
-                <img src="logo_cohab.svg" alt="COHAB" class="logo" style="height: 40px;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
                 <div class="role-badge" style="font-size: 0.8rem; padding: 0.3rem 0.7rem;">👤 USUARIO</div>
                 <button class="btn btn-secondary" onclick="logout()" style="background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); padding: 0.5rem 1rem; font-size: 0.9rem;">Cerrar</button>
             </div>
@@ -303,6 +314,18 @@
     <script src="mongodb-client.js"></script>
     
     <script>
+        // VERIFICACIÓN TEMPRANA: Si hay un ID en la URL, NO permitir redirecciones
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasId = urlParams.has('id') || window.location.pathname.includes('/alumno/');
+            
+            if (hasId) {
+                console.log('🔒 Modo acceso público detectado - bloqueando redirecciones automáticas');
+                // Prevenir cualquier redirección automática
+                window.__BLOCK_REDIRECTS__ = true;
+            }
+        })();
+        
         let video, canvas, context, scanning = false;
         let currentStudent = null;
 
@@ -348,57 +371,97 @@
         }
 
         function getStudentIdFromUrl() {
+            console.log('🔍 getStudentIdFromUrl() - Analizando URL...');
+            console.log('   - window.location.href:', window.location.href);
+            console.log('   - window.location.search:', window.location.search);
+            console.log('   - window.location.pathname:', window.location.pathname);
+            
             // Intentar obtener desde query parameter
             const params = new URLSearchParams(window.location.search);
             const queryId = params.get('id');
+            console.log('   - queryId obtenido:', queryId);
+            
             if (queryId) {
                 // Limpiar el ID por si acaso viene con una URL completa
-                return extractStudentId(queryId) || queryId;
+                const cleanId = extractStudentId(queryId) || queryId.trim();
+                console.log('   - ID limpio desde query:', cleanId);
+                if (cleanId) return cleanId;
             }
 
             // Intentar obtener desde pathname (/alumno/ID)
             const pathMatch = window.location.pathname.match(/\/alumno\/([^\/]+)/i);
             if (pathMatch && pathMatch[1]) {
-                return decodeURIComponent(pathMatch[1]);
+                const pathId = decodeURIComponent(pathMatch[1]);
+                console.log('   - ID desde pathname:', pathId);
+                return pathId;
             }
 
+            console.log('   - ❌ No se encontró ID en la URL');
             return null;
         }
         
-        // Cargar alumnos desde MongoDB/Supabase si están disponibles
+        // Cargar alumnos desde MongoDB (única fuente de verdad)
         async function loadAlumnosFromCloud() {
+            console.log('☁️ loadAlumnosFromCloud() - Iniciando carga desde MongoDB...');
+            
             try {
-                if (window.MONGO && MONGO.isConfigured()) {
-                    const alumnos = await MONGO.listAlumnos();
-                    if (Array.isArray(alumnos) && alumnos.length > 0) {
-                        localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                        return alumnos;
-                    }
-                } else if (window.SUPA && SUPA.isConfigured()) {
-                    const alumnos = await SUPA.listAlumnos();
-                    if (Array.isArray(alumnos) && alumnos.length > 0) {
-                        localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                        return alumnos;
-                    }
+                if (!window.MONGO || !MONGO.isConfigured()) {
+                    throw new Error('MongoDB no está configurado');
                 }
+                
+                console.log('📡 Intentando cargar desde MongoDB...');
+                const alumnos = await MONGO.listAlumnos();
+                console.log('📡 Respuesta de MongoDB:', alumnos);
+                
+                if (!Array.isArray(alumnos)) {
+                    throw new Error('Respuesta inválida del servidor');
+                }
+                
+                console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
+                return alumnos;
+                
             } catch (error) {
-                console.error('Error cargando alumnos desde la nube:', error);
+                console.error('❌ Error cargando alumnos desde MongoDB:', error);
+                console.error('   - Stack:', error.stack);
+                
+                // ⚠️ NO usar localStorage como fallback
+                // Si MongoDB falla, el sistema debe fallar explícitamente
+                throw error;
             }
-            return null;
         }
 
         // Verificar que el usuario tenga permisos de usuario
         function checkUserAccess() {
+            // BLOQUEAR redirecciones si hay un ID en la URL (acceso público)
+            if (window.__BLOCK_REDIRECTS__) {
+                console.log('🔒 Redirección bloqueada - acceso público activo');
+                return true;
+            }
+            
+            // PRIMERO verificar si hay un ID en la URL (acceso público)
             const publicId = getStudentIdFromUrl();
             if (publicId) {
-                return true; // acceso público vía QR o enlace directo
+                console.log('✅ Acceso público detectado con ID:', publicId);
+                window.__BLOCK_REDIRECTS__ = true; // Bloquear futuras redirecciones
+                return true; // acceso público vía QR o enlace directo - NO redirigir
             }
 
+            // Si no hay ID público, verificar roles de usuario
             const userRole = localStorage.getItem('userRole');
             if (userRole === 'usuario' || userRole === 'admin') {
                 return true;
             }
 
+            // Solo redirigir si NO hay ID público y NO hay rol de usuario
+            // PERO verificar nuevamente que no haya ID antes de redirigir
+            const doubleCheckId = getStudentIdFromUrl();
+            if (doubleCheckId) {
+                console.log('✅ ID detectado en verificación doble - bloqueando redirección');
+                window.__BLOCK_REDIRECTS__ = true;
+                return true;
+            }
+            
+            console.log('⚠️ Acceso denegado - redirigiendo a login');
             alert('Acceso denegado. Inicia sesión como usuario para ver tu estado.');
                 window.location.href = 'login.html';
                 return false;
@@ -487,82 +550,289 @@
             }
         }
 
-        // Buscar por ID de usuario
+        // ============================================================
+        // FUNCIÓN PRINCIPAL DE VALIDACIÓN - SIN FALLBACKS
+        // ============================================================
+        // REGLA: El acceso SOLO puede depender del backend.
+        // NO hay fallback a localStorage para decisiones de acceso.
+        // ============================================================
         async function searchByUserId(userId) {
+            console.log('═══════════════════════════════════════════════════');
+            console.log('🔎 [PASO 1] searchByUserId() INICIADO');
+            console.log('   Input recibido:', userId);
+            console.log('═══════════════════════════════════════════════════');
+            
+            // PASO 1: Obtener userId si no se proporcionó
             if (!userId) {
                 userId = document.getElementById('userIdInput') ? document.getElementById('userIdInput').value.trim() : null;
             }
             
             if (!userId) {
+                console.error('❌ [PASO 1] No se proporcionó userId');
                 showCustomAlert('ID requerido', 'Por favor ingresa un ID de alumno para buscar', 'warning');
                 return;
             }
             
-            // Limpiar y extraer el ID real
+            // PASO 2: Extraer ID limpio
             const cleanId = extractStudentId(userId);
+            console.log('🔍 [PASO 2] ID extraído:', cleanId);
+            
             if (!cleanId) {
+                console.error('❌ [PASO 2] ID inválido después de extraer');
                 showCustomAlert('ID inválido', 'El ID proporcionado no es válido', 'error');
                 return;
             }
             
-            console.log('Buscando alumno con ID:', cleanId);
-            
-            // Primero buscar en localStorage
-            let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            let alumno = alumnos.find(a => a.id === cleanId);
-            
-            // Si no se encuentra, intentar cargar desde MongoDB/Supabase
-            if (!alumno) {
-                console.log('Alumno no encontrado en localStorage, cargando desde la nube...');
-                const alumnosCloud = await loadAlumnosFromCloud();
-                if (alumnosCloud) {
-                    alumnos = alumnosCloud;
-                    alumno = alumnos.find(a => a.id === cleanId);
-                }
-            }
-            
-            if (!alumno) {
-                console.error('Alumno no encontrado. ID buscado:', cleanId);
-                console.log('Alumnos disponibles:', alumnos.map(a => a.id));
-                showCustomAlert('Alumno no encontrado', `No se encontró un alumno con el ID: ${cleanId}`, 'error');
-                // Si se accedió desde URL, redirigir a la página principal
-                if (window.location.search.includes('id=') || window.location.pathname.includes('/alumno/')) {
-                    setTimeout(() => {
-                        window.location.href = 'usuario.html';
-                    }, 3000);
+            // PASO 3: Verificar configuración de MongoDB API
+            console.log('🔍 [PASO 3] Verificando configuración de MongoDB API...');
+            if (!window.MONGO || !MONGO.isConfigured()) {
+                const apiUrl = window.MONGO ? MONGO.getApiUrl() : 'NO CONFIGURADO';
+                console.error('❌ [PASO 3] MongoDB API NO CONFIGURADA');
+                console.error('   API URL:', apiUrl);
+                
+                // ERROR EXPLÍCITO: No hay fallback, solo error claro
+                showCustomAlert(
+                    'Error de configuración del sistema',
+                    'El sistema de validación no está configurado correctamente.\n\n' +
+                    'Por favor contacta al administrador para configurar la URL de MongoDB API.\n\n' +
+                    'Sin esta configuración, no es posible validar suscripciones.',
+                    'error'
+                );
+                
+                // Mostrar sección de búsqueda para que el usuario pueda intentar de nuevo
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.style.display = 'block';
                 }
                 return;
             }
             
-            currentStudent = alumno;
-            showStudentResult(alumno);
+            const apiUrl = MONGO.getApiUrl();
+            console.log('✅ [PASO 3] MongoDB API configurada:', apiUrl);
+            
+            // PASO 4: Llamar al endpoint de validación
+            console.log('📡 [PASO 4] Llamando a endpoint de validación...');
+            console.log('   Endpoint:', `${apiUrl}/alumnos/${cleanId}/validar`);
+            console.log('   ID a validar:', cleanId);
+            
+            try {
+                const inicioRequest = Date.now();
+                const resultado = await MONGO.validarSuscripcion(cleanId);
+                const tiempoRequest = Date.now() - inicioRequest;
+                
+                console.log('✅ [PASO 4] Respuesta recibida del backend');
+                console.log('   Tiempo de respuesta:', tiempoRequest + 'ms');
+                console.log('   Respuesta completa:', resultado);
+                
+                // PASO 5: Validar estructura de respuesta
+                console.log('🔍 [PASO 5] Validando estructura de respuesta...');
+                if (!resultado || typeof resultado.acceso !== 'boolean') {
+                    console.error('❌ [PASO 5] Respuesta inválida del servidor');
+                    console.error('   Respuesta recibida:', resultado);
+                    throw new Error('Respuesta inválida del servidor: falta campo "acceso"');
+                }
+                
+                console.log('✅ [PASO 5] Respuesta válida');
+                console.log('   Acceso:', resultado.acceso);
+                console.log('   Estado:', resultado.estado);
+                console.log('   Días restantes:', resultado.diasRestantes);
+                
+                // PASO 6: Procesar resultado
+                console.log('🎨 [PASO 6] Procesando resultado y renderizando...');
+                await handleValidationResult(resultado, cleanId);
+                console.log('✅ [PASO 6] Resultado renderizado correctamente');
+                console.log('═══════════════════════════════════════════════════');
+                console.log('✅ VALIDACIÓN COMPLETADA EXITOSAMENTE');
+                console.log('═══════════════════════════════════════════════════');
+                
+            } catch (error) {
+                console.error('═══════════════════════════════════════════════════');
+                console.error('❌ ERROR EN VALIDACIÓN');
+                console.error('═══════════════════════════════════════════════════');
+                console.error('   Tipo de error:', error.name);
+                console.error('   Mensaje:', error.message);
+                console.error('   Stack:', error.stack);
+                
+                // PASO 7: Manejar errores de forma explícita
+                console.log('🔍 [PASO 7] Manejando error...');
+                
+                let mensajeError = 'Error al validar la suscripción';
+                let tituloError = 'Error de validación';
+                
+                if (error.message.includes('404') || error.message.includes('no encontrado')) {
+                    tituloError = 'Alumno no encontrado';
+                    mensajeError = `No se encontró un alumno con el ID: ${cleanId}\n\n` +
+                                   'Verifica que el ID sea correcto.';
+                } else if (error.message.includes('400') || error.message.includes('requerido')) {
+                    tituloError = 'Datos incompletos';
+                    mensajeError = 'El alumno no tiene todos los datos necesarios para validar la suscripción.\n\n' +
+                                   'Contacta al administrador.';
+                } else if (error.message.includes('500') || error.message.includes('Error interno')) {
+                    tituloError = 'Error del servidor';
+                    mensajeError = 'El servidor encontró un error al procesar la solicitud.\n\n' +
+                                   'Por favor intenta nuevamente más tarde.';
+                } else if (error.message.includes('Failed to fetch') || 
+                          error.message.includes('NetworkError') ||
+                          error.message.includes('Network request failed')) {
+                    tituloError = 'Error de conexión';
+                    mensajeError = 'No se pudo conectar con el servidor de validación.\n\n' +
+                                   'Verifica:\n' +
+                                   '1. Tu conexión a internet\n' +
+                                   '2. Que el backend esté disponible\n' +
+                                   '3. Que la URL de MongoDB API esté configurada correctamente';
+                } else {
+                    tituloError = 'Error desconocido';
+                    mensajeError = `Error: ${error.message || 'Error desconocido'}\n\n` +
+                                   'Por favor contacta al administrador.';
+                }
+                
+                console.error('   Título del error:', tituloError);
+                console.error('   Mensaje del error:', mensajeError);
+                
+                // Mostrar error de forma explícita
+                showCustomAlert(tituloError, mensajeError, 'error');
+                
+                // Asegurar que se muestre la sección de búsqueda
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.style.display = 'block';
+                }
+                
+                // Asegurar que el contenedor de resultado esté oculto
+                const resultContainer = document.getElementById('resultContainer');
+                if (resultContainer) {
+                    resultContainer.style.display = 'none';
+                }
+                
+                console.error('═══════════════════════════════════════════════════');
+                console.error('❌ VALIDACIÓN FALLIDA - ERROR MOSTRADO AL USUARIO');
+                console.error('═══════════════════════════════════════════════════');
+            }
+        }
+        
+        // ============================================================
+        // FUNCIÓN AUXILIAR: Manejar resultado de validación
+        // ============================================================
+        async function handleValidationResult(resultado, cleanId) {
+            console.log('🎨 [handleValidationResult] Procesando resultado...');
+            console.log('   Acceso:', resultado.acceso);
+            console.log('   Estado:', resultado.estado);
+            console.log('   Alumno:', resultado.alumno?.nombre);
+            
+            // Validar estructura
+            if (!resultado || typeof resultado.acceso !== 'boolean') {
+                console.error('❌ [handleValidationResult] Respuesta inválida');
+                throw new Error('Respuesta inválida del servidor: falta campo "acceso"');
+            }
+            
+            if (!resultado.alumno) {
+                console.error('❌ [handleValidationResult] Respuesta sin datos de alumno');
+                throw new Error('Respuesta inválida del servidor: falta campo "alumno"');
+            }
+            
+            // Guardar alumno actual
+            currentStudent = resultado.alumno;
+            console.log('✅ [handleValidationResult] Alumno guardado:', currentStudent.nombre);
+            
+            // Convertir respuesta del backend al formato esperado por showStudentResult
+            const estado = {
+                acceso: resultado.acceso,
+                estado: resultado.estado,
+                diasRestantes: resultado.diasRestantes,
+                proximoPago: resultado.proximoPago,
+                mensaje: resultado.mensaje,
+                // Para compatibilidad con UI existente
+                clase: resultado.acceso ? 'al-dia' : 'atrasado',
+                texto: resultado.mensaje,
+                proximo: resultado.proximoPago ? new Date(resultado.proximoPago).toLocaleDateString('es-ES') : '---'
+            };
+            
+            console.log('✅ [handleValidationResult] Estado formateado:', estado);
+            
+            // Renderizar resultado
+            console.log('🎨 [handleValidationResult] Llamando a showStudentResult()...');
+            showStudentResult(resultado.alumno, estado);
+            console.log('✅ [handleValidationResult] Resultado renderizado');
+            
+            // Actualizar título de la página
+            document.title = `Estado de Pago - ${resultado.alumno.nombre}`;
+            console.log('✅ [handleValidationResult] Título actualizado');
+        }
+            
+            if (!resultado || resultado.acceso === undefined) {
+                throw new Error('Respuesta inválida del servidor');
+            }
+            
+            // Guardar alumno actual
+            currentStudent = resultado.alumno;
+            
+            // Convertir respuesta del backend al formato esperado por showStudentResult
+            const estado = {
+                acceso: resultado.acceso,
+                estado: resultado.estado,
+                diasRestantes: resultado.diasRestantes,
+                proximoPago: resultado.proximoPago,
+                mensaje: resultado.mensaje,
+                // Para compatibilidad con UI existente
+                clase: resultado.acceso ? 'al-dia' : 'atrasado',
+                texto: resultado.mensaje,
+                proximo: resultado.proximoPago ? new Date(resultado.proximoPago).toLocaleDateString('es-ES') : '---'
+            };
+            
+            showStudentResult(resultado.alumno, estado);
             
             // Actualizar el título de la página con el nombre del alumno
-            document.title = `Estado de Pago - ${alumno.nombre}`;
+            document.title = `Estado de Pago - ${resultado.alumno.nombre}`;
         }
 
-        // Mostrar resultado del alumno
-        function showStudentResult(alumno) {
-            const estado = calcularEstado(alumno);
+        // ============================================================
+        // FUNCIÓN: Mostrar resultado de validación
+        // ============================================================
+        // REGLA: SIEMPRE mostrar algo (éxito o error explícito)
+        // NO estados vacíos, NO silencios
+        // ============================================================
+        function showStudentResult(alumno, estado) {
+            console.log('🎨 [showStudentResult] INICIANDO renderizado');
+            console.log('   Alumno:', alumno?.nombre);
+            console.log('   Estado recibido:', estado);
             
-            // Actualizar icono y estado
+            // Validar parámetros
+            if (!alumno) {
+                console.error('❌ [showStudentResult] Alumno no proporcionado');
+                showCustomAlert('Error', 'No se pudo obtener la información del alumno', 'error');
+                return;
+            }
+            
+            if (!estado) {
+                console.error('❌ [showStudentResult] Estado no proporcionado');
+                showCustomAlert('Error', 'No se pudo obtener el estado de la suscripción', 'error');
+                return;
+            }
+            
+            console.log('✅ [showStudentResult] Parámetros válidos');
+            
+            // Actualizar icono y estado - basado en respuesta binaria del backend
             const statusIcon = document.getElementById('statusIcon');
             const paymentStatus = document.getElementById('paymentStatus');
             
-            if (estado.clase === 'aldia') {
-                statusIcon.textContent = '✅';
-                statusIcon.className = 'status-icon status-aldia';
-                paymentStatus.textContent = '🟢 Al día con los pagos';
-                paymentStatus.className = 'status-aldia';
-            } else if (estado.clase === 'proximo') {
+            if (estado.acceso === true) {
+                // Suscripción ACTIVA
+                if (estado.diasRestantes <= 5) {
                 statusIcon.textContent = '⚠️';
                 statusIcon.className = 'status-icon status-proximo';
-                paymentStatus.textContent = '🟠 Próximo a vencer';
+                    paymentStatus.textContent = `🟠 Próximo a vencer (${estado.diasRestantes} días)`;
                 paymentStatus.className = 'status-proximo';
             } else {
+                    statusIcon.textContent = '✅';
+                    statusIcon.className = 'status-icon status-aldia';
+                    paymentStatus.textContent = `🟢 Al día con los pagos (${estado.diasRestantes} días restantes)`;
+                    paymentStatus.className = 'status-aldia';
+                }
+            } else {
+                // Suscripción VENCIDA
                 statusIcon.textContent = '❌';
                 statusIcon.className = 'status-icon status-atrasado';
-                paymentStatus.textContent = '🔴 Pago atrasado';
+                paymentStatus.textContent = `🔴 Pago atrasado (${Math.abs(estado.diasRestantes)} días)`;
                 paymentStatus.className = 'status-atrasado';
             }
             
@@ -570,14 +840,16 @@
             
             // Mostrar alerta si es necesario
             const alertBanner = document.getElementById('alertBanner');
-            if (estado.clase === 'atrasado') {
+            if (estado.acceso === false) {
+                // VENCIDA
                 alertBanner.innerHTML = `
                     <h3>🚨 PAGO ATRASADO</h3>
                     <p>Tu pago está atrasado por ${Math.abs(estado.diasRestantes)} días. Por favor contacta a la administración.</p>
                 `;
                 alertBanner.className = 'alert-banner atrasado';
                 alertBanner.style.display = 'block';
-            } else if (estado.clase === 'proximo') {
+            } else if (estado.acceso === true && estado.diasRestantes <= 5) {
+                // ACTIVA pero próximo a vencer
                 alertBanner.innerHTML = `
                     <h3>⚠️ PRÓXIMO A VENCER</h3>
                     <p>Tu pago vence en ${estado.diasRestantes} días. Te recomendamos realizar el pago pronto.</p>
@@ -617,7 +889,7 @@
                 </div>
                 <div class="info-item">
                     <div class="label">Próximo Pago</div>
-                    <div class="value">${formatDate(estado.proximoPago)}</div>
+                    <div class="value">${estado.proximoPago ? formatDate(new Date(estado.proximoPago)) : '---'}</div>
                 </div>
                 <div class="info-item">
                     <div class="label">Monto Mensual</div>
@@ -625,7 +897,7 @@
                 </div>
                 <div class="info-item">
                     <div class="label">Estado</div>
-                    <div class="value" style="font-weight: bold;">${estado.texto || (estado.diasRestantes < 0 ? Math.abs(estado.diasRestantes) + ' días atrasado' : estado.diasRestantes + ' días restantes')}</div>
+                    <div class="value" style="font-weight: bold;">${estado.mensaje || estado.texto || (estado.diasRestantes < 0 ? Math.abs(estado.diasRestantes) + ' días atrasado' : estado.diasRestantes + ' días restantes')}</div>
                 </div>
                 <div class="info-item" style="border-top: 2px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem;">
                     <div class="label" style="color: #dc2626; font-weight: bold;">🔗 URL Directa</div>
@@ -633,8 +905,37 @@
                 </div>
             `;
             
-            document.getElementById('resultContainer').style.display = 'block';
-            document.getElementById('manualSearch').style.display = 'none';
+            // FORZAR VISIBILIDAD DEL RESULTADO
+            const resultContainer = document.getElementById('resultContainer');
+            if (resultContainer) {
+                resultContainer.style.display = 'block';
+                resultContainer.style.visibility = 'visible';
+                resultContainer.style.opacity = '1';
+                console.log('✅ [showStudentResult] Contenedor de resultado FORZADO a visible');
+            } else {
+                console.error('❌ [showStudentResult] No se encontró resultContainer');
+                showCustomAlert('Error', 'No se pudo mostrar el resultado. Error en la estructura de la página.', 'error');
+                return;
+            }
+            
+            // Ocultar búsqueda manual
+            const manualSearch = document.getElementById('manualSearch');
+            if (manualSearch) {
+                manualSearch.style.display = 'none';
+            }
+            
+            // Scroll suave al resultado después de un breve delay
+            setTimeout(() => {
+                if (resultContainer) {
+                    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    console.log('✅ [showStudentResult] Scroll al resultado ejecutado');
+                }
+            }, 200);
+            
+            console.log('✅ [showStudentResult] Renderizado completado exitosamente');
+            console.log('   Acceso:', estado.acceso);
+            console.log('   Estado:', estado.estado);
+            console.log('   Días restantes:', estado.diasRestantes);
         }
 
         // Cerrar resultado
@@ -735,73 +1036,102 @@
             return `${day}/${month}/${year}`;
         }
 
-        // Función para calcular estado (copiada de app.js)
-        function calcularEstado(alumno) {
-            const hoy = new Date();
-            const fechaUltimoPago = new Date(alumno.fechaPago);
-            // Fallback: usar diaPagoGlobal si no está definido, o 30 por defecto
-            const diaPagoGlobal = parseInt(localStorage.getItem('diaPagoGlobal')) || 30;
-            const diaPago = parseInt(alumno.diaPago) || diaPagoGlobal;
-            
-            let proximoPago = new Date(fechaUltimoPago);
-            proximoPago.setMonth(proximoPago.getMonth() + 1);
-            proximoPago.setDate(diaPago);
-            
-            if (proximoPago.getDate() !== diaPago) {
-                proximoPago.setDate(0);
-            }
-            
-            const diffTime = proximoPago - hoy;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            let estado = {
-                tipo: '',
-                clase: '',
-                diasRestantes: diffDays,
-                proximoPago: proximoPago
-            };
-            
-            if (diffDays < 0) {
-                estado.tipo = '🔴 Atrasado';
-                estado.clase = 'atrasado';
-            } else if (diffDays <= 5) {
-                estado.tipo = '🟠 Próximo a vencer';
-                estado.clase = 'proximo';
-            } else {
-                estado.tipo = '🟢 Al día';
-                estado.clase = 'aldia';
-            }
-            
-            return estado;
-        }
+        // NOTA: La función calcularEstado() fue eliminada.
+        // Ahora el cálculo se hace en el backend (endpoint GET /alumnos/:id/validar)
+        // Esta es la fuente única de verdad para el estado de suscripciones.
 
-        // Inicializar página
+        // ============================================================
+        // INICIALIZACIÓN DE PÁGINA - FLUJO OBLIGATORIO
+        // ============================================================
+        // REGLA: Si hay ID en URL → SIEMPRE disparar validación
+        // NO hay excepciones, NO hay silencios, SIEMPRE mostrar resultado o error
+        // ============================================================
         document.addEventListener('DOMContentLoaded', async function() {
-            // Verificar si hay un ID en la URL
+            console.log('═══════════════════════════════════════════════════');
+            console.log('🚀 [INICIO] Inicializando usuario.html');
+            console.log('═══════════════════════════════════════════════════');
+            console.log('📍 URL completa:', window.location.href);
+            console.log('🔍 Query params:', window.location.search);
+            console.log('🛤️ Pathname:', window.location.pathname);
+            
+            // PASO 1: Extraer ID de la URL
             const studentId = getStudentIdFromUrl();
+            console.log('🆔 [INICIO] ID detectado en URL:', studentId);
             
             if (studentId) {
-                // Si hay un ID en la URL (query o ruta bonita), buscar automáticamente el alumno
-                // Primero intentar cargar desde la nube si está disponible
-                await loadAlumnosFromCloud();
-                await searchByUserId(studentId);
-                // Ocultar las opciones de búsqueda ya que ya tenemos el ID
+                console.log('✅ [INICIO] Modo acceso público detectado');
+                console.log('   ID extraído:', studentId);
+                console.log('   Acción: Disparar validación inmediatamente');
+                
+                // Mostrar indicador de carga
                 const searchSection = document.querySelector('.search-section');
                 if (searchSection) {
-                    searchSection.style.display = 'none';
+                    searchSection.innerHTML = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                            <p style="font-size: 1.1rem; color: #666;">Validando suscripción...</p>
+                            <p style="font-size: 0.9rem; color: #999; margin-top: 0.5rem;">Por favor espera</p>
+                        </div>
+                    `;
                 }
-                // Cambiar el título de la página
+                
+                // Cambiar título de la página
                 const welcomeH1 = document.querySelector('.user-welcome h1');
                 const welcomeP = document.querySelector('.user-welcome p');
                 if (welcomeH1) welcomeH1.textContent = '📱 Estado de Pago';
-                if (welcomeP) welcomeP.textContent = 'Consulta tu información de pago';
+                if (welcomeP) welcomeP.textContent = 'Validando tu suscripción...';
+                
+                try {
+                    // DISPARAR VALIDACIÓN INMEDIATAMENTE
+                    // NO cargar alumnos desde la nube primero
+                    // La validación se hace directamente con el endpoint
+                    console.log('📡 [INICIO] Disparando validación con ID:', studentId);
+                    await searchByUserId(studentId);
+                    
+                    // Ocultar sección de búsqueda después de validar
+                    if (searchSection) {
+                        searchSection.style.display = 'none';
+                    }
+                    
+                } catch (error) {
+                    console.error('═══════════════════════════════════════════════════');
+                    console.error('❌ [INICIO] ERROR CRÍTICO en inicialización');
+                    console.error('═══════════════════════════════════════════════════');
+                    console.error('   Error:', error);
+                    console.error('   Stack:', error.stack);
+                    
+                    // ERROR EXPLÍCITO: No silenciar errores
+                    showCustomAlert(
+                        'Error al cargar información',
+                        'No se pudo validar la suscripción.\n\n' +
+                        'Error: ' + (error.message || 'Error desconocido') + '\n\n' +
+                        'Por favor intenta nuevamente o contacta al administrador.',
+                        'error'
+                    );
+                    
+                    // Mostrar opciones de búsqueda en caso de error
+                if (searchSection) {
+                        searchSection.style.display = 'block';
+                        searchSection.innerHTML = ''; // Restaurar contenido original
+                    }
+                }
             } else {
-                // Comportamiento normal para usuarios
+                // Comportamiento normal para usuarios (sin ID en URL)
+                console.log('👤 [INICIO] Modo usuario normal (sin ID en URL)');
+                console.log('   Acción: Verificar acceso de usuario');
+                
                 if (checkUserAccess()) {
-                    // Cargar alumnos desde la nube si está disponible
+                    console.log('✅ [INICIO] Usuario tiene acceso');
+                    // Cargar alumnos desde la nube si está disponible (solo para búsqueda manual)
                     await loadAlumnosFromCloud();
+                } else {
+                    console.log('❌ [INICIO] Usuario sin acceso');
                 }
             }
+            
+            console.log('═══════════════════════════════════════════════════');
+            console.log('✅ [INICIO] Inicialización completada');
+            console.log('═══════════════════════════════════════════════════');
         });
     </script>
     

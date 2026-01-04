@@ -2,15 +2,580 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=login.html">
-    <title>Redirigiendo... - Academia COHAB</title>
-    <script>
-        // Redirigir inmediatamente a login.html
-        window.location.href = 'login.html';
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academia COHAB - Sistema de Validación de Suscripciones</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Sistema">
+    <meta name="description" content="Sistema de validación de suscripciones - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_cohab.png">
+    <link rel="apple-touch-icon" href="logo_cohab.png">
+    
+    <link rel="stylesheet" href="styles.css?v=12">
+    <style>
+        /* ============================================
+           ESTILOS PROFESIONALES - ACADEMIA BJJ
+           ============================================ */
+        
+        .home-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        
+        /* Hero Section - Impacto Profesional */
+        .home-hero {
+            text-align: center;
+            padding: 4rem 0 3rem;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+        
+        .home-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #dc2626, transparent);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
+        }
+        
+        .home-hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            text-shadow: 0 2px 20px rgba(220, 38, 38, 0.3),
+                         0 4px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .home-hero .hero-subtitle {
+            font-size: 1.35rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.01em;
+        }
+        
+        .home-hero .hero-description {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.65);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        /* Secciones - Diseño Institucional */
+        .home-section {
+            background: linear-gradient(145deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .home-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #dc2626, transparent);
+            opacity: 0.6;
+        }
+        
+        .home-section h2 {
+            color: #dc2626;
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+        
+        .home-section h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #dc2626, #b91c1c);
+            border-radius: 2px;
+        }
+        
+        .home-section p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.75;
+            margin-bottom: 1.25rem;
+            font-size: 1.05rem;
+        }
+        
+        .home-section p strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .home-section ul {
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 2;
+            margin: 1.5rem 0 1rem 2rem;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .home-section ul li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 1.05rem;
+        }
+        
+        .home-section ul li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #dc2626;
+            font-weight: bold;
+        }
+        
+        /* Diagrama de Flujo - Profesional */
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin: 2.5rem 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(26, 26, 26, 0.4) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-left: 4px solid #dc2626;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            padding: 1.5rem;
+            background: rgba(15, 15, 15, 0.6);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .flow-step:hover {
+            background: rgba(15, 15, 15, 0.8);
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+        
+        .flow-step-number {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+        
+        .flow-step-content {
+            flex: 1;
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.6;
+        }
+        
+        .flow-step-content strong {
+            color: #ffffff;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+        }
+        
+        /* Roles Section - Separación Visual Clara */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .role-card {
+            background: linear-gradient(145deg, rgba(15, 15, 15, 0.8) 0%, rgba(26, 26, 26, 0.8) 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 3px solid #dc2626;
+            transition: all 0.3s ease;
+        }
+        
+        .role-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+        
+        .role-card h3 {
+            color: #dc2626;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .role-card p {
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+        }
+        
+        .role-card ul {
+            margin: 1rem 0;
+        }
+        
+        /* Botones de Acción - Profesionales */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3),
+                        0 2px 4px rgba(0, 0, 0, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(220, 38, 38, 0.4),
+                        0 4px 8px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .action-btn.secondary:hover {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Badges de Estado */
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0 0.25rem;
+            letter-spacing: 0.02em;
+        }
+        
+        .status-badge.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        
+        .status-badge.expired {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+        
+        /* Footer Institucional */
+        .home-footer {
+            text-align: center;
+            padding: 3rem 2rem 2rem;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.95rem;
+        }
+        
+        .home-footer p {
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .home-hero {
+                padding: 3rem 0 2rem;
+            }
+            
+            .home-hero h1 {
+                font-size: 2.25rem;
+            }
+            
+            .home-hero .hero-subtitle {
+                font-size: 1.15rem;
+            }
+            
+            .home-section {
+                padding: 2rem 1.5rem;
+            }
+            
+            .home-section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .roles-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .flow-step {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <p>Redirigiendo a la página de inicio...</p>
-    <p>Si no eres redirigido automáticamente, <a href="login.html">haz clic aquí</a>.</p>
+    <nav class="navbar">
+        <div class="container">
+            <img src="logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Inicio</a></li>
+                <li><a href="login.html">Acceso Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="home-container">
+        <!-- Hero Section -->
+        <section class="home-hero">
+            <h1>Sistema de Control y Verificación</h1>
+            <p class="hero-subtitle">Academia COHAB</p>
+            <p class="hero-description">
+                Sistema institucional de gestión de suscripciones y control de acceso. 
+                Transparencia, orden y disciplina en cada validación.
+            </p>
+        </section>
+
+        <!-- Cómo funciona el sistema -->
+        <section class="home-section">
+            <h2>Cómo Funciona el Sistema</h2>
+            <p>
+                El proceso de validación es simple, rápido y preciso. Cada paso está diseñado 
+                para garantizar el orden y la transparencia en el acceso a las instalaciones.
+            </p>
+            
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-content">
+                        <strong>Pago de Suscripción</strong>
+                        El alumno realiza el pago de su mensualidad. El sistema registra 
+                        automáticamente la fecha de pago y calcula el período de validez.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-content">
+                        <strong>Registro del Estado</strong>
+                        El sistema actualiza el estado de la suscripción en tiempo real. 
+                        Cada alumno tiene un estado binario: <span class="status-badge active">ACTIVA</span> o <span class="status-badge expired">VENCIDA</span>.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-content">
+                        <strong>Verificación en Entrada</strong>
+                        El profesor escanea el código QR del alumno o ingresa su ID. 
+                        El sistema consulta la base de datos y determina el estado actual.
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-content">
+                        <strong>Control de Acceso</strong>
+                        El sistema responde de forma inmediata: 
+                        <span class="status-badge active">Acceso permitido</span> o 
+                        <span class="status-badge expired">Acceso denegado</span>. 
+                        La asistencia queda registrada automáticamente.
+                    </div>
+                </div>
+            </div>
+            
+            <p style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <strong>Criterio de validación:</strong> Una suscripción se considera 
+                <span class="status-badge active">ACTIVA</span> cuando los días restantes 
+                hasta el próximo vencimiento son mayores o iguales a cero. Si los días son 
+                negativos, la suscripción está <span class="status-badge expired">VENCIDA</span> 
+                y el acceso queda denegado.
+            </p>
+        </section>
+
+        <!-- Roles del Sistema -->
+        <section class="home-section">
+            <h2>Roles y Permisos</h2>
+            <p>
+                El sistema está diseñado con roles claramente definidos. Cada usuario tiene 
+                acceso únicamente a la información y funciones correspondientes a su rol.
+            </p>
+            
+            <div class="roles-grid">
+                <div class="role-card">
+                    <h3>Alumno</h3>
+                    <p>
+                        Consulta tu estado de suscripción y mantén un registro de tus pagos.
+                    </p>
+                    <p><strong>Puedes ver:</strong></p>
+                    <ul>
+                        <li>Estado actual de tu suscripción</li>
+                        <li>Fecha de último pago registrado</li>
+                        <li>Fecha del próximo vencimiento</li>
+                        <li>Días restantes o días de atraso</li>
+                        <li>Historial de pagos</li>
+                    </ul>
+                    <p><strong>No puedes:</strong></p>
+                    <ul>
+                        <li>Ver información de otros alumnos</li>
+                        <li>Modificar datos administrativos</li>
+                        <li>Acceder a funciones de gestión</li>
+                    </ul>
+                    <div class="action-buttons" style="margin-top: 1.5rem; justify-content: flex-start;">
+                        <a href="usuario.html" class="action-btn">Consultar mi estado</a>
+                    </div>
+                </div>
+                
+                <div class="role-card">
+                    <h3>Profesor</h3>
+                    <p>
+                        Valida el acceso de alumnos en la entrada y registra asistencia de forma rápida y precisa.
+                    </p>
+                    <p><strong>Puedes hacer:</strong></p>
+                    <ul>
+                        <li>Escanear código QR del alumno</li>
+                        <li>Ingresar ID manualmente</li>
+                        <li>Ver resultado inmediato de validación</li>
+                        <li>Registrar asistencia automáticamente</li>
+                    </ul>
+                    <p><strong>Ves en pantalla:</strong></p>
+                    <ul>
+                        <li>Estado de suscripción: <span class="status-badge active">ACTIVA</span> o <span class="status-badge expired">VENCIDA</span></li>
+                        <li>Información básica del alumno</li>
+                        <li>Días restantes o días de atraso</li>
+                    </ul>
+                    <div class="action-buttons" style="margin-top: 1.5rem; justify-content: flex-start;">
+                        <a href="verificar.html" class="action-btn">Validar acceso</a>
+                    </div>
+                </div>
+                
+                <div class="role-card">
+                    <h3>Administrador</h3>
+                    <p>
+                        Gestiona toda la información del sistema, alumnos, pagos y configuraciones.
+                    </p>
+                    <p><strong>Gestionas:</strong></p>
+                    <ul>
+                        <li>Registro y edición de alumnos</li>
+                        <li>Registro de pagos y actualización de fechas</li>
+                        <li>Configuración del sistema</li>
+                        <li>Reportes y estadísticas</li>
+                        <li>Generación de códigos QR</li>
+                    </ul>
+                    <p style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.6); font-size: 0.95rem;">
+                        <strong>Nota:</strong> El acceso administrativo no está disponible desde esta página. 
+                        Contacta con el administrador del sistema para obtener credenciales.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seguridad y Privacidad -->
+        <section class="home-section">
+            <h2>Seguridad y Privacidad</h2>
+            <p>
+                La protección de datos y la privacidad de los alumnos son prioridades fundamentales 
+                en el diseño de este sistema.
+            </p>
+            <ul>
+                <li><strong>Almacenamiento seguro:</strong> Todos los datos se almacenan en servidores 
+                    seguros con encriptación de extremo a extremo</li>
+                <li><strong>Validación en tiempo real:</strong> Cada consulta se realiza directamente 
+                    contra la base de datos, garantizando información siempre actualizada</li>
+                <li><strong>Identificadores únicos:</strong> Cada alumno posee un ID único y privado 
+                    que solo él conoce</li>
+                <li><strong>Principio de menor privilegio:</strong> Cada rol tiene acceso únicamente 
+                    a la información necesaria para su función</li>
+                <li><strong>Sin exposición de datos:</strong> La información personal no se comparte 
+                    entre usuarios ni se expone públicamente</li>
+            </ul>
+        </section>
+
+        <!-- Navegación -->
+        <section class="home-section">
+            <h2>Acceso al Sistema</h2>
+            <p>
+                Selecciona la opción correspondiente a tu rol para acceder a las funciones del sistema.
+            </p>
+            <div class="action-buttons">
+                <a href="usuario.html" class="action-btn">Acceso Alumno</a>
+                <a href="verificar.html" class="action-btn">Verificación Profesor</a>
+                <a href="login.html" class="action-btn secondary">Acceso Administrativo</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="home-footer">
+        <p>© 2025 Academia COHAB</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: rgba(255, 255, 255, 0.4);">
+            Sistema de Control y Verificación de Suscripciones
+        </p>
+    </footer>
 </body>
 </html>

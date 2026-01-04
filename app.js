@@ -1,11 +1,13 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 17 - Fechas normalizadas usando UTC para evitar desfases
-console.log('✅ App.js cargado - Versión 17 - Fechas normalizadas con UTC');
+// VERSIÓN: 20 - MongoDB como única fuente de verdad (sin localStorage)
+console.log('✅ App.js cargado - Versión 20 - MongoDB única fuente de verdad');
 
-let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
+// ⚠️ NO usar localStorage para datos de negocio
+// MongoDB es la única fuente de verdad
+let alumnos = [];
 let editingAlumno = null;
-let diaPagoGlobal = parseInt(localStorage.getItem('diaPagoGlobal')) || 30;
+let diaPagoGlobal = 30; // Valor por defecto, se puede configurar desde UI si es necesario
 
 function parseFechaLocal(valor) {
     if (!valor) {
@@ -260,29 +262,40 @@ async function loadAlumnos() {
         return;
     }
     
-    grid.innerHTML = '';
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">⏳ Cargando alumnos...</div>';
     
-    // Si hay MongoDB configurado, priorizar MongoDB
+    // ✅ MongoDB es la ÚNICA fuente de verdad
     try {
-        if (window.MONGO && MONGO.isConfigured()) {
-            const nube = await MONGO.listAlumnos();
-            if (Array.isArray(nube)) {
-                alumnos = nube;
-                localStorage.setItem('alumnos', JSON.stringify(alumnos));
-            }
+        if (!window.MONGO || !MONGO.isConfigured()) {
+            throw new Error('MongoDB no está configurado');
         }
-    } catch (e) {}
-    
-    // Si hay Supabase configurado (fallback o alternativo)
-    try {
-        if (alumnos.length === 0 && window.SUPA && SUPA.isConfigured()) {
-            const nube = await SUPA.listAlumnos();
-            if (Array.isArray(nube)) {
-                alumnos = nube;
-                localStorage.setItem('alumnos', JSON.stringify(alumnos));
-            }
+        
+        const nube = await MONGO.listAlumnos();
+        
+        if (!Array.isArray(nube)) {
+            throw new Error('Respuesta inválida del servidor');
         }
-    } catch (e) {}
+        
+        alumnos = nube;
+        console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
+        
+    } catch (error) {
+        console.error('❌ Error al cargar alumnos desde MongoDB:', error);
+        grid.innerHTML = `
+            <div class="empty-state error-state" style="grid-column: 1/-1;">
+                <div class="empty-state-icon">❌</div>
+                <h3>Error al cargar datos</h3>
+                <p>${error.message || 'No se pudo conectar con la base de datos'}</p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
+                    Verifica tu conexión y que MongoDB esté configurado correctamente.
+                </p>
+                <button onclick="loadAlumnos()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                    🔄 Reintentar
+                </button>
+            </div>
+        `;
+        return;
+    }
     
     if (alumnos.length === 0) {
         grid.innerHTML = `
@@ -375,6 +388,45 @@ async function loadAlumnos() {
         `;
         grid.appendChild(card);
     });
+    
+    // Actualizar estadísticas del dashboard
+    updateDashboardStats();
+}
+
+// Actualizar estadísticas del dashboard
+function updateDashboardStats() {
+    const totalAlumnos = alumnos.length;
+    let alumnosAlDia = 0;
+    let alumnosVencidos = 0;
+    let alumnosMorosos = 0;
+    
+    alumnos.forEach(alumno => {
+        const estado = calcularEstado(alumno);
+        if (estado.clase === 'al-dia') {
+            alumnosAlDia++;
+        } else if (estado.clase === 'atrasado') {
+            const diasAtrasado = parseInt(estado.texto) || 0;
+            if (diasAtrasado > 30) {
+                alumnosMorosos++;
+            } else {
+                alumnosVencidos++;
+            }
+        } else if (estado.clase === 'proximo') {
+            // Los que están por vencer se cuentan como "al día" para estadísticas
+            alumnosAlDia++;
+        }
+    });
+    
+    // Actualizar elementos del DOM si existen
+    const totalEl = document.getElementById('totalAlumnos');
+    const alDiaEl = document.getElementById('alumnosAlDia');
+    const vencidosEl = document.getElementById('alumnosVencidos');
+    const morososEl = document.getElementById('alumnosMorosos');
+    
+    if (totalEl) totalEl.textContent = totalAlumnos;
+    if (alDiaEl) alDiaEl.textContent = alumnosAlDia;
+    if (vencidosEl) vencidosEl.textContent = alumnosVencidos;
+    if (morososEl) morososEl.textContent = alumnosMorosos;
 }
 
 // Abrir modal para agregar alumno
@@ -645,31 +697,8 @@ async function saveAlumno(event) {
             }
         }
         
-        // Guardar en localStorage
-        localStorage.setItem('alumnos', JSON.stringify(alumnos));
-        
-        // Forzar actualización: recargar alumnos desde MongoDB si está configurado
-        // Esto asegura que los datos estén sincronizados
-        try {
-            if (window.MONGO && MONGO.isConfigured()) {
-                const alumnosActualizados = await MONGO.listAlumnos();
-                if (Array.isArray(alumnosActualizados) && alumnosActualizados.length > 0) {
-                    alumnos = alumnosActualizados;
-                    localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                    console.log('✅ Sincronizado desde MongoDB - Total alumnos:', alumnos.length);
-                    // Verificar que la fecha se guardó correctamente
-                    const alumnoGuardado = alumnos.find(a => a.id === formData.id || a.nombre === formData.nombre);
-                    if (alumnoGuardado) {
-                        console.log('✅ Alumno guardado encontrado:', alumnoGuardado.nombre, 'Fecha:', alumnoGuardado.fechaPago);
-                    }
-                }
-            }
-        } catch (e) {
-            console.error('❌ Error al sincronizar:', e);
-        }
-        
-        // Recargar vista con los datos actualizados
-        console.log('🔄 Recargando vista de alumnos...');
+        // ✅ Recargar desde MongoDB para asegurar sincronización
+        console.log('🔄 Recargando vista de alumnos desde MongoDB...');
         await loadAlumnos();
 
         if (formData.email) {
@@ -773,17 +802,23 @@ function editAlumno(id) {
 async function deleteAlumno(id) {
     if (confirm('¿Estás seguro de eliminar este alumno?')) {
         const alumnoEliminado = alumnos.find(a => a.id === id);
-        alumnos = alumnos.filter(a => a.id !== id);
-        localStorage.setItem('alumnos', JSON.stringify(alumnos));
+        
         try {
-            if (window.MONGO && MONGO.isConfigured()) {
-                await MONGO.deleteAlumno(id);
-            } else if (window.SUPA && SUPA.isConfigured()) {
-                await SUPA.deleteAlumno(id);
+            if (!window.MONGO || !MONGO.isConfigured()) {
+                throw new Error('MongoDB no está configurado');
             }
-        } catch (e) {}
-        await loadAlumnos();
-        alert(`Alumno ${alumnoEliminado ? alumnoEliminado.nombre : ''} eliminado correctamente`);
+            
+            await MONGO.deleteAlumno(id);
+            console.log('✅ Alumno eliminado de MongoDB');
+            
+            // Recargar desde MongoDB
+            await loadAlumnos();
+            alert(`Alumno ${alumnoEliminado ? alumnoEliminado.nombre : ''} eliminado correctamente`);
+            
+        } catch (error) {
+            console.error('❌ Error al eliminar alumno:', error);
+            alert(`Error al eliminar alumno: ${error.message}`);
+        }
     }
 }
 
@@ -1147,31 +1182,57 @@ window.onclick = function(event) {
 // Función de búsqueda/filtrado de alumnos
 function filterAlumnos() {
     const searchInput = document.getElementById('searchInput');
+    const filterEstado = document.getElementById('filterEstado');
     const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const estadoFiltro = filterEstado ? filterEstado.value : '';
     const grid = document.getElementById('alumnosGrid');
     
     if (!grid) {
         return;
     }
     
-    if (!searchTerm) {
-        // Si no hay término de búsqueda, mostrar todos
+    // Filtrar alumnos por búsqueda de texto
+    let alumnosFiltrados = alumnos;
+    
+    if (searchTerm) {
+        alumnosFiltrados = alumnosFiltrados.filter(alumno => {
+            const nombre = (alumno.nombre || '').toLowerCase();
+            const email = (alumno.email || '').toLowerCase();
+            const telefono = (alumno.telefono || '').toLowerCase();
+            const id = (alumno.id || '').toLowerCase();
+            
+            return nombre.includes(searchTerm) ||
+                   email.includes(searchTerm) ||
+                   telefono.includes(searchTerm) ||
+                   id.includes(searchTerm);
+        });
+    }
+    
+    // Filtrar por estado
+    if (estadoFiltro) {
+        alumnosFiltrados = alumnosFiltrados.filter(alumno => {
+            const estado = calcularEstado(alumno);
+            switch (estadoFiltro) {
+                case 'al-dia':
+                    return estado.clase === 'al-dia';
+                case 'por-vencer':
+                    return estado.clase === 'proximo';
+                case 'vencido':
+                    return estado.clase === 'atrasado';
+                case 'moroso':
+                    const diasAtrasado = parseInt(estado.texto) || 0;
+                    return estado.clase === 'atrasado' && diasAtrasado > 30;
+                default:
+                    return true;
+            }
+        });
+    }
+    
+    // Si no hay filtros, mostrar todos
+    if (!searchTerm && !estadoFiltro) {
         loadAlumnos();
         return;
     }
-    
-    // Filtrar alumnos
-    const alumnosFiltrados = alumnos.filter(alumno => {
-        const nombre = (alumno.nombre || '').toLowerCase();
-        const email = (alumno.email || '').toLowerCase();
-        const telefono = (alumno.telefono || '').toLowerCase();
-        const id = (alumno.id || '').toLowerCase();
-        
-        return nombre.includes(searchTerm) ||
-               email.includes(searchTerm) ||
-               telefono.includes(searchTerm) ||
-               id.includes(searchTerm);
-    });
     
     // Limpiar grid
     grid.innerHTML = '';
@@ -1266,22 +1327,7 @@ function filterAlumnos() {
 // Función para actualizar base de datos y recalcular estados
 async function updateDatabase() {
     try {
-        // Recargar alumnos desde MongoDB si está configurado
-        if (window.MONGO && MONGO.isConfigured()) {
-            const alumnosNube = await MONGO.listAlumnos();
-            if (Array.isArray(alumnosNube) && alumnosNube.length > 0) {
-                alumnos = alumnosNube;
-                localStorage.setItem('alumnos', JSON.stringify(alumnos));
-            }
-        } else if (window.SUPA && SUPA.isConfigured()) {
-            const alumnosNube = await SUPA.listAlumnos();
-            if (Array.isArray(alumnosNube) && alumnosNube.length > 0) {
-                alumnos = alumnosNube;
-                localStorage.setItem('alumnos', JSON.stringify(alumnos));
-            }
-        }
-        
-        // Recargar la vista para mostrar estados actualizados
+        // ✅ Recargar desde MongoDB (única fuente de verdad)
         await loadAlumnos();
         
         // Mostrar mensaje de éxito
@@ -1292,5 +1338,73 @@ async function updateDatabase() {
         }
     } catch (error) {
         alert('Error al actualizar la base de datos: ' + error.message);
+    }
+}
+
+// Limpiar filtros
+function clearFilters() {
+    const searchInput = document.getElementById('searchInput');
+    const filterEstado = document.getElementById('filterEstado');
+    
+    if (searchInput) searchInput.value = '';
+    if (filterEstado) filterEstado.value = '';
+    
+    loadAlumnos();
+}
+
+// Exportar datos a CSV
+function exportarDatos() {
+    if (alumnos.length === 0) {
+        alert('No hay alumnos para exportar');
+        return;
+    }
+    
+    // Crear encabezados CSV
+    const headers = ['Nombre', 'Email', 'Teléfono', 'Fecha Último Pago', 'Día de Pago', 'Monto', 'Estado', 'Próximo Vencimiento', 'ID'];
+    
+    // Crear filas CSV
+    const rows = alumnos.map(alumno => {
+        const estado = calcularEstado(alumno);
+        const fechaPago = parseFechaLocal(alumno.fechaPago);
+        const fechaPagoTexto = fechaPago ? formatFechaLocal(fechaPago) : '---';
+        const montoTexto = alumno.monto ? `$${parseFloat(alumno.monto).toFixed(2)}` : '---';
+        
+        return [
+            `"${(alumno.nombre || '').replace(/"/g, '""')}"`,
+            `"${(alumno.email || '').replace(/"/g, '""')}"`,
+            `"${(alumno.telefono || '').replace(/"/g, '""')}"`,
+            fechaPagoTexto,
+            alumno.diaPago || '---',
+            montoTexto,
+            estado.texto || '---',
+            estado.proximo || '---',
+            alumno.id || '---'
+        ].join(',');
+    });
+    
+    // Combinar encabezados y filas
+    const csvContent = [
+        headers.join(','),
+        ...rows
+    ].join('\n');
+    
+    // Crear blob y descargar
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `alumnos_cohab_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Mostrar notificación
+    if (typeof showNotification === 'function') {
+        showNotification('Datos exportados correctamente', 'success');
+    } else {
+        alert('Datos exportados correctamente');
     }
 }

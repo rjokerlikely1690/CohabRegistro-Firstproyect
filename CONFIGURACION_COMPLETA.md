@@ -10,13 +10,18 @@
 ## 🏠 Página de Inicio
 
 ### Estado Actual
-- ✅ `login.html` - Página de inicio moderna con diseño oscuro
-- ✅ `index.html` - Redirige automáticamente a `login.html`
+- ✅ `index.html` - Página informativa 100% pasiva (solo explicación, sin lógica, sin redirecciones)
+- ✅ `login.html` - Página de acceso con 3 opciones de rol
 - ✅ `gestion-alumnos.html` - Página de gestión de alumnos
 
 ### Cómo Funciona
-1. Al acceder a la raíz (`/`), se carga `index.html` que redirige a `login.html`
-2. `login.html` muestra 3 opciones de acceso:
+1. Al acceder a la raíz (`/`), se carga `index.html` que muestra información sobre el sistema
+2. `index.html` es completamente pasiva: no redirige, no valida, no llama APIs, no ejecuta lógica
+3. Desde `index.html`, el usuario puede navegar a:
+   - `login.html` - Para acceder como administrador o gestión
+   - `usuario.html` - Para verificar estado de pago (requiere ID en URL)
+   - `verificar.html` - Para profesores validar acceso (requiere QR o ID)
+4. `login.html` muestra 3 opciones de acceso:
    - 👨‍💼 **ADMINISTRADOR** → `admin.html`
    - 👥 **GESTIÓN DE ALUMNOS** → `gestion-alumnos.html`
    - 👤 **VERIFICAR PAGO** → `usuario.html`

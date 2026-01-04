@@ -80,6 +80,12 @@
         return true;
     }
 
+    // Validar suscripción - ENDPOINT ÚNICO DE VALIDACIÓN
+    // Devuelve: { acceso: boolean, estado: string, diasRestantes: number, ... }
+    async function validarSuscripcion(id) {
+        return await apiCall(`/alumnos/${id}/validar`, 'GET');
+    }
+
     function mapToDb(a) {
         return {
             id: a.id,
@@ -116,6 +122,7 @@
         deleteAlumno,
         registrarPago,
         enviarQr,
+        validarSuscripcion,
         insertAlumnoReturningId,
         configure
     };

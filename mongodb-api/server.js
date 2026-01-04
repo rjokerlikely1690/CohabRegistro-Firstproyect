@@ -410,6 +410,147 @@ app.patch('/alumnos/:id/pago', authMiddleware, async (req, res) => {
     }
 });
 
+// FUNCIÓN ÚNICA DE CÁLCULO DE ESTADO - FUENTE ÚNICA DE VERDAD
+// Esta función calcula el estado de la suscripción basándose en:
+// - fechaPago: ISO string en UTC
+// - diaPago: día fijo de corte mensual (1-31)
+// Reglas:
+// - diasRestantes >= 0 → ACTIVA (acceso: true)
+// - diasRestantes < 0 → VENCIDA (acceso: false)
+// - No hay días de gracia
+// - Pago exactamente el día de vencimiento → ACTIVA
+function calcularEstadoSuscripcion(alumno) {
+    const hoy = new Date();
+    hoy.setUTCHours(0, 0, 0, 0); // Normalizar a medianoche UTC
+    
+    // Parsear fechaPago desde ISO string
+    let fechaPago = new Date(alumno.fechaPago);
+    if (isNaN(fechaPago.getTime())) {
+        throw new Error('Fecha de pago inválida');
+    }
+    fechaPago.setUTCHours(0, 0, 0, 0);
+    
+    // Obtener día de pago (1-31)
+    const diaPago = parseInt(alumno.diaPago) || 30;
+    if (diaPago < 1 || diaPago > 31) {
+        throw new Error('Día de pago inválido (debe ser 1-31)');
+    }
+    
+    // PASO 1: Determinar a qué mes corresponde realmente el último pago
+    let vencimientoMesActual = new Date(Date.UTC(fechaPago.getUTCFullYear(), fechaPago.getUTCMonth(), diaPago));
+    if (vencimientoMesActual.getUTCDate() !== diaPago) {
+        // Si el día no existe (ej: 31 en febrero) ajustar al último día del mes
+        vencimientoMesActual = new Date(Date.UTC(fechaPago.getUTCFullYear(), fechaPago.getUTCMonth() + 1, 0));
+    }
+
+    let mesVencimientoPago;
+    if (fechaPago < vencimientoMesActual) {
+        // Pago realizado antes del día de vencimiento → corresponde al mes anterior
+        mesVencimientoPago = new Date(Date.UTC(fechaPago.getUTCFullYear(), fechaPago.getUTCMonth() - 1, diaPago));
+        if (mesVencimientoPago.getUTCDate() !== diaPago) {
+            mesVencimientoPago = new Date(Date.UTC(fechaPago.getUTCFullYear(), fechaPago.getUTCMonth(), 0));
+        }
+    } else {
+        // Pago realizado el mismo día o después del vencimiento → corresponde al mes actual
+        mesVencimientoPago = new Date(vencimientoMesActual);
+    }
+
+    // PASO 2: Calcular el próximo vencimiento (mes siguiente al mes efectivo del pago)
+    let proximoPago = new Date(Date.UTC(mesVencimientoPago.getUTCFullYear(), mesVencimientoPago.getUTCMonth() + 1, diaPago));
+    if (proximoPago.getUTCDate() !== diaPago) {
+        proximoPago = new Date(Date.UTC(mesVencimientoPago.getUTCFullYear(), mesVencimientoPago.getUTCMonth() + 2, 0));
+    }
+
+    // PASO 3: Si el próximo vencimiento ya pasó, seguir avanzando
+    while (proximoPago < hoy) {
+        proximoPago = new Date(Date.UTC(proximoPago.getUTCFullYear(), proximoPago.getUTCMonth() + 1, diaPago));
+        if (proximoPago.getUTCDate() !== diaPago) {
+            proximoPago = new Date(Date.UTC(proximoPago.getUTCFullYear(), proximoPago.getUTCMonth() + 1, 0));
+        }
+    }
+
+    proximoPago.setUTCHours(0, 0, 0, 0);
+
+    // Calcular días restantes
+    const diasRestantes = Math.ceil((proximoPago - hoy) / (1000 * 60 * 60 * 24));
+    
+    // REGLA DE NEGOCIO: diasRestantes >= 0 → ACTIVA, < 0 → VENCIDA
+    const acceso = diasRestantes >= 0;
+    
+    return {
+        acceso: acceso,
+        diasRestantes: diasRestantes,
+        proximoPago: proximoPago.toISOString(),
+        estado: acceso ? 'ACTIVA' : 'VENCIDA',
+        mensaje: acceso 
+            ? `Suscripción activa. ${diasRestantes} días restantes.`
+            : `Suscripción vencida. ${Math.abs(diasRestantes)} días de atraso.`
+    };
+}
+
+// GET /alumnos/:id/validar - VALIDAR SUSCRIPCIÓN (ENDPOINT PRINCIPAL)
+// Este es el único endpoint que debe usarse para validar suscripciones
+// Responde en formato binario: { acceso: true/false, ... }
+app.get('/alumnos/:id/validar', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id || id.trim() === '') {
+            return res.status(400).json({ 
+                acceso: false,
+                error: 'ID requerido',
+                mensaje: 'ID de alumno no proporcionado'
+            });
+        }
+        
+        const collection = db.collection(COLLECTION_NAME);
+        const alumno = await collection.findOne({ id: id.trim() });
+        
+        if (!alumno) {
+            return res.status(404).json({ 
+                acceso: false,
+                error: 'Alumno no encontrado',
+                mensaje: `No se encontró un alumno con el ID: ${id}`
+            });
+        }
+        
+        // Validar que el alumno tenga los campos necesarios
+        if (!alumno.fechaPago) {
+            return res.status(400).json({ 
+                acceso: false,
+                error: 'Datos incompletos',
+                mensaje: 'El alumno no tiene fecha de pago registrada'
+            });
+        }
+        
+        // Calcular estado usando la función única
+        const resultado = calcularEstadoSuscripcion(alumno);
+        
+        // Respuesta binaria clara
+        res.json({
+            acceso: resultado.acceso,
+            estado: resultado.estado,
+            diasRestantes: resultado.diasRestantes,
+            proximoPago: resultado.proximoPago,
+            mensaje: resultado.mensaje,
+            alumno: {
+                id: alumno.id,
+                nombre: alumno.nombre,
+                email: alumno.email || null,
+                telefono: alumno.telefono || null,
+                monto: alumno.monto || null
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error validando suscripción:', error);
+        res.status(500).json({ 
+            acceso: false,
+            error: 'Error interno del servidor',
+            mensaje: error.message || 'Error al validar la suscripción'
+        });
+    }
+});
+
 app.post('/alumnos/:id/enviar-qr', authMiddleware, async (req, res) => {
     try {
         if (!SEND_EMAILS) {
@@ -456,6 +597,7 @@ app.get('/', (req, res) => {
         database: db ? 'connected' : 'disconnected',
         endpoints: {
             'GET /alumnos': 'Listar todos los alumnos',
+            'GET /alumnos/:id/validar': 'Validar suscripción (BINARIO: acceso true/false)',
             'POST /alumnos': 'Crear nuevo alumno',
             'PUT /alumnos': 'Actualizar o crear alumno',
             'DELETE /alumnos/:id': 'Eliminar alumno',
@@ -480,6 +622,7 @@ async function start() {
         console.log(`🚀 Servidor MongoDB API corriendo en puerto ${PORT}`);
         console.log(`📡 Endpoints disponibles:`);
         console.log(`   GET    /alumnos`);
+        console.log(`   GET    /alumnos/:id/validar`);
         console.log(`   POST   /alumnos`);
         console.log(`   PUT    /alumnos`);
         console.log(`   DELETE /alumnos/:id`);

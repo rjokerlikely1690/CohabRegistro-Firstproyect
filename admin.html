@@ -19,7 +19,7 @@
     <link rel="icon" type="image/png" href="logo_cohab.png">
     <link rel="apple-touch-icon" href="logo_cohab.png">
     
-    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=12">
     <style>
         .admin-header {
             background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
@@ -100,43 +100,38 @@
             border: 2px solid #e5e7eb;
             padding: 1.5rem;
             border-radius: 0.5rem;
-            text-align: center;
             cursor: pointer;
             transition: all 0.3s;
+            text-align: center;
             text-decoration: none;
-            color: inherit;
+            color: #1f2937;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .quick-action-btn:hover {
             border-color: #dc2626;
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
         
-        .quick-action-btn .icon {
+        .quick-action-icon {
             font-size: 2rem;
-            margin-bottom: 0.5rem;
         }
         
-        .quick-action-btn .title {
-            font-weight: bold;
-            margin-bottom: 0.25rem;
+        .quick-action-label {
+            font-weight: 600;
         }
         
-        .quick-action-btn .desc {
-            font-size: 0.8rem;
-            color: #666;
-        }
-        
-        @media (max-width: 768px) {
-            .admin-nav {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .admin-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -145,128 +140,165 @@
         <div class="container">
             <div class="admin-nav">
             <div class="admin-nav-left">
-                <img src="logo_cohab.svg" alt="COHAB" class="logo" style="height: 40px;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
-                <div>
-                    <h1 style="margin: 0; font-size: 1.2rem;">Panel Admin</h1>
-                    <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">Academia COHAB</p>
-                </div>
+                    <h1>🔐 Panel Administrador</h1>
+                    <span class="role-badge">ADMIN</span>
             </div>
                 <div class="admin-nav-right">
-                    <div class="role-badge" style="font-size: 0.8rem; padding: 0.3rem 0.7rem;">👨‍💼 ADMIN</div>
-                    <button class="btn btn-secondary" onclick="logout()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Cerrar</button>
+                    <button onclick="window.location.href='index.html'" class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer;">
+                        🏠 Inicio
+                    </button>
+                    <button onclick="logout()" class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer;">
+                        🚪 Salir
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <main class="container">
-        <!-- Estadísticas Rápidas -->
-        <section class="admin-stats">
+    <div class="container">
+        <div id="errorContainer"></div>
+        
+        <div class="admin-stats">
             <div class="stat-card total">
-                <div class="stat-number" id="totalAlumnos">0</div>
+                <div class="stat-number" id="totalAlumnos">---</div>
                 <div class="stat-label">Total Alumnos</div>
             </div>
             <div class="stat-card aldia">
-                <div class="stat-number" id="alumnosAldia">0</div>
+                <div class="stat-number" id="alumnosAldia">---</div>
                 <div class="stat-label">Al Día</div>
             </div>
             <div class="stat-card proximo">
-                <div class="stat-number" id="alumnosProximo">0</div>
+                <div class="stat-number" id="alumnosProximo">---</div>
                 <div class="stat-label">Próximos a Vencer</div>
             </div>
             <div class="stat-card atrasado">
-                <div class="stat-number" id="alumnosAtrasados">0</div>
+                <div class="stat-number" id="alumnosAtrasados">---</div>
                 <div class="stat-label">Atrasados</div>
             </div>
-        </section>
+        </div>
 
-        <!-- Acciones Rápidas -->
-        <section class="quick-actions">
-            <a href="index.html" class="quick-action-btn" style="border-left: 4px solid #6366f1;">
-                <div class="icon">👥</div>
-                <div class="title">Gestión de Alumnos</div>
-                <div class="desc">Agregar, editar y administrar alumnos</div>
+        <div class="quick-actions">
+            <a href="gestion-alumnos.html" class="quick-action-btn">
+                <span class="quick-action-icon">👥</span>
+                <span class="quick-action-label">Gestión de Alumnos</span>
+                <span style="font-size: 0.8rem; color: #666;">Agregar, editar y eliminar</span>
             </a>
             
-            <a href="verificar.html" class="quick-action-btn" style="border-left: 4px solid #10b981;">
-                <div class="icon">🔍</div>
-                <div class="title">Verificar Pagos</div>
-                <div class="desc">Escanear QR y verificar estados</div>
+            <a href="verificar.html" class="quick-action-btn">
+                <span class="quick-action-icon">✅</span>
+                <span class="quick-action-label">Verificar Pagos</span>
+                <span style="font-size: 0.8rem; color: #666;">Escanear QR y validar</span>
             </a>
             
-            <div class="quick-action-btn" onclick="sendQRsToAll()" style="border-left: 4px solid #f59e0b;">
-                <div class="icon">📧</div>
-                <div class="title">Enviar QRs por Email</div>
-                <div class="desc">Enviar códigos QR a todos los alumnos</div>
+            <button onclick="refreshStats()" class="quick-action-btn">
+                <span class="quick-action-icon">🔄</span>
+                <span class="quick-action-label">Actualizar Estadísticas</span>
+                <span style="font-size: 0.8rem; color: #666;">Recargar datos</span>
+            </button>
+        </div>
             </div>
             
-            <div class="quick-action-btn" onclick="generateAllQRs()" style="border-left: 4px solid #8b5cf6;">
-                <div class="icon">📱</div>
-                <div class="title">Generar QR Masivo</div>
-                <div class="desc">Crear códigos QR para imprimir</div>
-            </div>
-            
-            <div class="quick-action-btn" onclick="exportData()" style="border-left: 4px solid #06b6d4;">
-                <div class="icon">📊</div>
-                <div class="title">Exportar Datos</div>
-                <div class="desc">Descargar reporte completo JSON</div>
-            </div>
-            
-            <div class="quick-action-btn" onclick="backupData()" style="border-left: 4px solid #10b981;">
-                <div class="icon">💾</div>
-                <div class="title">Crear Respaldo</div>
-                <div class="desc">Backup completo con configuración</div>
-            </div>
-            
-            <div class="quick-action-btn" onclick="configureServerBaseUrl()" style="border-left: 4px solid #3b82f6;">
-                <div class="icon">🔗</div>
-                <div class="title">Configurar URL Base</div>
-                <div class="desc">Fijar URL para QRs (Cloudflare/Netlify)</div>
-            </div>
-            
-            <div class="quick-action-btn" onclick="configureMongoDB()" style="border-left: 4px solid #059669;">
-                <div class="icon">🍃</div>
-                <div class="title">Configurar MongoDB</div>
-                <div class="desc">URL de API (Railway/Render)</div>
-            </div>
-            
-            <div class="quick-action-btn" onclick="configureEmail()" style="border-left: 4px solid #ec4899;">
-                <div class="icon">✉️</div>
-                <div class="title">Configurar Email</div>
-                <div class="desc">Resend/MailerSend para envío de QRs</div>
-            </div>
-            
-            <div class="quick-action-btn" onclick="deleteAllAlumnos()" style="border-left: 4px solid #dc2626;">
-                <div class="icon">🗑️</div>
-                <div class="title">Eliminar Todos</div>
-                <div class="desc">⚠️ Borrar todos los alumnos</div>
-            </div>
-        </section>
-
-        <!-- Vista Rápida de Alumnos -->
-        <section class="header-section">
-            <h2>📋 Vista Rápida de Alumnos</h2>
-            <div class="header-actions">
-                <button class="btn btn-secondary" onclick="refreshStats()">Actualizar</button>
-                <button class="btn btn-primary" onclick="window.location.href='index.html'">Ver Todos</button>
-            </div>
-        </section>
-
-        <section class="alumnos-grid" id="alumnosGrid">
-            <!-- Los alumnos se cargarán aquí dinámicamente -->
-        </section>
-    </main>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js"></script>
-    <script src="mongodb-client.js"></script>
-    <script src="alert-system.js"></script>
-    <script src="app.js"></script>
+    <!-- MongoDB Client -->
+    <script src="mongodb-client.js?v=3"></script>
+    <script src="app.js?v=20"></script>
+    
     <script>
-        // Verificar que el usuario tenga permisos de admin
-        function checkAdminAccess() {
+        // ⚠️ MongoDB es la única fuente de verdad
+        // NO usar localStorage para datos de negocio
+        
+        // Función para calcular estado (temporal, debería venir del backend)
+        function calcularEstado(alumno) {
+            if (!alumno || !alumno.fechaPago || !alumno.diaPago) {
+                return { clase: 'atrasado', texto: 'Sin datos' };
+            }
+            
+            const hoy = new Date();
+            const fechaPago = new Date(alumno.fechaPago);
+            const diaPago = parseInt(alumno.diaPago) || 30;
+            
+            // Calcular próximo vencimiento
+            let proximoVencimiento = new Date(fechaPago);
+            proximoVencimiento.setMonth(proximoVencimiento.getMonth() + 1);
+            proximoVencimiento.setDate(Math.min(diaPago, new Date(proximoVencimiento.getFullYear(), proximoVencimiento.getMonth() + 1, 0).getDate()));
+            
+            const diffTime = proximoVencimiento - hoy;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return { clase: 'atrasado', texto: `${Math.abs(diffDays)}d atrasado` };
+            } else if (diffDays <= 7) {
+                return { clase: 'proximo', texto: `${diffDays}d restantes` };
+            } else {
+                return { clase: 'aldia', texto: `${diffDays}d restantes` };
+            }
+        }
+        
+        // Actualizar estadísticas desde MongoDB
+        async function updateStats() {
+            try {
+                if (!window.MONGO || !MONGO.isConfigured()) {
+                    throw new Error('MongoDB no está configurado');
+                }
+                
+                const alumnos = await MONGO.listAlumnos();
+                
+                if (!Array.isArray(alumnos)) {
+                    throw new Error('Respuesta inválida del servidor');
+                }
+                
+            let total = alumnos.length;
+            let aldia = 0;
+            let proximo = 0;
+            let atrasados = 0;
+                
+            alumnos.forEach(alumno => {
+                const estado = calcularEstado(alumno);
+                if (estado.clase === 'aldia') aldia++;
+                else if (estado.clase === 'proximo') proximo++;
+                else if (estado.clase === 'atrasado') atrasados++;
+            });
+                
+            document.getElementById('totalAlumnos').textContent = total;
+            document.getElementById('alumnosAldia').textContent = aldia;
+            document.getElementById('alumnosProximo').textContent = proximo;
+            document.getElementById('alumnosAtrasados').textContent = atrasados;
+                
+                console.log('✅ Estadísticas actualizadas desde MongoDB');
+                
+            } catch (error) {
+                console.error('❌ Error al actualizar estadísticas:', error);
+                
+                const errorContainer = document.getElementById('errorContainer');
+                errorContainer.innerHTML = `
+                    <div class="error-message">
+                        <strong>❌ Error al cargar estadísticas</strong>
+                        <p>${error.message || 'No se pudo conectar con la base de datos'}</p>
+                        <button onclick="updateStats()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #dc2626; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                            🔄 Reintentar
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('totalAlumnos').textContent = '---';
+                document.getElementById('alumnosAldia').textContent = '---';
+                document.getElementById('alumnosProximo').textContent = '---';
+                document.getElementById('alumnosAtrasados').textContent = '---';
+            }
+        }
+
+        // Refrescar estadísticas
+        function refreshStats() {
+            updateStats();
+        }
+        
+        // Cerrar sesión
+        function logout() {
+            localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+        
+        // Verificar acceso
+        function checkAccess() {
             const userRole = localStorage.getItem('userRole');
             if (userRole !== 'admin') {
                 alert('Acceso denegado. Solo administradores pueden acceder a esta página.');
@@ -275,416 +307,16 @@
             }
             return true;
         }
-
-        // Función de logout
-        function logout() {
-            if (confirm('¿Estás seguro de cerrar sesión?')) {
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('lastAccess');
-                window.location.href = 'login.html';
-            }
-        }
-
-        // Actualizar estadísticas
-        function updateStats() {
-            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            let total = alumnos.length;
-            let aldia = 0;
-            let proximo = 0;
-            let atrasados = 0;
-            alumnos.forEach(alumno => {
-                const estado = calcularEstado(alumno);
-                if (estado.clase === 'aldia') aldia++;
-                else if (estado.clase === 'proximo') proximo++;
-                else if (estado.clase === 'atrasado') atrasados++;
-            });
-            document.getElementById('totalAlumnos').textContent = total;
-            document.getElementById('alumnosAldia').textContent = aldia;
-            document.getElementById('alumnosProximo').textContent = proximo;
-            document.getElementById('alumnosAtrasados').textContent = atrasados;
-        }
-
-        // Refrescar estadísticas
-        function refreshStats() {
-            updateStats();
-            // Recargar la página para mostrar los alumnos
-            location.reload();
-            showNotification('Estadísticas actualizadas');
-        }
-
-        // Generar QR para todos los alumnos
-        function generateAllQRs() {
-            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            if (alumnos.length === 0) {
-                alert('No hay alumnos registrados');
-                return;
-            }
-            
-            // Verificar que la URL base esté configurada
-            const baseUrl = localStorage.getItem('serverBaseUrl');
-            if (!baseUrl || !baseUrl.includes('pages.dev') && !baseUrl.includes('netlify.app') && !baseUrl.includes('http://') && baseUrl.includes('localhost')) {
-                if (!confirm('⚠️ La URL base no está configurada correctamente.\n\n¿Quieres configurarla ahora antes de generar los QRs?')) {
-                    return;
-                }
-                configureServerBaseUrl();
-                // Verificar nuevamente después de configurar
-                const newBaseUrl = localStorage.getItem('serverBaseUrl');
-                if (!newBaseUrl || newBaseUrl.includes('localhost')) {
-                    alert('❌ Por favor configura la URL de Cloudflare Pages primero.\n\nVe a: Configurar URL Base');
-                    return;
-                }
-            }
-            
-            if (confirm(`¿Generar códigos QR para ${alumnos.length} alumnos?\n\nURL que se usará: ${localStorage.getItem('serverBaseUrl') || 'No configurada'}`)) {
-                generarQRsMasivo(alumnos);
-            }
-        }
-
-        // Función para generar QR masivo
-        function generarQRsMasivo(alumnos) {
-            // Obtener URL base configurada
-            let baseUrl = localStorage.getItem('serverBaseUrl');
-            if (!baseUrl || baseUrl.includes('localhost')) {
-                baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
-            }
-            baseUrl = baseUrl.replace(/\/$/, '') + '/';
-            
-            const ventanaQR = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
-            const fecha = new Date().toLocaleDateString();
-            const alumnosJson = JSON.stringify(alumnos).replace(/</g, '\\x3C').replace(/>/g, '\\x3E');
-            
-            ventanaQR.document.write('<!DOCTYPE html><html><head><title>Códigos QR - Academia COHAB</title>');
-            ventanaQR.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;background:#f5f5f5}.qr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:20px}.qr-item{background:white;padding:15px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);text-align:center}.qr-item h3{margin:0 0 10px 0;color:#333;font-size:14px}.qr-item p{margin:5px 0;color:#666;font-size:12px}.print-btn{position:fixed;top:20px;right:20px;background:#dc2626;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;font-size:16px}@media print{.print-btn{display:none}body{background:white}}</style>');
-            ventanaQR.document.write('<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></scr' + 'ipt>');
-            ventanaQR.document.write('</head><body>');
-            ventanaQR.document.write('<button class="print-btn" onclick="window.print()">Imprimir Todos</button>');
-            ventanaQR.document.write('<h1>Códigos QR - Academia COHAB</h1>');
-            ventanaQR.document.write('<p>Generados el ' + fecha + '</p>');
-            ventanaQR.document.write('<p style="color:#666;font-size:0.9rem;">URL base: ' + baseUrl + '</p>');
-            ventanaQR.document.write('<div class="qr-grid" id="qrGrid"></div>');
-            ventanaQR.document.write('<scr' + 'ipt>');
-            ventanaQR.document.write('const alumnos=' + alumnosJson + ';');
-            ventanaQR.document.write('const baseUrl="' + baseUrl + '";');
-            ventanaQR.document.write('alumnos.forEach(function(alumno,index){');
-            ventanaQR.document.write('var qrItem=document.createElement("div");');
-            ventanaQR.document.write('qrItem.className="qr-item";');
-            ventanaQR.document.write('var studentUrl=baseUrl+"usuario.html?id="+alumno.id;');
-            ventanaQR.document.write('qrItem.innerHTML="<h3>"+alumno.nombre+"</h3>"+"<div id=\\"qr-"+index+"\\"></div>"+"<p><strong>ID:</strong> "+alumno.id+"</p>"+"<p><strong>Email:</strong> "+(alumno.email||"No especificado")+"</p>"+"<p><strong>Tel:</strong> "+(alumno.telefono||"No especificado")+"</p>";');
-            ventanaQR.document.write('document.getElementById("qrGrid").appendChild(qrItem);');
-            ventanaQR.document.write('new QRCode(qrItem.querySelector("#qr-"+index),{text:studentUrl,width:150,height:150,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});');
-            ventanaQR.document.write('});');
-            ventanaQR.document.write('</scr' + 'ipt></body></html>');
-            ventanaQR.document.close();
-            
-            showNotification('Códigos QR generados para ' + alumnos.length + ' alumnos usando: ' + baseUrl);
-        }
-
-        // Exportar datos
-        function exportData() {
-            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            if (alumnos.length === 0) {
-                alert('No hay datos para exportar');
-                return;
-            }
-            
-            const dataStr = JSON.stringify(alumnos, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
-            
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `backup_cohab_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            
-            URL.revokeObjectURL(url);
-            showNotification('Datos exportados correctamente');
-        }
-
-        // Crear respaldo
-        function backupData() {
-            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            const backup = {
-                fecha: new Date().toISOString(),
-                version: '1.0',
-                alumnos: alumnos,
-                configuracion: {
-                    diaPagoGlobal: localStorage.getItem('diaPagoGlobal') || '30'
-                }
-            };
-            
-            const dataStr = JSON.stringify(backup, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            const url = URL.createObjectURL(dataBlob);
-            
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `respaldo_cohab_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            
-            URL.revokeObjectURL(url);
-            showNotification('Respaldo creado correctamente');
-        }
-
-        // Importar respaldo
-        (function(){
-            const actions = document.querySelector('.quick-actions');
-            if (actions && !document.getElementById('importInput')) {
-                const importBtn = document.createElement('label');
-                importBtn.className = 'quick-action-btn';
-                importBtn.innerHTML = '<div class="icon">📥</div><div class="title">Importar Respaldo</div><div class="desc">Cargar JSON de respaldo</div>';
-                importBtn.htmlFor = 'importInput';
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.id = 'importInput';
-                input.accept = 'application/json';
-                input.style.display = 'none';
-                input.onchange = function(e){
-                    const file = e.target.files && e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = function(ev){
-                        try {
-                            const data = JSON.parse(ev.target.result);
-                            if (Array.isArray(data)) {
-                                localStorage.setItem('alumnos', JSON.stringify(data));
-                            } else if (data && Array.isArray(data.alumnos)) {
-                                localStorage.setItem('alumnos', JSON.stringify(data.alumnos));
-                                if (data.configuracion && data.configuracion.diaPagoGlobal) {
-                                    localStorage.setItem('diaPagoGlobal', String(data.configuracion.diaPagoGlobal));
-                                }
-                            } else {
-                                alert('Formato de respaldo no válido');
-                                return;
-                            }
-                            if (typeof window.alumnos !== 'undefined') window.alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-                            updateStats();
-                            loadAlumnos();
-                            showNotification('Respaldo importado correctamente');
-                        } catch(err) {
-                            alert('Error al importar respaldo: ' + err.message);
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                actions.appendChild(importBtn);
-                actions.appendChild(input);
-            }
-        })();
-
-        // Eliminar todos los alumnos
-        function deleteAllAlumnos() {
-            const actuales = JSON.parse(localStorage.getItem('alumnos')) || [];
-            if (actuales.length === 0) {
-                alert('No hay alumnos registrados');
-                return;
-            }
-            
-            if (!confirm(`¿Eliminar a TODOS los ${actuales.length} alumnos? Esta acción es irreversible.`)) {
-                return;
-            }
-            
-            localStorage.setItem('alumnos', JSON.stringify([]));
-            if (typeof window.alumnos !== 'undefined') {
-                window.alumnos = [];
-            }
-            
-            updateStats();
-            loadAlumnos();
-            
-            try { showNotification('Todos los alumnos fueron eliminados'); } catch (e) { alert('Todos los alumnos fueron eliminados'); }
-        }
-
-        // Enviar QRs por email a todos los alumnos
-        async function sendQRsToAll() {
-            const alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            const alumnosConEmail = alumnos.filter(a => a.email && a.email.trim() !== '');
-            
-            if (alumnosConEmail.length === 0) {
-                alert('No hay alumnos con email registrado para enviar QRs.');
-                return;
-            }
-            
-            if (!confirm(`¿Enviar códigos QR por email a ${alumnosConEmail.length} alumnos?\n\nEsto puede tardar unos minutos.`)) {
-                return;
-            }
-            
-            if (!window.MONGO || !MONGO.isConfigured()) {
-                alert('⚠️ MongoDB no está configurado. Configura la API de MongoDB primero.');
-                return;
-            }
-            
-            let enviados = 0;
-            let fallidos = 0;
-            const resultados = [];
-            
-            showNotification(`Enviando QRs a ${alumnosConEmail.length} alumnos...`, 'info');
-            
-            for (const alumno of alumnosConEmail) {
-                try {
-                    await MONGO.enviarQr(alumno.id);
-                    enviados++;
-                    resultados.push({ nombre: alumno.nombre, estado: '✅ Enviado' });
-                } catch (error) {
-                    fallidos++;
-                    resultados.push({ nombre: alumno.nombre, estado: '❌ Error: ' + error.message });
-                    console.error(`Error enviando QR a ${alumno.nombre}:`, error);
-                }
-                
-                // Pequeña pausa para no sobrecargar el servidor
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-            
-            const mensaje = `📧 Envío completado:\n✅ Enviados: ${enviados}\n❌ Fallidos: ${fallidos}`;
-            alert(mensaje);
-            
-            if (fallidos > 0) {
-                console.log('Resultados detallados:', resultados);
-            }
-        }
         
-        // Configurar servicio de email
-        function configureEmail() {
-            const info = `
-Configuración de Email para envío de QRs
-
-OPCIÓN 1 - Resend (Recomendado):
-1. Ve a https://resend.com
-2. Crea una cuenta gratuita
-3. Verifica tu dominio o usa el dominio de prueba
-4. Obtén tu API Key
-5. Configura estas variables en Railway/Render:
-   - EMAIL_ENABLED=true
-   - USE_RESEND_API=true
-   - RESEND_API_KEY=tu_api_key_aqui
-   - EMAIL_FROM=tu_email@tudominio.com
-
-OPCIÓN 2 - MailerSend:
-1. Ve a https://mailersend.com
-2. Crea una cuenta
-3. Obtén tu API Token
-4. Configura estas variables:
-   - EMAIL_ENABLED=true
-   - USE_MAILERSEND_API=true
-   - MAILERSEND_API_TOKEN=tu_token_aqui
-   - EMAIL_FROM=tu_email@tudominio.com
-
-NOTA: El email se envía automáticamente cuando se registra un nuevo alumno con email.
-            `;
-            alert(info);
-        }
-        
-        // Configuración del sistema
-        function systemSettings() {
-            const settings = `
-⚙️ CONFIGURACIÓN DEL SISTEMA
-
-📊 Base de Datos:
-- MongoDB: ${MONGO && MONGO.isConfigured() ? '✅ Configurado' : '❌ No configurado'}
-- Supabase: ${SUPA && SUPA.isConfigured() ? '✅ Configurado' : '❌ No configurado'}
-
-🔗 URL Base para QRs:
-${localStorage.getItem('serverBaseUrl') || '❌ No configurada'}
-
-📧 Email:
-- Verifica las variables de entorno en Railway/Render
-
-💾 Alumnos en LocalStorage:
-${(JSON.parse(localStorage.getItem('alumnos')) || []).length} alumnos
-            `;
-            alert(settings);
-        }
-
-        // Configurar credenciales Supabase
-        (function(){
-            if (!SUPA || SUPA.isConfigured()) return;
-            const url = prompt('Supabase URL (https://xxxx.supabase.co)');
-            const anon = prompt('Supabase anon key');
-            if (url && anon) {
-                SUPA.configure(url, anon);
-                showNotification('Supabase configurado. Puedes importar/exportar a la nube.');
-            }
-        })();
-
-        // Configurar MongoDB API
-        function configureMongoDB() {
-            const current = MONGO && MONGO.getApiUrl ? MONGO.getApiUrl() : '';
-            const url = prompt('URL de MongoDB API (ej: https://cohab-api.railway.app)', current || 'https://cohabregistro-firstproyect-production.up.railway.app');
-            if (url && /^https?:\/\//i.test(url)) {
-                MONGO.configure(url);
-                showNotification('MongoDB API configurada. La app usará MongoDB ahora.');
-            } else if (url) {
-                alert('URL inválida. Debe empezar con http:// o https://');
-            }
-        }
-
-        function configureServerBaseUrl() {
-            const current = localStorage.getItem('serverBaseUrl');
-            const cloudflareUrl = 'https://cohabregistro-firstproyect.pages.dev';
+        // Inicializar
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!checkAccess()) return;
             
-            // Si estamos en Cloudflare Pages, configurar automáticamente
-            if (window.location.hostname.includes('.pages.dev')) {
-                const detectedUrl = `https://${window.location.hostname}`;
-                localStorage.setItem('serverBaseUrl', detectedUrl);
-                showNotification('✅ URL base configurada automáticamente: ' + detectedUrl);
-                return;
-            }
+            console.log('🔐 Panel de Administrador cargado');
+            console.log('⚠️ MongoDB es la única fuente de verdad');
             
-            // Si estamos en localhost y no hay URL configurada, sugerir Cloudflare
-            const isLocalhost = /^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.)/i.test(window.location.hostname);
-            if (isLocalhost && !current) {
-                if (confirm(`¿Configurar la URL de Cloudflare Pages?\n\n${cloudflareUrl}\n\nEsto hará que los QRs funcionen desde cualquier dispositivo.`)) {
-                    localStorage.setItem('serverBaseUrl', cloudflareUrl);
-                    showNotification('✅ URL base configurada: ' + cloudflareUrl);
-                    return;
-                }
-            }
-            
-            const value = prompt(
-                'URL base para QRs (debe ser accesible desde internet):\n\n' +
-                'Ejemplos:\n' +
-                '- Cloudflare Pages: https://cohabregistro-firstproyect.pages.dev\n' +
-                '- Netlify: https://tu-sitio.netlify.app\n' +
-                '- Tu dominio: https://tudominio.com\n\n' +
-                'URL actual: ' + (current || 'No configurada'),
-                current || cloudflareUrl
-            );
-            
-            if (!value) return;
-            if (!/^https?:\/\//i.test(value)) { 
-                alert('❌ URL inválida. Debe comenzar con http:// o https://'); 
-                return; 
-            }
-            
-            const cleanUrl = value.trim().replace(/\/$/, '');
-            localStorage.setItem('serverBaseUrl', cleanUrl);
-            showNotification('✅ URL base guardada: ' + cleanUrl + '\n\nLos nuevos QRs usarán esta URL.');
-        }
-
-        // Inicializar página
-        document.addEventListener('DOMContentLoaded', function() {
-            if (checkAdminAccess()) {
-                updateStats();
-                loadAlumnos();
-                
-                // Actualizar estadísticas cada minuto
-                setInterval(updateStats, 60000);
-            }
+            await updateStats();
         });
-    </script>
-    
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                        console.log('ServiceWorker registrado exitosamente:', registration.scope);
-                    })
-                    .catch(function(error) {
-                        console.log('Error al registrar ServiceWorker:', error);
-                    });
-            });
-        }
     </script>
 </body>
 </html> 

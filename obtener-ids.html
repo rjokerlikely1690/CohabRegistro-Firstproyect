@@ -52,32 +52,39 @@
     <p>Haz clic en cualquier ID para copiarlo</p>
     <div id="alumnosList"></div>
     
-    <script src="mongodb-client.js"></script>
-    <script src="supabase-client.js"></script>
+    <script src="mongodb-client.js?v=3"></script>
     <script>
+        // ⚠️ MongoDB es la única fuente de verdad
         async function loadAlumnos() {
-            let alumnos = JSON.parse(localStorage.getItem('alumnos')) || [];
-            
-            // Intentar cargar desde MongoDB/Supabase
-            try {
-                if (window.MONGO && MONGO.isConfigured()) {
-                    const alumnosCloud = await MONGO.listAlumnos();
-                    if (Array.isArray(alumnosCloud) && alumnosCloud.length > 0) {
-                        alumnos = alumnosCloud;
-                        localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                    }
-                } else if (window.SUPA && SUPA.isConfigured()) {
-                    const alumnosCloud = await SUPA.listAlumnos();
-                    if (Array.isArray(alumnosCloud) && alumnosCloud.length > 0) {
-                        alumnos = alumnosCloud;
-                        localStorage.setItem('alumnos', JSON.stringify(alumnos));
-                    }
-                }
-            } catch (error) {
-                console.error('Error cargando desde la nube:', error);
-            }
-            
             const container = document.getElementById('alumnosList');
+            container.innerHTML = '<p>⏳ Cargando alumnos desde MongoDB...</p>';
+            
+            let alumnos = [];
+            
+            try {
+                if (!window.MONGO || !MONGO.isConfigured()) {
+                    throw new Error('MongoDB no está configurado');
+                }
+                
+                alumnos = await MONGO.listAlumnos();
+                
+                if (!Array.isArray(alumnos)) {
+                    throw new Error('Respuesta inválida del servidor');
+                }
+                
+                console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
+                
+            } catch (error) {
+                console.error('❌ Error cargando alumnos:', error);
+                container.innerHTML = `
+                    <div style="background: #fee2e2; border: 1px solid #dc2626; color: #991b1b; padding: 1rem; border-radius: 0.5rem;">
+                        <strong>❌ Error al cargar datos</strong>
+                        <p>${error.message || 'No se pudo conectar con la base de datos'}</p>
+                        <button onclick="loadAlumnos()">🔄 Reintentar</button>
+                    </div>
+                `;
+                return;
+            }
             
             if (alumnos.length === 0) {
                 container.innerHTML = '<p>No hay alumnos registrados</p>';
