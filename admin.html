@@ -198,10 +198,9 @@
         </div>
             </div>
             
-    <!-- Supabase Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js?v=4"></script>
-    <script src="app.js?v=21"></script>
+    <!-- MongoDB Client -->
+    <script src="mongodb-client.js?v=3"></script>
+    <script src="app.js?v=24"></script>
     
     <script>
         // ⚠️ MongoDB es la única fuente de verdad
@@ -214,6 +213,8 @@
             }
             
             const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            
             const fechaPago = new Date(alumno.fechaPago);
             const diaPago = parseInt(alumno.diaPago) || 30;
             
@@ -221,6 +222,13 @@
             let proximoVencimiento = new Date(fechaPago);
             proximoVencimiento.setMonth(proximoVencimiento.getMonth() + 1);
             proximoVencimiento.setDate(Math.min(diaPago, new Date(proximoVencimiento.getFullYear(), proximoVencimiento.getMonth() + 1, 0).getDate()));
+            proximoVencimiento.setHours(0, 0, 0, 0);
+            
+            // Si el próximo pago ya pasó, avanzar al siguiente mes
+            while (proximoVencimiento < hoy) {
+                proximoVencimiento.setMonth(proximoVencimiento.getMonth() + 1);
+                proximoVencimiento.setDate(Math.min(diaPago, new Date(proximoVencimiento.getFullYear(), proximoVencimiento.getMonth() + 1, 0).getDate()));
+            }
             
             const diffTime = proximoVencimiento - hoy;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -234,14 +242,14 @@
             }
         }
         
-        // Actualizar estadísticas desde Supabase
+        // Actualizar estadísticas desde MongoDB
         async function updateStats() {
             try {
-                if (!window.SUPA || !SUPA.isConfigured()) {
-                    throw new Error('Supabase no está configurado. Por favor configúralo en el panel de administración.');
+                if (!window.MONGO || !MONGO.isConfigured()) {
+                    throw new Error('MongoDB no está configurado. Verifica la conexión del backend.');
                 }
                 
-                const alumnos = await SUPA.listAlumnos();
+                const alumnos = await MONGO.listAlumnos();
                 
                 if (!Array.isArray(alumnos)) {
                     throw new Error('Respuesta inválida del servidor');
@@ -264,7 +272,10 @@
                 document.getElementById('alumnosProximo').textContent = proximo;
                 document.getElementById('alumnosAtrasados').textContent = atrasados;
                 
-                console.log('✅ Estadísticas actualizadas desde Supabase');
+                console.log('✅ Estadísticas actualizadas desde MongoDB:', { total, aldia, proximo, atrasados });
+                
+                // Limpiar errores si existen
+                document.getElementById('errorContainer').innerHTML = '';
                 
             } catch (error) {
                 console.error('❌ Error al actualizar estadísticas:', error);
@@ -274,6 +285,9 @@
                     <div class="error-message">
                         <strong>❌ Error al cargar estadísticas</strong>
                         <p>${error.message || 'No se pudo conectar con la base de datos'}</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                            <strong>Solución:</strong> Asegúrate de que el servidor backend esté corriendo en <code>http://localhost:3000</code>
+                        </p>
                         <button onclick="updateStats()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #dc2626; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
                             🔄 Reintentar
                         </button>
@@ -314,7 +328,7 @@
             if (!checkAccess()) return;
             
             console.log('🔐 Panel de Administrador cargado');
-            console.log('⚠️ Supabase es la única fuente de verdad');
+            console.log('⚠️ MongoDB es la única fuente de verdad');
             
             await updateStats();
         });
