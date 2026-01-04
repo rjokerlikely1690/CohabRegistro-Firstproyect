@@ -308,10 +308,9 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="alert-system.js"></script>
-    <!-- Scripts necesarios para MongoDB/Supabase -->
+    <!-- Scripts necesarios para Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js"></script>
-    <script src="mongodb-client.js"></script>
+    <script src="supabase-client.js?v=4"></script>
     
     <script>
         // VERIFICACIÓN TEMPRANA: Si hay un ID en la URL, NO permitir redirecciones
@@ -400,32 +399,32 @@
             return null;
         }
         
-        // Cargar alumnos desde MongoDB (única fuente de verdad)
+        // Cargar alumnos desde Supabase (única fuente de verdad)
         async function loadAlumnosFromCloud() {
-            console.log('☁️ loadAlumnosFromCloud() - Iniciando carga desde MongoDB...');
+            console.log('☁️ loadAlumnosFromCloud() - Iniciando carga desde Supabase...');
             
             try {
-                if (!window.MONGO || !MONGO.isConfigured()) {
-                    throw new Error('MongoDB no está configurado');
+                if (!window.SUPA || !SUPA.isConfigured()) {
+                    throw new Error('Supabase no está configurado. Por favor configúralo en el panel de administración.');
                 }
                 
-                console.log('📡 Intentando cargar desde MongoDB...');
-                const alumnos = await MONGO.listAlumnos();
-                console.log('📡 Respuesta de MongoDB:', alumnos);
+                console.log('📡 Intentando cargar desde Supabase...');
+                const alumnos = await SUPA.listAlumnos();
+                console.log('📡 Respuesta de Supabase:', alumnos);
                 
                 if (!Array.isArray(alumnos)) {
                     throw new Error('Respuesta inválida del servidor');
                 }
                 
-                console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
+                console.log('✅ Alumnos cargados desde Supabase:', alumnos.length);
                 return alumnos;
                 
             } catch (error) {
-                console.error('❌ Error cargando alumnos desde MongoDB:', error);
+                console.error('❌ Error cargando alumnos desde Supabase:', error);
                 console.error('   - Stack:', error.stack);
                 
                 // ⚠️ NO usar localStorage como fallback
-                // Si MongoDB falla, el sistema debe fallar explícitamente
+                // Si Supabase falla, el sistema debe fallar explícitamente
                 throw error;
             }
         }
@@ -583,18 +582,16 @@
                 return;
             }
             
-            // PASO 3: Verificar configuración de MongoDB API
-            console.log('🔍 [PASO 3] Verificando configuración de MongoDB API...');
-            if (!window.MONGO || !MONGO.isConfigured()) {
-                const apiUrl = window.MONGO ? MONGO.getApiUrl() : 'NO CONFIGURADO';
-                console.error('❌ [PASO 3] MongoDB API NO CONFIGURADA');
-                console.error('   API URL:', apiUrl);
+            // PASO 3: Verificar configuración de Supabase
+            console.log('🔍 [PASO 3] Verificando configuración de Supabase...');
+            if (!window.SUPA || !SUPA.isConfigured()) {
+                console.error('❌ [PASO 3] Supabase NO CONFIGURADA');
                 
                 // ERROR EXPLÍCITO: No hay fallback, solo error claro
                 showCustomAlert(
                     'Error de configuración del sistema',
                     'El sistema de validación no está configurado correctamente.\n\n' +
-                    'Por favor contacta al administrador para configurar la URL de MongoDB API.\n\n' +
+                    'Por favor contacta al administrador para configurar Supabase.\n\n' +
                     'Sin esta configuración, no es posible validar suscripciones.',
                     'error'
                 );
@@ -607,17 +604,15 @@
                 return;
             }
             
-            const apiUrl = MONGO.getApiUrl();
-            console.log('✅ [PASO 3] MongoDB API configurada:', apiUrl);
+            console.log('✅ [PASO 3] Supabase configurada');
             
             // PASO 4: Llamar al endpoint de validación
-            console.log('📡 [PASO 4] Llamando a endpoint de validación...');
-            console.log('   Endpoint:', `${apiUrl}/alumnos/${cleanId}/validar`);
+            console.log('📡 [PASO 4] Llamando a validación de Supabase...');
             console.log('   ID a validar:', cleanId);
             
             try {
                 const inicioRequest = Date.now();
-                const resultado = await MONGO.validarSuscripcion(cleanId);
+                const resultado = await SUPA.validarSuscripcion(cleanId);
                 const tiempoRequest = Date.now() - inicioRequest;
                 
                 console.log('✅ [PASO 4] Respuesta recibida del backend');

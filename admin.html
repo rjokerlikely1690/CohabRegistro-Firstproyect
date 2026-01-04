@@ -198,9 +198,10 @@
         </div>
             </div>
             
-    <!-- MongoDB Client -->
-    <script src="mongodb-client.js?v=3"></script>
-    <script src="app.js?v=20"></script>
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js?v=4"></script>
+    <script src="app.js?v=21"></script>
     
     <script>
         // ⚠️ MongoDB es la única fuente de verdad
@@ -233,37 +234,37 @@
             }
         }
         
-        // Actualizar estadísticas desde MongoDB
+        // Actualizar estadísticas desde Supabase
         async function updateStats() {
             try {
-                if (!window.MONGO || !MONGO.isConfigured()) {
-                    throw new Error('MongoDB no está configurado');
+                if (!window.SUPA || !SUPA.isConfigured()) {
+                    throw new Error('Supabase no está configurado. Por favor configúralo en el panel de administración.');
                 }
                 
-                const alumnos = await MONGO.listAlumnos();
+                const alumnos = await SUPA.listAlumnos();
                 
                 if (!Array.isArray(alumnos)) {
                     throw new Error('Respuesta inválida del servidor');
                 }
                 
-            let total = alumnos.length;
-            let aldia = 0;
-            let proximo = 0;
-            let atrasados = 0;
+                let total = alumnos.length;
+                let aldia = 0;
+                let proximo = 0;
+                let atrasados = 0;
                 
-            alumnos.forEach(alumno => {
-                const estado = calcularEstado(alumno);
-                if (estado.clase === 'aldia') aldia++;
-                else if (estado.clase === 'proximo') proximo++;
-                else if (estado.clase === 'atrasado') atrasados++;
-            });
+                alumnos.forEach(alumno => {
+                    const estado = calcularEstado(alumno);
+                    if (estado.clase === 'aldia') aldia++;
+                    else if (estado.clase === 'proximo') proximo++;
+                    else if (estado.clase === 'atrasado') atrasados++;
+                });
                 
-            document.getElementById('totalAlumnos').textContent = total;
-            document.getElementById('alumnosAldia').textContent = aldia;
-            document.getElementById('alumnosProximo').textContent = proximo;
-            document.getElementById('alumnosAtrasados').textContent = atrasados;
+                document.getElementById('totalAlumnos').textContent = total;
+                document.getElementById('alumnosAldia').textContent = aldia;
+                document.getElementById('alumnosProximo').textContent = proximo;
+                document.getElementById('alumnosAtrasados').textContent = atrasados;
                 
-                console.log('✅ Estadísticas actualizadas desde MongoDB');
+                console.log('✅ Estadísticas actualizadas desde Supabase');
                 
             } catch (error) {
                 console.error('❌ Error al actualizar estadísticas:', error);
@@ -313,7 +314,7 @@
             if (!checkAccess()) return;
             
             console.log('🔐 Panel de Administrador cargado');
-            console.log('⚠️ MongoDB es la única fuente de verdad');
+            console.log('⚠️ Supabase es la única fuente de verdad');
             
             await updateStats();
         });

@@ -1,10 +1,10 @@
 // Sistema COHAB - Academia de BJJ
 // Versión limpia sin funciones problemáticas
-// VERSIÓN: 20 - MongoDB como única fuente de verdad (sin localStorage)
-console.log('✅ App.js cargado - Versión 20 - MongoDB única fuente de verdad');
+// VERSIÓN: 21 - Supabase como única fuente de verdad
+console.log('✅ App.js cargado - Versión 21 - Supabase única fuente de verdad');
 
 // ⚠️ NO usar localStorage para datos de negocio
-// MongoDB es la única fuente de verdad
+// Supabase es la única fuente de verdad
 let alumnos = [];
 let editingAlumno = null;
 let diaPagoGlobal = 30; // Valor por defecto, se puede configurar desde UI si es necesario
@@ -264,30 +264,30 @@ async function loadAlumnos() {
     
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">⏳ Cargando alumnos...</div>';
     
-    // ✅ MongoDB es la ÚNICA fuente de verdad
+    // ✅ Supabase es la ÚNICA fuente de verdad
     try {
-        if (!window.MONGO || !MONGO.isConfigured()) {
-            throw new Error('MongoDB no está configurado');
+        if (!window.SUPA || !SUPA.isConfigured()) {
+            throw new Error('Supabase no está configurado. Por favor configúralo en el panel de administración.');
         }
         
-        const nube = await MONGO.listAlumnos();
+        const nube = await SUPA.listAlumnos();
         
         if (!Array.isArray(nube)) {
             throw new Error('Respuesta inválida del servidor');
         }
         
         alumnos = nube;
-        console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
+        console.log('✅ Alumnos cargados desde Supabase:', alumnos.length);
         
     } catch (error) {
-        console.error('❌ Error al cargar alumnos desde MongoDB:', error);
+        console.error('❌ Error al cargar alumnos desde Supabase:', error);
         grid.innerHTML = `
             <div class="empty-state error-state" style="grid-column: 1/-1;">
                 <div class="empty-state-icon">❌</div>
                 <h3>Error al cargar datos</h3>
                 <p>${error.message || 'No se pudo conectar con la base de datos'}</p>
                 <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
-                    Verifica tu conexión y que MongoDB esté configurado correctamente.
+                    Verifica tu conexión y que Supabase esté configurado correctamente.
                 </p>
                 <button onclick="loadAlumnos()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
                     🔄 Reintentar
@@ -620,19 +620,20 @@ async function saveAlumno(event) {
                 formData.id = editingAlumno; // Mantener el ID original
                 alumnos[index] = { ...formData }; // Crear copia
                 
-                // Guardar en MongoDB/Supabase
+                // ✅ Guardar en Supabase (única fuente de verdad)
                 try {
-                    if (window.MONGO && MONGO.isConfigured()) {
-                        console.log('💾 Guardando en MongoDB...');
-                        await MONGO.upsertAlumno(formData);
-                        console.log('✅ Guardado exitoso en MongoDB');
-                    } else if (window.SUPA && SUPA.isConfigured()) {
-                        console.log('💾 Guardando en Supabase...');
-                        await SUPA.upsertAlumno(formData);
-                        console.log('✅ Guardado exitoso en Supabase');
+                    if (!window.SUPA || !SUPA.isConfigured()) {
+                        throw new Error('Supabase no está configurado');
                     }
-                } catch (e) {
-                    console.error('❌ ERROR al guardar:', e);
+                    
+                    console.log('💾 Guardando en Supabase...');
+                    await SUPA.upsertAlumno(formData);
+                    console.log('✅ Guardado exitoso en Supabase');
+                    
+                } catch (error) {
+                    console.error('❌ ERROR al guardar:', error);
+                    alert(`Error al guardar: ${error.message}`);
+                    return; // No continuar si falla
                 }
             } else {
                 console.error('❌ No se encontró el alumno con ID:', editingAlumno);
@@ -643,40 +644,29 @@ async function saveAlumno(event) {
             let nuevoId = null;
             
             try {
-                if (window.MONGO && MONGO.isConfigured()) {
-                    console.log('💾 Intentando guardar en MongoDB...');
-                    // Priorizar MongoDB - solo insert, no upsert después
-                    const payload = { ...formData };
-                    delete payload.id;
-                    console.log('📦 Payload a enviar:', payload);
-                    const inserted = await MONGO.insertAlumnoReturningId(payload);
-                    console.log('📥 Respuesta de MongoDB:', inserted);
-                    if (inserted && inserted.id) {
-                        nuevoId = inserted.id;
-                        console.log('✅ ID obtenido de MongoDB:', nuevoId);
-                    } else {
-                        console.warn('⚠️ MongoDB no devolvió ID, generando uno local');
-                    }
-                } else if (window.SUPA && SUPA.isConfigured()) {
-                    console.log('💾 Intentando guardar en Supabase...');
-                    // Fallback a Supabase
-                    const payload = { ...formData };
-                    delete payload.id;
-                    console.log('📦 Payload a enviar:', payload);
-                    const inserted = await SUPA.insertAlumnoReturningId(payload);
-                    console.log('📥 Respuesta de Supabase:', inserted);
-                    if (inserted && inserted.id) {
-                        nuevoId = inserted.id;
-                        console.log('✅ ID obtenido de Supabase:', nuevoId);
-                    } else {
-                        console.warn('⚠️ Supabase no devolvió ID, generando uno local');
-                    }
-                } else {
-                    console.log('ℹ️ MongoDB/Supabase no configurado, usando almacenamiento local');
+                if (!window.SUPA || !SUPA.isConfigured()) {
+                    throw new Error('Supabase no está configurado');
                 }
-            } catch (e) {
-                console.error('❌ Error al guardar en la nube:', e);
-                console.log('⚠️ Continuando con almacenamiento local...');
+                
+                console.log('💾 Intentando guardar en Supabase...');
+                const payload = { ...formData };
+                delete payload.id;
+                console.log('📦 Payload a enviar:', payload);
+                
+                const inserted = await SUPA.insertAlumnoReturningId(payload);
+                console.log('📥 Respuesta de Supabase:', inserted);
+                
+                if (inserted && inserted.id) {
+                    nuevoId = inserted.id;
+                    console.log('✅ ID obtenido de Supabase:', nuevoId);
+                } else {
+                    console.warn('⚠️ Supabase no devolvió ID, generando uno local');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error al guardar en Supabase:', error);
+                alert(`Error al guardar: ${error.message}`);
+                return; // No continuar si falla
             }
             
             // Si no se obtuvo ID de la nube, generar uno local
@@ -697,19 +687,12 @@ async function saveAlumno(event) {
             }
         }
         
-        // ✅ Recargar desde MongoDB para asegurar sincronización
-        console.log('🔄 Recargando vista de alumnos desde MongoDB...');
+        // ✅ Recargar desde Supabase para asegurar sincronización
+        console.log('🔄 Recargando vista de alumnos desde Supabase...');
         await loadAlumnos();
 
         if (formData.email) {
-            try {
-                if (window.MONGO && MONGO.isConfigured()) {
-                    await MONGO.enviarQr(formData.id);
-                    console.log(`📧 Email con QR enviado a ${formData.email}`);
-                }
-            } catch (e) {
-                console.warn('⚠️ No se pudo enviar el email con el QR:', e);
-            }
+            console.log('📧 Email configurado, pero envío de QR solo disponible con backend');
         }
 
         closeModal();
@@ -804,14 +787,14 @@ async function deleteAlumno(id) {
         const alumnoEliminado = alumnos.find(a => a.id === id);
         
         try {
-            if (!window.MONGO || !MONGO.isConfigured()) {
-                throw new Error('MongoDB no está configurado');
+            if (!window.SUPA || !SUPA.isConfigured()) {
+                throw new Error('Supabase no está configurado');
             }
             
-            await MONGO.deleteAlumno(id);
-            console.log('✅ Alumno eliminado de MongoDB');
+            await SUPA.deleteAlumno(id);
+            console.log('✅ Alumno eliminado de Supabase');
             
-            // Recargar desde MongoDB
+            // Recargar desde Supabase
             await loadAlumnos();
             alert(`Alumno ${alumnoEliminado ? alumnoEliminado.nombre : ''} eliminado correctamente`);
             

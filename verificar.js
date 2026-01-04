@@ -1,5 +1,5 @@
 // Sistema de verificación de estado de pagos
-// VERSIÓN: 12 - MongoDB como única fuente de verdad (sin localStorage)
+// VERSIÓN: 13 - Supabase como única fuente de verdad
 
 // ⚠️ NO usar localStorage para datos de negocio
 let alumnos = [];
@@ -501,8 +501,13 @@ async function verificarAlumno(id) {
     console.log('   ID a validar:', alumnoId);
     
     try {
+        // ✅ Usar Supabase para validar
+        if (!window.SUPA || !SUPA.isConfigured()) {
+            throw new Error('Supabase no está configurado. Por favor configúralo en el panel de administración.');
+        }
+        
         const inicioRequest = Date.now();
-        const resultado = await MONGO.validarSuscripcion(alumnoId);
+        const resultado = await SUPA.validarSuscripcion(alumnoId);
         const tiempoRequest = Date.now() - inicioRequest;
         
         console.log('✅ [VERIFICAR PASO 3] Respuesta recibida del backend');
@@ -1057,18 +1062,18 @@ async function registrarPago() {
     
     if (confirm(`¿Confirmar pago de ${alumno.nombre} por $${alumno.monto}?`)) {
         try {
-            // ✅ Registrar pago SOLO en MongoDB
-            if (!window.MONGO || !MONGO.isConfigured()) {
-                throw new Error('MongoDB no está configurado');
+            // ✅ Registrar pago SOLO en Supabase
+            if (!window.SUPA || !SUPA.isConfigured()) {
+                throw new Error('Supabase no está configurado');
             }
             
             const fechaPago = new Date().toISOString().split('T')[0];
-            await MONGO.registrarPago(alumnoId, fechaPago);
+            await SUPA.registrarPago(alumnoId, fechaPago);
             
-            console.log('✅ Pago registrado en MongoDB');
+            console.log('✅ Pago registrado en Supabase');
             alert('¡Pago registrado exitosamente!');
             
-            // Actualizar vista desde MongoDB
+            // Actualizar vista desde Supabase
             await verificarAlumno(alumnoId);
             await loadTodosAlumnos();
             
@@ -1096,19 +1101,19 @@ async function loadTodosAlumnos() {
     container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">⏳ Cargando alumnos...</div>';
     
     try {
-        // ✅ Cargar SOLO desde MongoDB
-        if (!window.MONGO || !MONGO.isConfigured()) {
-            throw new Error('MongoDB no está configurado');
+        // ✅ Cargar SOLO desde Supabase
+        if (!window.SUPA || !SUPA.isConfigured()) {
+            throw new Error('Supabase no está configurado. Por favor configúralo en el panel de administración.');
         }
         
-        const response = await MONGO.listAlumnos();
+        const response = await SUPA.listAlumnos();
         
         if (!Array.isArray(response)) {
             throw new Error('Respuesta inválida del servidor');
         }
         
         alumnos = response;
-        console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
+        console.log('✅ Alumnos cargados desde Supabase:', alumnos.length);
         
     } catch (error) {
         console.error('❌ Error al cargar alumnos:', error);

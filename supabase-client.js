@@ -71,9 +71,99 @@
     async function registrarPago(id, fechaISO) {
         const c = client();
         if (!c) return null;
-        const { error } = await c.from('alumnos').update({ fecha_pago: fechaISO }).eq('id', id);
+        const { error} = await c.from('alumnos').update({ fecha_pago: fechaISO }).eq('id', id);
         if (error) throw error;
         return true;
+    }
+    
+    // Función para validar suscripción (equivalente a MongoDB)
+    async function validarSuscripcion(id) {
+        const c = client();
+        if (!c) throw new Error('Supabase no está configurado');
+        
+        const { data, error } = await c
+            .from('alumnos')
+            .select('*')
+            .eq('id', id)
+            .single();
+        
+        if (error) {
+            if (error.code === 'PGRST116') {
+                throw new Error('Alumno no encontrado');
+            }
+            throw error;
+        }
+        
+        if (!data) {
+            throw new Error('Alumno no encontrado');
+        }
+        
+        // Calcular estado (similar a MongoDB)
+        const alumno = mapFromDb(data);
+        const estado = calcularEstadoSuscripcion(alumno);
+        
+        return {
+            acceso: estado.acceso,
+            estado: estado.estado,
+            diasRestantes: estado.diasRestantes,
+            proximoPago: estado.proximoPago,
+            mensaje: estado.mensaje,
+            alumno: {
+                id: alumno.id,
+                nombre: alumno.nombre,
+                email: alumno.email || null,
+                telefono: alumno.telefono || null,
+                monto: alumno.monto || null
+            }
+        };
+    }
+    
+    // Calcular estado de suscripción (lógica centralizada)
+    function calcularEstadoSuscripcion(alumno) {
+        if (!alumno || !alumno.fechaPago || !alumno.diaPago) {
+            return {
+                acceso: false,
+                estado: 'VENCIDA',
+                diasRestantes: -999,
+                proximoPago: '---',
+                mensaje: 'Datos incompletos'
+            };
+        }
+        
+        const hoy = new Date();
+        const fechaPago = new Date(alumno.fechaPago);
+        const diaPago = parseInt(alumno.diaPago) || 30;
+        
+        // Calcular próximo vencimiento
+        let proximoVencimiento = new Date(fechaPago);
+        proximoVencimiento.setMonth(proximoVencimiento.getMonth() + 1);
+        proximoVencimiento.setDate(Math.min(diaPago, new Date(proximoVencimiento.getFullYear(), proximoVencimiento.getMonth() + 1, 0).getDate()));
+        
+        const diffTime = proximoVencimiento - hoy;
+        const diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Regla de negocio: diasRestantes >= 0 → ACTIVA
+        const acceso = diasRestantes >= 0;
+        const estado = acceso ? 'ACTIVA' : 'VENCIDA';
+        
+        let mensaje;
+        if (diasRestantes < 0) {
+            mensaje = `❌ Suscripción vencida. ${Math.abs(diasRestantes)} días de atraso.`;
+        } else if (diasRestantes === 0) {
+            mensaje = `⚠️ Último día de suscripción. Vence hoy.`;
+        } else if (diasRestantes <= 7) {
+            mensaje = `⚠️ Suscripción próxima a vencer. ${diasRestantes} días restantes.`;
+        } else {
+            mensaje = `✅ Suscripción activa. ${diasRestantes} días restantes.`;
+        }
+        
+        return {
+            acceso,
+            estado,
+            diasRestantes,
+            proximoPago: proximoVencimiento.toISOString().split('T')[0],
+            mensaje
+        };
     }
 
     function mapToDb(a) {
@@ -114,6 +204,7 @@
         deleteAlumno,
         registrarPago,
         insertAlumnoReturningId,
+        validarSuscripcion,
         configure
     };
 })();
