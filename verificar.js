@@ -1071,10 +1071,10 @@ async function registrarPago() {
             await MONGO.registrarPago(alumnoId, fechaPago);
             
             console.log('✅ Pago registrado en MongoDB');
-            alert('¡Pago registrado exitosamente!');
-            
+        alert('¡Pago registrado exitosamente!');
+        
             // Actualizar vista desde MongoDB
-            await verificarAlumno(alumnoId);
+        await verificarAlumno(alumnoId);
             await loadTodosAlumnos();
             
         } catch (error) {
@@ -1283,12 +1283,6 @@ function filterStatus(status) {
             }
         }
     });
-}
-    event.target.classList.add('active');
-    }
-    
-    // Recargar lista (sin filtros)
-    loadTodosAlumnos();
 }
 
 // Helpers para interpretar datos QR	
