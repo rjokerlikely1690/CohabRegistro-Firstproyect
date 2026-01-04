@@ -399,32 +399,32 @@
             return null;
         }
         
-        // Cargar alumnos desde Supabase (única fuente de verdad)
+        // Cargar alumnos desde MongoDB (única fuente de verdad)
         async function loadAlumnosFromCloud() {
-            console.log('☁️ loadAlumnosFromCloud() - Iniciando carga desde Supabase...');
+            console.log('☁️ loadAlumnosFromCloud() - Iniciando carga desde MongoDB...');
             
             try {
-                if (!window.SUPA || !SUPA.isConfigured()) {
-                    throw new Error('Supabase no está configurado. Por favor configúralo en el panel de administración.');
+                if (!window.MONGO || !MONGO.isConfigured()) {
+                    throw new Error('MongoDB no está configurado. Por favor configúralo en el panel de administración.');
                 }
                 
-                console.log('📡 Intentando cargar desde Supabase...');
-                const alumnos = await SUPA.listAlumnos();
-                console.log('📡 Respuesta de Supabase:', alumnos);
+                console.log('📡 Intentando cargar desde MongoDB...');
+                const alumnos = await MONGO.listAlumnos();
+                console.log('📡 Respuesta de MongoDB:', alumnos);
                 
                 if (!Array.isArray(alumnos)) {
                     throw new Error('Respuesta inválida del servidor');
                 }
                 
-                console.log('✅ Alumnos cargados desde Supabase:', alumnos.length);
+                console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
                 return alumnos;
                 
             } catch (error) {
-                console.error('❌ Error cargando alumnos desde Supabase:', error);
+                console.error('❌ Error cargando alumnos desde MongoDB:', error);
                 console.error('   - Stack:', error.stack);
                 
                 // ⚠️ NO usar localStorage como fallback
-                // Si Supabase falla, el sistema debe fallar explícitamente
+                // Si MongoDB falla, el sistema debe fallar explícitamente
                 throw error;
             }
         }
@@ -582,16 +582,16 @@
                 return;
             }
             
-            // PASO 3: Verificar configuración de Supabase
-            console.log('🔍 [PASO 3] Verificando configuración de Supabase...');
-            if (!window.SUPA || !SUPA.isConfigured()) {
-                console.error('❌ [PASO 3] Supabase NO CONFIGURADA');
+            // PASO 3: Verificar configuración de MongoDB
+            console.log('🔍 [PASO 3] Verificando configuración de MongoDB...');
+            if (!window.MONGO || !MONGO.isConfigured()) {
+                console.error('❌ [PASO 3] MongoDB NO CONFIGURADA');
                 
                 // ERROR EXPLÍCITO: No hay fallback, solo error claro
                 showCustomAlert(
                     'Error de configuración del sistema',
                     'El sistema de validación no está configurado correctamente.\n\n' +
-                    'Por favor contacta al administrador para configurar Supabase.\n\n' +
+                    'Por favor contacta al administrador para configurar MongoDB.\n\n' +
                     'Sin esta configuración, no es posible validar suscripciones.',
                     'error'
                 );
@@ -604,15 +604,15 @@
                 return;
             }
             
-            console.log('✅ [PASO 3] Supabase configurada');
+            console.log('✅ [PASO 3] MongoDB configurada');
             
             // PASO 4: Llamar al endpoint de validación
-            console.log('📡 [PASO 4] Llamando a validación de Supabase...');
+            console.log('📡 [PASO 4] Llamando a validación de MongoDB...');
             console.log('   ID a validar:', cleanId);
             
             try {
                 const inicioRequest = Date.now();
-                const resultado = await SUPA.validarSuscripcion(cleanId);
+                const resultado = await MONGO.validarSuscripcion(cleanId);
                 const tiempoRequest = Date.now() - inicioRequest;
                 
                 console.log('✅ [PASO 4] Respuesta recibida del backend');
