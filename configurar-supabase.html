@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Supabase - COHAB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .container {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 2rem;
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #667eea;
+        }
+        .step h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .hint {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            margin: 0.5rem 0;
+            font-size: 0.85rem;
+            color: #856404;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .current-config {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+        .current-config strong {
+            color: #1976d2;
+        }
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        .instructions {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .instructions ol {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .instructions li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Configurar Supabase</h1>
+        <p class="subtitle">Configura tu base de datos en 2 minutos</p>
+        
+        <div id="currentConfig" class="current-config" style="display: none;">
+            <strong>✅ Configuración actual:</strong><br>
+            URL: <span id="currentUrl"></span><br>
+            Key: <span id="currentKey">••••••••</span>
+        </div>
+        
+        <div class="step">
+            <h3>
+                <span class="step-number">1</span>
+                Crea tu proyecto en Supabase
+            </h3>
+            <div class="instructions">
+                <ol>
+                    <li>Ve a <a href="https://supabase.com" target="_blank" class="link">supabase.com</a></li>
+                    <li>Crea una cuenta gratis (con GitHub o email)</li>
+                    <li>Click en "New Project"</li>
+                    <li>Elige un nombre y contraseña</li>
+                    <li>Espera 2 minutos mientras se crea</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>
+                <span class="step-number">2</span>
+                Copia tus credenciales
+            </h3>
+            <div class="instructions">
+                <ol>
+                    <li>En tu proyecto, ve a <strong>Settings</strong> → <strong>API</strong></li>
+                    <li>Copia el <strong>Project URL</strong></li>
+                    <li>Copia el <strong>anon public key</strong></li>
+                </ol>
+            </div>
+            <div class="hint">
+                💡 <strong>Tip:</strong> El "anon public" key es seguro compartir, está diseñado para el navegador
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>
+                <span class="step-number">3</span>
+                Pega tus credenciales aquí
+            </h3>
+            
+            <label for="supabaseUrl">📍 Supabase URL</label>
+            <input 
+                type="text" 
+                id="supabaseUrl" 
+                placeholder="https://xxxxxxxxxxxxx.supabase.co"
+                autocomplete="off"
+            >
+            
+            <label for="supabaseKey">🔑 Supabase Anon Key</label>
+            <input 
+                type="text" 
+                id="supabaseKey" 
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                autocomplete="off"
+            >
+            
+            <button onclick="guardarConfiguracion()" id="btnGuardar">
+                💾 Guardar Configuración
+            </button>
+            
+            <div id="mensaje" style="margin-top: 1rem;"></div>
+        </div>
+        
+        <div class="step" style="margin-top: 2rem;">
+            <h3>
+                <span class="step-number">4</span>
+                Crea la tabla de alumnos
+            </h3>
+            <div class="instructions">
+                <p>Después de guardar la configuración, ve a:</p>
+                <a href="./migrar-mongodb-a-supabase.html" class="link" style="display: block; margin-top: 0.5rem; font-size: 1rem;">
+                    📄 migrar-mongodb-a-supabase.html
+                </a>
+                <p style="margin-top: 0.5rem;">Para crear la tabla y migrar tus datos automáticamente</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Cargar configuración actual si existe
+        window.addEventListener('DOMContentLoaded', () => {
+            const url = localStorage.getItem('supabaseUrl');
+            const key = localStorage.getItem('supabaseAnon');
+            
+            if (url && key) {
+                document.getElementById('currentConfig').style.display = 'block';
+                document.getElementById('currentUrl').textContent = url;
+                document.getElementById('supabaseUrl').value = url;
+                document.getElementById('supabaseKey').value = key;
+            }
+        });
+        
+        function guardarConfiguracion() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            const mensaje = document.getElementById('mensaje');
+            const btnGuardar = document.getElementById('btnGuardar');
+            
+            // Validaciones
+            if (!url || !key) {
+                mensaje.innerHTML = '<div class="hint error">❌ Por favor completa ambos campos</div>';
+                return;
+            }
+            
+            if (!url.includes('supabase.co')) {
+                mensaje.innerHTML = '<div class="hint error">❌ La URL debe ser de Supabase (debe contener "supabase.co")</div>';
+                return;
+            }
+            
+            if (!url.startsWith('https://')) {
+                mensaje.innerHTML = '<div class="hint error">❌ La URL debe comenzar con "https://"</div>';
+                return;
+            }
+            
+            if (key.length < 100) {
+                mensaje.innerHTML = '<div class="hint error">❌ El Anon Key parece incorrecto (es muy corto)</div>';
+                return;
+            }
+            
+            // Guardar en localStorage
+            try {
+                localStorage.setItem('supabaseUrl', url);
+                localStorage.setItem('supabaseAnon', key);
+                
+                mensaje.innerHTML = `
+                    <div class="hint success">
+                        ✅ <strong>¡Configuración guardada correctamente!</strong><br><br>
+                        <strong>Próximos pasos:</strong><br>
+                        1. Ve a <a href="./migrar-mongodb-a-supabase.html" class="link">migrar-mongodb-a-supabase.html</a><br>
+                        2. Crea la tabla y migra tus datos<br>
+                        3. ¡Listo! Tu app funcionará con Supabase<br><br>
+                        <button onclick="window.location.href='./migrar-mongodb-a-supabase.html'" style="margin-top: 0.5rem;">
+                            ➡️ Ir a Migración
+                        </button>
+                    </div>
+                `;
+                
+                // Actualizar vista de configuración actual
+                document.getElementById('currentConfig').style.display = 'block';
+                document.getElementById('currentUrl').textContent = url;
+                
+                // Deshabilitar botón temporalmente
+                btnGuardar.disabled = true;
+                setTimeout(() => {
+                    btnGuardar.disabled = false;
+                }, 3000);
+                
+            } catch (error) {
+                mensaje.innerHTML = `<div class="hint error">❌ Error al guardar: ${error.message}</div>`;
+            }
+        }
+        
+        // Permitir guardar con Enter
+        document.getElementById('supabaseKey').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                guardarConfiguracion();
+            }
+        });
+    </script>
+</body>
+</html>
+
