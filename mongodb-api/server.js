@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection string (debe venir de variables de entorno)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.1@cohab.oefjuvo.mongodb.net/?appName=cohab';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.@cohab.oerfjuvo.mongodb.net/?appName=cohab';
 const DB_NAME = process.env.DB_NAME || 'cohab';
 const COLLECTION_NAME = process.env.COLLECTION_NAME || 'alumnos';
 
