@@ -1090,6 +1090,67 @@ function cerrarResultado() {
     document.getElementById('manualId').value = '';
 }
 
+// Calcular estado local para vista rápida
+function calcularEstadoLocal(alumno) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    const fechaPago = new Date(alumno.fechaPago);
+    if (isNaN(fechaPago.getTime())) {
+        return {
+            texto: 'Sin pago registrado',
+            clase: 'atrasado',
+            proximo: '---',
+            diasRestantes: -999
+        };
+    }
+    
+    const diaPago = alumno.diaPago || 30;
+    
+    // Calcular próximo pago
+    let proximoPago = new Date(fechaPago);
+    proximoPago.setMonth(proximoPago.getMonth() + 1);
+    proximoPago.setDate(Math.min(diaPago, new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, 0).getDate()));
+    proximoPago.setHours(0, 0, 0, 0);
+    
+    // Si el próximo pago ya pasó, avanzar al siguiente mes
+    while (proximoPago < hoy) {
+        proximoPago.setMonth(proximoPago.getMonth() + 1);
+        proximoPago.setDate(Math.min(diaPago, new Date(proximoPago.getFullYear(), proximoPago.getMonth() + 1, 0).getDate()));
+    }
+    
+    const diffTime = proximoPago - hoy;
+    const diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    let texto, clase;
+    if (diasRestantes < 0) {
+        texto = `Vencido hace ${Math.abs(diasRestantes)} días`;
+        clase = 'atrasado';
+    } else if (diasRestantes === 0) {
+        texto = 'Vence hoy';
+        clase = 'proximo';
+    } else if (diasRestantes <= 7) {
+        texto = `${diasRestantes} días restantes`;
+        clase = 'proximo';
+    } else {
+        texto = `${diasRestantes} días restantes`;
+        clase = 'al-dia';
+    }
+    
+    // Formatear fecha de próximo pago
+    const dia = String(proximoPago.getDate()).padStart(2, '0');
+    const mes = String(proximoPago.getMonth() + 1).padStart(2, '0');
+    const anio = proximoPago.getFullYear();
+    const proximoFormatted = `${dia}/${mes}/${anio}`;
+    
+    return {
+        texto,
+        clase,
+        proximo: proximoFormatted,
+        diasRestantes
+    };
+}
+
 // Cargar todos los alumnos (vista rápida)
 async function loadTodosAlumnos() {
     const container = document.getElementById('todosAlumnos');
@@ -1144,25 +1205,32 @@ async function loadTodosAlumnos() {
     container.innerHTML = '';
     
     alumnos.forEach(alumno => {
-        // NOTA: La vista rápida NO calcula estado localmente
-        // El estado se obtiene cuando se hace clic y se llama a verificarAlumno()
-        // Por ahora, mostramos solo información básica sin estado calculado
+        // Calcular estado localmente para la vista rápida
+        const estado = calcularEstadoLocal(alumno);
         
         const card = document.createElement('div');
-        card.className = `mini-card estado-pending`; // Estado pendiente hasta validar
+        card.className = `mini-card estado-${estado.clase}`;
         card.onclick = () => verificarAlumno(alumno.id);
         card.style.cursor = 'pointer';
         
-        // Vista rápida: Solo información básica, SIN calcular estado
-        // El estado se obtiene del backend cuando se hace clic
+        // Icono según estado
+        let estadoIcon = '';
+        if (estado.clase === 'atrasado') {
+            estadoIcon = '🔴';
+        } else if (estado.clase === 'proximo') {
+            estadoIcon = '🟠';
+        } else {
+            estadoIcon = '🟢';
+        }
+        
         card.innerHTML = `
             <div class="mini-card-header">
-                <span class="mini-status-icon">🔍</span>
+                <span class="mini-status-icon">${estadoIcon}</span>
                 <span class="mini-card-name">${alumno.nombre}</span>
             </div>
             <div class="mini-card-info">
-                <div>Clic para validar</div>
-                <div>ID: ${alumno.id.substring(0, 8)}...</div>
+                <div class="status-text-mini">${estado.texto}</div>
+                <div style="font-size: 0.8rem; opacity: 0.7;">📅 ${estado.proximo}</div>
             </div>
         `;
         
@@ -1179,21 +1247,43 @@ async function loadTodosAlumnos() {
     }
 }
 
-// Filtrar por estado (deshabilitado - la vista rápida no calcula estados)
-// NOTA: Los filtros están deshabilitados porque la vista rápida
-// no calcula estados localmente. Todos los alumnos se muestran
-// y el estado se obtiene del backend al hacer clic.
+// Filtrar por estado
 function filterStatus(status) {
-    console.log('⚠️ [filterStatus] Filtros deshabilitados - la vista rápida no calcula estados');
-    // Los filtros están deshabilitados porque no calculamos estados localmente
-    // Todos los alumnos se muestran y el estado se obtiene del backend al hacer clic
-    currentFilter = 'all'; // Forzar a 'all' siempre
+    console.log('🔍 [filterStatus] Filtrando por:', status);
+    currentFilter = status;
     
     // Actualizar botones activos
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    if (event && event.target) {
+    
+    const activeBtn = document.querySelector(`.filter-btn[onclick="filterStatus('${status}')"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // Aplicar filtro
+    const cards = document.querySelectorAll('.mini-card');
+    cards.forEach(card => {
+        if (status === 'all') {
+            card.style.display = 'block';
+        } else {
+            // Mapear estados
+            const statusMap = {
+                'aldia': 'al-dia',
+                'proximo': 'proximo',
+                'atrasado': 'atrasado'
+            };
+            
+            const targetClass = statusMap[status];
+            if (card.classList.contains(`estado-${targetClass}`)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+}
     event.target.classList.add('active');
     }
     
