@@ -1,4 +1,4 @@
 /public/styles.css /styles.css 200
-/alumno/:id /usuario.html?id=:id 200
-/u/:id /usuario.html?id=:id 200
-/usuario.html* /usuario.html 200
+/alumno/:id /public/alumno.html?id=:id 200
+/u/:id /public/alumno.html?id=:id 200
+/usuario.html* /public/alumno.html 301
