@@ -1,4 +1,17 @@
 /public/styles.css /styles.css 200
+<<<<<<< HEAD
 /alumno/:id /public/alumno.html?id=:id 200
 /u/:id /public/alumno.html?id=:id 200
 /usuario.html* /public/alumno.html 301
+=======
+/public/manifest.json /manifest.json 200
+/public/logo_cohab.png /logo_cohab.png 200
+/public/logo_cohab.svg /logo_cohab.svg 200
+/public/sw.js /sw.js 200
+/alumno/:id /public/alumno.html?id=:id 200
+/u/:id /public/alumno.html?id=:id 200
+/usuario.html* /public/alumno.html 301
+/admin.html /admin/dashboard.html 301
+/gestion-alumnos.html /admin/dashboard.html 301
+/verificar.html /public/verificar.html 301
+>>>>>>> e618350 (Fix redirects for alumno and public assets)
