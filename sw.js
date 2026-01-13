@@ -1,12 +1,16 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v11';
+const CACHE_NAME = 'academia-cohab-v12';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/usuario.html',
-  '/verificar.html',
+  // Rutas públicas actuales (Clean URLs en Pages pueden servir sin .html)
+  '/public/alumno',
+  '/public/verificar',
+  // Compatibilidad (si se accede directo con .html)
+  '/public/alumno.html',
+  '/public/verificar.html',
   '/app.js',
   '/verificar.js',
   '/styles.css',
@@ -22,7 +26,6 @@ self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
-        console.log('Cache abierto');
         return cache.addAll(urlsToCache);
       })
   );
@@ -36,7 +39,6 @@ self.addEventListener('activate', function(event) {
       return Promise.all(
         cacheNames.map(function(cacheName) {
           if (cacheName !== CACHE_NAME) {
-            console.log('Eliminando cache antiguo:', cacheName);
             return caches.delete(cacheName);
           }
         })
