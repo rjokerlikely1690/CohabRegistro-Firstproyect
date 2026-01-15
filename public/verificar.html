@@ -181,20 +181,19 @@
     <script src="../verificar.js?v=17"></script>
     
     <script>
-        // Verificación de acceso ADMIN (fallback a localStorage; no depender de scripts externos)
-        function checkAdminAccess() {
-            // Sistema con localStorage
+        // Verificación de acceso (PROFESOR/ADMIN) vía localStorage
+        function checkVerifierAccess() {
             const userRole = localStorage.getItem('userRole');
-            if (userRole !== 'admin' && userRole !== 'management') {
-                alert('Acceso denegado. Esta función requiere permisos de administrador.');
-                window.location.href = '../login.html';
+            if (userRole !== 'admin' && userRole !== 'verifier') {
+                alert('Acceso denegado. Esta función requiere rol de Profesor o Administrador.');
+                window.location.href = '../login.html?role=verifier';
                 return false;
             }
             return true;
         }
         
         // Verificar acceso ANTES de inicializar acciones
-        const __HAS_ADMIN_ACCESS__ = checkAdminAccess();
+        const __HAS_VERIFIER_ACCESS__ = checkVerifierAccess();
         
         // Cerrar sesión
         async function logout() {

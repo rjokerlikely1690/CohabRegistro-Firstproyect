@@ -317,7 +317,7 @@
             const userRole = localStorage.getItem('userRole');
             if (userRole !== 'admin') {
                 alert('Acceso denegado. Solo administradores pueden acceder a esta página.');
-                window.location.href = 'login.html';
+                window.location.href = 'login.html?role=admin';
                 return false;
             }
             return true;

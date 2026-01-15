@@ -374,19 +374,19 @@
                         </div>
                     </a>
                     
-                    <a href="gestion-alumnos.html" class="role-button role-management">
+                    <a href="public/verificar.html" class="role-button role-verifier">
                         <span class="role-icon">👥</span>
                         <div class="role-content">
-                            <div class="role-title">GESTIÓN DE ALUMNOS</div>
-                            <div class="role-description">Registro, edición y administración de alumnos y suscripciones.</div>
+                            <div class="role-title">PROFESOR / VERIFICADOR</div>
+                            <div class="role-description">Verificación de acceso por QR e ingreso manual. Requiere rol.</div>
                         </div>
                     </a>
                     
-                    <a href="usuario.html" class="role-button role-user">
+                    <a href="public/alumno.html" class="role-button role-user">
                         <span class="role-icon">👤</span>
                         <div class="role-content">
-                            <div class="role-title">VERIFICAR PAGO</div>
-                            <div class="role-description">Consulta el estado de tu suscripción y fecha de próximo pago.</div>
+                            <div class="role-title">ALUMNO (SIN LOGIN)</div>
+                            <div class="role-description">Accede por QR o ID para ver tu estado. No requiere inicio de sesión.</div>
                         </div>
                     </a>
                 </div>
@@ -395,20 +395,44 @@
     </div>
     
     <script>
-        // Guardar selección de rol en localStorage
+        // Rol deseado desde query (?role=admin | ?role=verifier)
+        const params = new URLSearchParams(window.location.search);
+        const desiredRole = (params.get('role') || '').toLowerCase();
+
+        function resolveRoleFromContext(href) {
+            // Si viene explícito en la URL, ese es el rol de autenticación
+            if (desiredRole === 'admin' || desiredRole === 'verifier') return desiredRole;
+            // Si no, inferir por destino del botón
+            if ((href || '').includes('admin')) return 'admin';
+            if ((href || '').includes('public/verificar')) return 'verifier';
+            // Alumno no inicia sesión
+            return null;
+        }
+
+        function roleLanding(role) {
+            if (role === 'admin') return 'admin/dashboard.html';
+            if (role === 'verifier') return 'public/verificar.html';
+            return null;
+        }
+
+        // Guardar selección de rol en localStorage (solo profesor/admin)
         document.querySelectorAll('.role-button').forEach(button => {
             button.addEventListener('click', function(e) {
                 const href = this.getAttribute('href');
-                let role = 'usuario';
-                
-                if (href.includes('admin')) {
-                    role = 'admin';
-                } else if (href.includes('gestion') || href.includes('index')) {
-                    role = 'management';
-                }
-                
+                const role = resolveRoleFromContext(href);
+
+                // Alumno: no iniciar sesión, no setear rol. Dejar navegar al enlace.
+                if (!role) return;
+
+                // Profesor/Admin: setear rol y redirigir a landing canónica
                 localStorage.setItem('userRole', role);
                 localStorage.setItem('lastAccess', new Date().toISOString());
+
+                const landing = roleLanding(role);
+                if (landing) {
+                    e.preventDefault();
+                    window.location.href = landing;
+                }
             });
         });
         
@@ -423,14 +447,12 @@
             // Si han pasado menos de 24 horas, redirigir automáticamente SOLO si el usuario llegó "directo"
             // (evita que botones de navegación terminen todos en la misma página por autoredirección)
             const cameFromAnotherPage = !!document.referrer;
-            if (!cameFromAnotherPage && hoursDiff < 24) {
-                if (lastRole === 'admin') {
-                    window.location.href = 'admin.html';
-                } else if (lastRole === 'management') {
-                    window.location.href = 'gestion-alumnos.html';
-                } else {
-                    window.location.href = 'usuario.html';
-                }
+            // Regla: NO redirigir implícitamente a alumno nunca.
+            // Solo roles autenticados (admin/verifier) pueden auto-redirigir.
+            const isAuthRole = lastRole === 'admin' || lastRole === 'verifier';
+            if (!cameFromAnotherPage && hoursDiff < 24 && isAuthRole) {
+                const landing = roleLanding(lastRole);
+                if (landing) window.location.href = landing;
             }
         }
     </script>
