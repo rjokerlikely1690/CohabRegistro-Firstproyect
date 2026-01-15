@@ -350,13 +350,12 @@
             <div class="logo-container">
                 <img src="logo_cohab.svg" alt="Academia COHAB" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
             </div>
-            <h1>Sistema de Control y Verificación</h1>
-            <p class="subtitle">Academia COHAB</p>
+            <h1>Acceso Privado</h1>
+            <p class="subtitle">COHAB BJJ</p>
             <p class="description">
-                Plataforma institucional para la gestión de suscripciones y control de acceso. 
-                <strong>Transparencia, orden y disciplina</strong> en cada operación. 
-                Accede a las herramientas correspondientes a tu rol y mantén el control 
-                total de tu academia.
+                Accede a las herramientas según tu rol.
+                <strong>Alumno</strong> (consulta) y <strong>Profesor</strong> (operación) son accesos visibles.
+                El acceso administrativo se mantiene protegido y no se muestra públicamente.
             </p>
         </div>
         
@@ -364,9 +363,9 @@
         <div class="access-panel">
             <div class="login-card">
                 <div class="role-selector">
-                    <h3>Selecciona tu acceso</h3>
+                    <h3>¿Cómo quieres ingresar?</h3>
                     
-                    <a href="admin.html" class="role-button role-admin">
+                    <a href="admin.html" class="role-button role-admin" style="display:none">
                         <span class="role-icon">👨‍💼</span>
                         <div class="role-content">
                             <div class="role-title">ADMINISTRADOR</div>
@@ -377,16 +376,16 @@
                     <a href="public/verificar.html" class="role-button role-verifier">
                         <span class="role-icon">👥</span>
                         <div class="role-content">
-                            <div class="role-title">PROFESOR / VERIFICADOR</div>
-                            <div class="role-description">Verificación de acceso por QR e ingreso manual. Requiere rol.</div>
+                            <div class="role-title">SOY PROFESOR</div>
+                            <div class="role-description">Verificación operativa (QR/ID). Requiere sesión.</div>
                         </div>
                     </a>
                     
                     <a href="public/alumno.html" class="role-button role-user">
                         <span class="role-icon">👤</span>
                         <div class="role-content">
-                            <div class="role-title">ALUMNO (SIN LOGIN)</div>
-                            <div class="role-description">Accede por QR o ID para ver tu estado. No requiere inicio de sesión.</div>
+                            <div class="role-title">SOY ALUMNO</div>
+                            <div class="role-description">Accede por QR o ID para ver tu estado. No requiere sesión.</div>
                         </div>
                     </a>
                 </div>
@@ -401,13 +400,17 @@
         
         // Si viene role explícito, ocultar opciones no válidas para evitar ambigüedad
         (function enforceRoleUi() {
-            if (desiredRole !== 'admin' && desiredRole !== 'verifier') return;
-            
             const adminBtn = document.querySelector('.role-button.role-admin');
             const verifierBtn = document.querySelector('.role-button.role-verifier');
             const alumnoBtn = document.querySelector('.role-button.role-user');
+
+            // Por defecto, Admin no se muestra públicamente
+            if (adminBtn) adminBtn.style.display = 'none';
+
+            if (desiredRole !== 'admin' && desiredRole !== 'verifier') return;
             
             if (desiredRole === 'admin') {
+                if (adminBtn) adminBtn.style.display = 'flex';
                 if (verifierBtn) verifierBtn.style.display = 'none';
                 if (alumnoBtn) alumnoBtn.style.display = 'none';
             }
@@ -457,26 +460,6 @@
                 }
             });
         });
-        
-        // Verificar si ya hay un rol seleccionado recientemente
-        const lastRole = localStorage.getItem('userRole');
-        const lastAccess = localStorage.getItem('lastAccess');
-        
-        if (lastRole && lastAccess) {
-            const timeDiff = new Date() - new Date(lastAccess);
-            const hoursDiff = timeDiff / (1000 * 60 * 60);
-            
-            // Si han pasado menos de 24 horas, redirigir automáticamente SOLO si el usuario llegó "directo"
-            // (evita que botones de navegación terminen todos en la misma página por autoredirección)
-            const cameFromAnotherPage = !!document.referrer;
-            // Regla: NO redirigir implícitamente a alumno nunca.
-            // Solo roles autenticados (admin/verifier) pueden auto-redirigir.
-            const isAuthRole = lastRole === 'admin' || lastRole === 'verifier';
-            if (!cameFromAnotherPage && hoursDiff < 24 && isAuthRole) {
-                const landing = roleLanding(lastRole);
-                if (landing) window.location.href = landing;
-            }
-        }
     </script>
     
     <!-- Service Worker Registration -->

@@ -1,10 +1,18 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v12';
+const CACHE_NAME = 'academia-cohab-v13';
 const urlsToCache = [
   '/',
   '/index.html',
+  // Páginas públicas (marketing)
+  '/clases.html',
+  '/metodologia.html',
+  '/comunidad.html',
+  '/horarios.html',
+  '/contacto.html',
+  '/ubicacion.html',
+  '/faq.html',
   // Rutas públicas actuales (Clean URLs en Pages pueden servir sin .html)
   '/public/alumno',
   '/public/verificar',
