@@ -25,3 +25,4 @@
 
 # Verificación (canónica/protegida)
 /verificar.html /public/verificar.html 301
+/verificar /public/verificar 301
