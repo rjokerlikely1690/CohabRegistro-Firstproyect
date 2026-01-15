@@ -12,10 +12,6 @@
 /public/logo_cohab.svg /logo_cohab.svg 200
 /public/sw.js /sw.js 200
 
-# Pretty URLs (si el host no lo resuelve automáticamente)
-/public/alumno /public/alumno.html 200
-/public/verificar /public/verificar.html 200
-
 # Rutas QR (canónicas)
 /alumno/:id /public/alumno.html?id=:id 200
 /u/:id /public/alumno.html?id=:id 200
@@ -24,5 +20,6 @@
 /usuario.html* /public/alumno.html 301
 
 # Verificación (canónica/protegida)
-/verificar.html /public/verificar.html 301
+# Cloudflare Pages fuerza clean URLs (308 de *.html -> sin .html), así que canónica real: /public/verificar
+/verificar.html /public/verificar 301
 /verificar /public/verificar 301
