@@ -926,8 +926,8 @@ function showQR(id) {
     baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, ''); // Remover cualquier .html
     baseUrl = baseUrl.replace(/\/$/, ''); // Remover trailing slash
     
-    // Asegurar que termine sin slash para construir la URL correctamente
-    const studentUrl = `${baseUrl}/usuario.html?id=${encodeURIComponent(alumno.id)}`;
+    // URL canónica de alumno (sin login): /alumno/:id
+    const studentUrl = `${baseUrl}/alumno/${encodeURIComponent(alumno.id)}`;
     
     console.log('🔗 URL base limpia:', baseUrl);
     console.log('🔗 URL del alumno generada:', studentUrl);
@@ -1095,7 +1095,7 @@ function buildStudentUrl(alumnoId) {
     baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, '');
     baseUrl = baseUrl.replace(/\/$/, '');
     
-    return `${baseUrl}/usuario.html?id=${encodeURIComponent(alumnoId)}`;
+    return `${baseUrl}/alumno/${encodeURIComponent(alumnoId)}`;
 }
 
 // Compartir QR por WhatsApp con imagen

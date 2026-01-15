@@ -115,7 +115,7 @@ function authMiddleware(req, res, next) {
 
 function buildStudentUrl(alumno) {
     const base = PUBLIC_BASE_URL.endsWith('/') ? PUBLIC_BASE_URL : `${PUBLIC_BASE_URL}/`;
-    return `${base}usuario.html?id=${alumno.id}`;
+    return `${base}alumno/${encodeURIComponent(alumno.id)}`;
 }
 
 async function generateQrBuffer(alumno) {

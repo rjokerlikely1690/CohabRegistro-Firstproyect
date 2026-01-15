@@ -398,10 +398,32 @@
         // Rol deseado desde query (?role=admin | ?role=verifier)
         const params = new URLSearchParams(window.location.search);
         const desiredRole = (params.get('role') || '').toLowerCase();
+        
+        // Si viene role explícito, ocultar opciones no válidas para evitar ambigüedad
+        (function enforceRoleUi() {
+            if (desiredRole !== 'admin' && desiredRole !== 'verifier') return;
+            
+            const adminBtn = document.querySelector('.role-button.role-admin');
+            const verifierBtn = document.querySelector('.role-button.role-verifier');
+            const alumnoBtn = document.querySelector('.role-button.role-user');
+            
+            if (desiredRole === 'admin') {
+                if (verifierBtn) verifierBtn.style.display = 'none';
+                if (alumnoBtn) alumnoBtn.style.display = 'none';
+            }
+            if (desiredRole === 'verifier') {
+                if (adminBtn) adminBtn.style.display = 'none';
+                if (alumnoBtn) alumnoBtn.style.display = 'none';
+            }
+        })();
 
         function resolveRoleFromContext(href) {
             // Si viene explícito en la URL, ese es el rol de autenticación
-            if (desiredRole === 'admin' || desiredRole === 'verifier') return desiredRole;
+            if (desiredRole === 'admin' || desiredRole === 'verifier') {
+                // Alumno nunca inicia sesión: no permitir que el flujo role=admin|verifier se contamine
+                if ((href || '').includes('public/alumno')) return null;
+                return desiredRole;
+            }
             // Si no, inferir por destino del botón
             if ((href || '').includes('admin')) return 'admin';
             if ((href || '').includes('public/verificar')) return 'verifier';

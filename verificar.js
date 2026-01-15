@@ -252,8 +252,8 @@ function buildStudentUrl(alumnoId) {
     baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, ''); // Remover cualquier .html
     baseUrl = baseUrl.replace(/\/$/, ''); // Remover trailing slash
     
-    // Siempre usar formato usuario.html?id= para Cloudflare Pages (más confiable)
-    return `${baseUrl}/usuario.html?id=${encodeURIComponent(alumnoId)}`;
+    // URL canónica de alumno (sin login): /alumno/:id
+    return `${baseUrl}/alumno/${encodeURIComponent(alumnoId)}`;
 }
 
 // Alternar linterna si está disponible

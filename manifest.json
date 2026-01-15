@@ -28,7 +28,7 @@
       "name": "Panel Admin",
       "short_name": "Admin",
       "description": "Acceso rápido al panel de administración",
-      "url": "admin.html",
+      "url": "admin/dashboard.html",
       "icons": [
         {
           "src": "logo_cohab.png",
@@ -40,7 +40,7 @@
       "name": "Versión Usuario",
       "short_name": "Usuario",
       "description": "Verificar estado de pago",
-      "url": "usuario.html",
+      "url": "public/alumno.html",
       "icons": [
         {
           "src": "logo_cohab.png",

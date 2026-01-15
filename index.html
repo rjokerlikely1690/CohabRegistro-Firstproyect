@@ -391,7 +391,7 @@
             <img src="logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Inicio</a></li>
-                <li><a href="login.html">Acceso Admin</a></li>
+                <li><a href="login.html?role=admin">Acceso Admin</a></li>
             </ul>
         </div>
     </nav>
@@ -401,170 +401,13 @@
         <section class="home-hero">
             <h1>Sistema de Control y Verificación</h1>
             <p class="hero-subtitle">Academia COHAB</p>
-            <p class="hero-description">
-                Sistema institucional de gestión de suscripciones y control de acceso. 
-                Transparencia, orden y disciplina en cada validación.
-            </p>
+            <p class="hero-description">Punto de entrada operativo del sistema.</p>
         </section>
 
-        <!-- Cómo funciona el sistema -->
-        <section class="home-section">
-            <h2>Cómo Funciona el Sistema</h2>
-            <p>
-                El proceso de validación es simple, rápido y preciso. Cada paso está diseñado 
-                para garantizar el orden y la transparencia en el acceso a las instalaciones.
-            </p>
-            
-            <div class="flow-diagram">
-                <div class="flow-step">
-                    <div class="flow-step-number">1</div>
-                    <div class="flow-step-content">
-                        <strong>Pago de Suscripción</strong>
-                        El alumno realiza el pago de su mensualidad. El sistema registra 
-                        automáticamente la fecha de pago y calcula el período de validez.
-                    </div>
-                </div>
-                <div class="flow-step">
-                    <div class="flow-step-number">2</div>
-                    <div class="flow-step-content">
-                        <strong>Registro del Estado</strong>
-                        El sistema actualiza el estado de la suscripción en tiempo real. 
-                        Cada alumno tiene un estado binario: <span class="status-badge active">ACTIVA</span> o <span class="status-badge expired">VENCIDA</span>.
-                    </div>
-                </div>
-                <div class="flow-step">
-                    <div class="flow-step-number">3</div>
-                    <div class="flow-step-content">
-                        <strong>Verificación en Entrada</strong>
-                        El profesor escanea el código QR del alumno o ingresa su ID. 
-                        El sistema consulta la base de datos y determina el estado actual.
-                    </div>
-                </div>
-                <div class="flow-step">
-                    <div class="flow-step-number">4</div>
-                    <div class="flow-step-content">
-                        <strong>Control de Acceso</strong>
-                        El sistema responde de forma inmediata: 
-                        <span class="status-badge active">Acceso permitido</span> o 
-                        <span class="status-badge expired">Acceso denegado</span>. 
-                        La asistencia queda registrada automáticamente.
-                    </div>
-                </div>
-            </div>
-            
-            <p style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <strong>Criterio de validación:</strong> Una suscripción se considera 
-                <span class="status-badge active">ACTIVA</span> cuando los días restantes 
-                hasta el próximo vencimiento son mayores o iguales a cero. Si los días son 
-                negativos, la suscripción está <span class="status-badge expired">VENCIDA</span> 
-                y el acceso queda denegado.
-            </p>
-        </section>
-
-        <!-- Roles del Sistema -->
-        <section class="home-section">
-            <h2>Roles y Permisos</h2>
-            <p>
-                El sistema está diseñado con roles claramente definidos. Cada usuario tiene 
-                acceso únicamente a la información y funciones correspondientes a su rol.
-            </p>
-            
-            <div class="roles-grid">
-                <div class="role-card">
-                    <h3>Alumno</h3>
-                    <p>
-                        Consulta tu estado de suscripción y mantén un registro de tus pagos.
-                    </p>
-                    <p><strong>Puedes ver:</strong></p>
-                    <ul>
-                        <li>Estado actual de tu suscripción</li>
-                        <li>Fecha de último pago registrado</li>
-                        <li>Fecha del próximo vencimiento</li>
-                        <li>Días restantes o días de atraso</li>
-                        <li>Historial de pagos</li>
-                    </ul>
-                    <p><strong>No puedes:</strong></p>
-                    <ul>
-                        <li>Ver información de otros alumnos</li>
-                        <li>Modificar datos administrativos</li>
-                        <li>Acceder a funciones de gestión</li>
-                    </ul>
-                    <div class="action-buttons" style="margin-top: 1.5rem; justify-content: flex-start;">
-                        <a href="public/alumno.html" class="action-btn">Consultar mi estado</a>
-                    </div>
-                </div>
-                
-                <div class="role-card">
-                    <h3>Profesor</h3>
-                    <p>
-                        Valida el acceso de alumnos en la entrada y registra asistencia de forma rápida y precisa.
-                    </p>
-                    <p><strong>Puedes hacer:</strong></p>
-                    <ul>
-                        <li>Escanear código QR del alumno</li>
-                        <li>Ingresar ID manualmente</li>
-                        <li>Ver resultado inmediato de validación</li>
-                        <li>Registrar asistencia automáticamente</li>
-                    </ul>
-                    <p><strong>Ves en pantalla:</strong></p>
-                    <ul>
-                        <li>Estado de suscripción: <span class="status-badge active">ACTIVA</span> o <span class="status-badge expired">VENCIDA</span></li>
-                        <li>Información básica del alumno</li>
-                        <li>Días restantes o días de atraso</li>
-                    </ul>
-                    <div class="action-buttons" style="margin-top: 1.5rem; justify-content: flex-start;">
-                        <a href="login.html?role=verifier" class="action-btn">Validar acceso</a>
-                    </div>
-                </div>
-                
-                <div class="role-card">
-                    <h3>Administrador</h3>
-                    <p>
-                        Gestiona toda la información del sistema, alumnos, pagos y configuraciones.
-                    </p>
-                    <p><strong>Gestionas:</strong></p>
-                    <ul>
-                        <li>Registro y edición de alumnos</li>
-                        <li>Registro de pagos y actualización de fechas</li>
-                        <li>Configuración del sistema</li>
-                        <li>Reportes y estadísticas</li>
-                        <li>Generación de códigos QR</li>
-                    </ul>
-                    <p style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.6); font-size: 0.95rem;">
-                        <strong>Nota:</strong> El acceso administrativo no está disponible desde esta página. 
-                        Contacta con el administrador del sistema para obtener credenciales.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Seguridad y Privacidad -->
-        <section class="home-section">
-            <h2>Seguridad y Privacidad</h2>
-            <p>
-                La protección de datos y la privacidad de los alumnos son prioridades fundamentales 
-                en el diseño de este sistema.
-            </p>
-            <ul>
-                <li><strong>Almacenamiento seguro:</strong> Todos los datos se almacenan en servidores 
-                    seguros con encriptación de extremo a extremo</li>
-                <li><strong>Validación en tiempo real:</strong> Cada consulta se realiza directamente 
-                    contra la base de datos, garantizando información siempre actualizada</li>
-                <li><strong>Identificadores únicos:</strong> Cada alumno posee un ID único y privado 
-                    que solo él conoce</li>
-                <li><strong>Principio de menor privilegio:</strong> Cada rol tiene acceso únicamente 
-                    a la información necesaria para su función</li>
-                <li><strong>Sin exposición de datos:</strong> La información personal no se comparte 
-                    entre usuarios ni se expone públicamente</li>
-            </ul>
-        </section>
-
-        <!-- Navegación -->
+        <!-- Accesos operativos -->
         <section class="home-section">
             <h2>Acceso al Sistema</h2>
-            <p>
-                Selecciona la opción correspondiente a tu rol para acceder a las funciones del sistema.
-            </p>
+            <p>Selecciona tu rol para iniciar el flujo correspondiente.</p>
             <div class="action-buttons">
                 <a href="public/alumno.html" class="action-btn">Acceso Alumno</a>
                 <a href="login.html?role=verifier" class="action-btn">Acceso Profesor</a>
