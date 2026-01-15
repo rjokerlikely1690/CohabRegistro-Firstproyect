@@ -22,3 +22,6 @@
 
 # Compatibilidad legacy
 /usuario.html* /public/alumno.html 301
+
+# Verificación (canónica/protegida)
+/verificar.html /public/verificar.html 301
