@@ -401,16 +401,43 @@
         <section class="home-hero">
             <h1>Sistema de Control y Verificación</h1>
             <p class="hero-subtitle">Academia COHAB</p>
-            <p class="hero-description">Punto de entrada operativo del sistema.</p>
+            <p class="hero-description">Portal operativo del sistema (alumnos, verificación y administración).</p>
         </section>
 
-        <!-- Accesos operativos -->
+        <!-- Presentación breve (operativa) -->
         <section class="home-section">
-            <h2>Acceso al Sistema</h2>
-            <p>Selecciona tu rol para iniciar el flujo correspondiente.</p>
+            <h2>Resumen del Sistema</h2>
+            <p>
+                Este sistema permite <strong>consultar estados de pago</strong>, <strong>verificar acceso</strong> y <strong>gestionar alumnos</strong>
+                con roles separados. El alumno no inicia sesión y solo accede a su información.
+            </p>
+        </section>
+
+        <!-- Zona Pública -->
+        <section class="home-section">
+            <h2>Zona Pública</h2>
+            <p><strong>Alumnos:</strong> consulta tu estado usando tu QR o tu ID. No requiere inicio de sesión.</p>
             <div class="action-buttons">
-                <a href="public/alumno.html" class="action-btn">Acceso Alumno</a>
+                <a href="public/alumno.html" class="action-btn">Acceso Alumno (QR / ID)</a>
+            </div>
+        </section>
+
+        <!-- Zona Operativa (no administrativa) -->
+        <section class="home-section">
+            <h2>Zona Operativa</h2>
+            <p><strong>Profesores / Verificadores:</strong> verificación de QR y registro operativo (requiere sesión).</p>
+            <div class="action-buttons">
                 <a href="login.html?role=verifier" class="action-btn">Acceso Profesor</a>
+            </div>
+        </section>
+
+        <!-- Zona Administrativa (restringida) -->
+        <section class="home-section">
+            <h2>Administración del Sistema</h2>
+            <p style="color: rgba(255, 255, 255, 0.65);">
+                Área privada. Solo administradores autorizados pueden acceder.
+            </p>
+            <div class="action-buttons">
                 <a href="login.html?role=admin" class="action-btn secondary">Acceso Administración</a>
             </div>
         </section>
