@@ -404,44 +404,80 @@
             <p class="hero-description">Portal operativo del sistema (alumnos, verificación y administración).</p>
         </section>
 
-        <!-- Presentación breve (operativa) -->
+        <!-- Portal operativo -->
         <section class="home-section">
-            <h2>Resumen del Sistema</h2>
+            <h2>Portal Operativo</h2>
             <p>
-                Este sistema permite <strong>consultar estados de pago</strong>, <strong>verificar acceso</strong> y <strong>gestionar alumnos</strong>
-                con roles separados. El alumno no inicia sesión y solo accede a su información.
+                Elige tu acceso según tu rol. El alumno <strong>no inicia sesión</strong>. Profesor y Administrador <strong>requieren login</strong>.
             </p>
-        </section>
 
-        <!-- Zona Pública -->
-        <section class="home-section">
-            <h2>Zona Pública</h2>
-            <p><strong>Alumnos:</strong> consulta tu estado usando tu QR o tu ID. No requiere inicio de sesión.</p>
-            <div class="action-buttons">
-                <a href="public/alumno.html" class="action-btn">Acceso Alumno (QR / ID)</a>
-            </div>
-        </section>
+            <div class="roles-grid" style="grid-template-columns: 1.2fr 0.8fr; align-items: start;">
+                <div style="display: grid; gap: 1.5rem;">
+                    <div class="role-card">
+                        <h3>Zona Pública — Alumno</h3>
+                        <p><strong>Consulta tu estado</strong> usando tu QR o tu ID. Solo verás tu información.</p>
+                        <div class="action-buttons" style="margin-top: 1rem; justify-content: flex-start;">
+                            <a href="public/alumno.html" class="action-btn">Acceso Alumno (QR / ID)</a>
+                        </div>
+                    </div>
 
-        <!-- Zona Operativa (no administrativa) -->
-        <section class="home-section">
-            <h2>Zona Operativa</h2>
-            <p><strong>Profesores / Verificadores:</strong> verificación de QR y registro operativo (requiere sesión).</p>
-            <div class="action-buttons">
-                <a href="login.html?role=verifier" class="action-btn">Acceso Profesor</a>
-            </div>
-        </section>
+                    <div class="role-card">
+                        <h3>Zona Operativa — Profesor / Verificador</h3>
+                        <p>Verifica QR, consulta estado y registra pagos operativos. Requiere sesión.</p>
+                        <div class="action-buttons" style="margin-top: 1rem; justify-content: flex-start;">
+                            <a href="login.html?role=verifier" class="action-btn">Acceso Profesor</a>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Zona Administrativa (restringida) -->
-        <section class="home-section">
-            <h2>Administración del Sistema</h2>
-            <p style="color: rgba(255, 255, 255, 0.65);">
-                Área privada. Solo administradores autorizados pueden acceder.
-            </p>
-            <div class="action-buttons">
-                <a href="login.html?role=admin" class="action-btn secondary">Acceso Administración</a>
+                <div style="display: grid; gap: 1.5rem;">
+                    <div class="role-card" style="border-top-color: #dc2626;">
+                        <h3>Administración del Sistema</h3>
+                        <p style="color: rgba(255, 255, 255, 0.75);">
+                            Área privada. Gestión completa de alumnos y control del sistema.
+                        </p>
+                        <div class="action-buttons" style="margin-top: 1rem; justify-content: flex-start;">
+                            <a href="login.html?role=admin" class="action-btn secondary">Acceso Administración</a>
+                        </div>
+                    </div>
+
+                    <div class="role-card">
+                        <h3>Estado del Sistema</h3>
+                        <p style="margin-bottom: 0.75rem; color: rgba(255, 255, 255, 0.8);">
+                            Backend: <strong id="backendStatus">Verificando...</strong>
+                        </p>
+                        <p style="margin: 0; color: rgba(255, 255, 255, 0.65); font-size: 0.95rem;">
+                            Si el backend está caído, no se podrán validar pagos ni gestionar alumnos.
+                        </p>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
+
+    <script>
+        // Indicador simple (solo lectura) del estado del backend configurado
+        (function () {
+            const el = document.getElementById('backendStatus');
+            if (!el) return;
+            const apiUrl = (window.MONGO && typeof window.MONGO.getApiUrl === 'function') ? window.MONGO.getApiUrl() : '';
+            const base = (apiUrl || '').replace(/\/$/, '');
+            if (!base) {
+                el.textContent = 'No configurado';
+                return;
+            }
+            fetch(base + '/health', { method: 'GET' })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (data && data.status === 'ok') {
+                        el.textContent = 'Conectado';
+                    } else {
+                        el.textContent = 'No responde';
+                    }
+                })
+                .catch(() => { el.textContent = 'No responde'; });
+        })();
+    </script>
 
     <footer class="home-footer">
         <p>© 2025 Academia COHAB</p>
