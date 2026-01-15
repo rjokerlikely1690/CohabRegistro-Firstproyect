@@ -7,6 +7,11 @@ const { MongoClient } = require('mongodb');
 const cors = require('cors');
 const QRCode = require('qrcode');
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+// En algunos entornos, la resolución DNS de registros SRV puede fallar.
+// Forzamos resolvers públicos para estabilizar la conexión a MongoDB Atlas.
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const app = express();
 app.use(cors());
@@ -72,12 +77,16 @@ if (SEND_EMAILS && !USE_RESEND_API && !USE_MAILERSEND_API) {
 // Conectar a MongoDB
 async function connectDB() {
     try {
+        const isProduction = process.env.NODE_ENV === 'production';
+
         // Opciones de conexión con SSL/TLS mejoradas
         const clientOptions = {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
             tls: true,
-            tlsAllowInvalidCertificates: false,
+            // En local/dev puede fallar la validación del CA bundle del sistema.
+            // Mantener estricto en producción.
+            tlsAllowInvalidCertificates: !isProduction,
             retryWrites: true,
             w: 'majority'
         };

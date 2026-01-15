@@ -751,32 +751,6 @@
             document.title = `Estado de Pago - ${resultado.alumno.nombre}`;
             console.log('✅ [handleValidationResult] Título actualizado');
         }
-            
-            if (!resultado || resultado.acceso === undefined) {
-                throw new Error('Respuesta inválida del servidor');
-            }
-            
-            // Guardar alumno actual
-            currentStudent = resultado.alumno;
-            
-            // Convertir respuesta del backend al formato esperado por showStudentResult
-            const estado = {
-                acceso: resultado.acceso,
-                estado: resultado.estado,
-                diasRestantes: resultado.diasRestantes,
-                proximoPago: resultado.proximoPago,
-                mensaje: resultado.mensaje,
-                // Para compatibilidad con UI existente
-                clase: resultado.acceso ? 'al-dia' : 'atrasado',
-                texto: resultado.mensaje,
-                proximo: resultado.proximoPago ? new Date(resultado.proximoPago).toLocaleDateString('es-ES') : '---'
-            };
-            
-            showStudentResult(resultado.alumno, estado);
-            
-            // Actualizar el título de la página con el nombre del alumno
-            document.title = `Estado de Pago - ${resultado.alumno.nombre}`;
-        }
 
         // ============================================================
         // FUNCIÓN: Mostrar resultado de validación

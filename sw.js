@@ -68,6 +68,37 @@ self.addEventListener('fetch', function(event) {
     event.respondWith(fetch(req));
     return;
   }
+
+  function isStaticAssetRequest(pathname) {
+    return (
+      pathname.endsWith('.css') ||
+      pathname.endsWith('.js') ||
+      pathname.endsWith('.png') ||
+      pathname.endsWith('.svg') ||
+      pathname.endsWith('.webp') ||
+      pathname.endsWith('.jpg') ||
+      pathname.endsWith('.jpeg') ||
+      pathname.endsWith('.gif') ||
+      pathname.endsWith('.ico') ||
+      pathname.endsWith('.json')
+    );
+  }
+
+  function isBadAssetResponse(reqUrl, res) {
+    if (!res) return true;
+    const ct = (res.headers && res.headers.get && res.headers.get('content-type')) ? res.headers.get('content-type') : '';
+    const pathname = new URL(reqUrl).pathname.toLowerCase();
+
+    if (pathname.endsWith('.css')) {
+      // Evitar "CSS envenenado": HTML servido en lugar de CSS
+      return !ct.includes('text/css');
+    }
+    if (pathname.endsWith('.js')) {
+      // JS suele venir como application/javascript o text/javascript
+      return !(ct.includes('javascript'));
+    }
+    return false;
+  }
   
   const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
 
@@ -105,12 +136,34 @@ self.addEventListener('fetch', function(event) {
   }
 
   // Cache-first para archivos estáticos (CSS, JS, imágenes)
+  // Protección: NO servir/guardar HTML como si fuera CSS/JS (evita pantalla sin estilos en móviles)
+  const isStatic = isStaticAssetRequest(url.pathname.toLowerCase());
   event.respondWith(
-    caches.match(req).then(resp => resp || fetch(req).then(res => {
-      const resClone = res.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(req, resClone));
-      return res;
-    }))
+    caches.match(req).then(cached => {
+      if (cached) {
+        if (isStatic && isBadAssetResponse(req.url, cached)) {
+          // Cache envenenado: ignorar y reintentar desde red
+          return fetch(req).then(res => {
+            if (isStatic && isBadAssetResponse(req.url, res)) {
+              return res; // no cachear respuesta inválida
+            }
+            const resClone = res.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, resClone));
+            return res;
+          });
+        }
+        return cached;
+      }
+
+      return fetch(req).then(res => {
+        if (isStatic && isBadAssetResponse(req.url, res)) {
+          return res; // no cachear respuesta inválida
+        }
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, resClone));
+        return res;
+      });
+    })
   );
 });
 

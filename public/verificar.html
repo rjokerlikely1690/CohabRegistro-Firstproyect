@@ -20,7 +20,6 @@
     <link rel="apple-touch-icon" href="../logo_cohab.png">
     
     <link rel="stylesheet" href="../styles.css?v=13">
-    <link rel="stylesheet" href="../verificar-styles.css?v=1">
 </head>
 <body>
     <nav class="navbar">
@@ -28,7 +27,7 @@
             <img src="../logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
             <ul class="nav-links">
                 <li><a href="../index.html">🏠 Inicio</a></li>
-                <li><a href="../admin/dashboard.html">📊 Dashboard</a></li>
+                <li><a href="../admin.html">📊 Panel Admin</a></li>
                 <li><a href="../public/verificar.html" class="active">✅ Verificar QR</a></li>
                 <li><a href="javascript:void(0)" onclick="logout()">🚪 Cerrar Sesión</a></li>
             </ul>
@@ -175,9 +174,6 @@
     </main>
 
     <!-- Scripts -->
-    <!-- Scripts de autenticación (cargar primero) -->
-    <script src="../shared/utils/api-client.js"></script>
-    <script src="../auth/auth-service.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="../mongodb-client.js?v=3"></script>
@@ -185,18 +181,9 @@
     <script src="../verificar.js?v=17"></script>
     
     <script>
-        // Verificación de acceso ADMIN obligatoria
+        // Verificación de acceso ADMIN (fallback a localStorage; no depender de scripts externos)
         function checkAdminAccess() {
-            // Primero intentar con autenticación real (JWT)
-            if (typeof window.AuthService !== 'undefined' && typeof window.AuthService.requireRole === 'function') {
-                // Requerir rol de admin
-                if (!window.AuthService.requireRole('admin', '../login.html')) {
-                    return false;
-                }
-                return true;
-            }
-            
-            // Fallback: sistema anterior con localStorage
+            // Sistema con localStorage
             const userRole = localStorage.getItem('userRole');
             if (userRole !== 'admin' && userRole !== 'management') {
                 alert('Acceso denegado. Esta función requiere permisos de administrador.');
@@ -206,26 +193,16 @@
             return true;
         }
         
-        // Verificar acceso ANTES de cargar la página
-        if (!checkAdminAccess()) {
-            // Si no tiene acceso, requireRole ya redirige
-            // Detener ejecución del resto del script
-            throw new Error('Acceso denegado: requiere autenticación admin');
-        }
+        // Verificar acceso ANTES de inicializar acciones
+        const __HAS_ADMIN_ACCESS__ = checkAdminAccess();
         
         // Cerrar sesión
         function logout() {
             if (confirm('¿Estás seguro de cerrar sesión?')) {
-                if (typeof window.AuthService !== 'undefined' && typeof window.AuthService.logout === 'function') {
-                    window.AuthService.logout().then(() => {
-                        window.location.href = '../login.html';
-                    });
-                } else {
-                    localStorage.removeItem('userRole');
-                    localStorage.removeItem('lastAccess');
-                    sessionStorage.clear();
-                    window.location.href = '../login.html';
-                }
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('lastAccess');
+                sessionStorage.clear();
+                window.location.href = '../login.html';
             }
         }
     </script>

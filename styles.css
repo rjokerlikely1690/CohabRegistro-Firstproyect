@@ -1967,7 +1967,7 @@ body.modal-open .navbar { pointer-events: none; }
 }
 
 .custom-alert-btn {
-    background: linear-gradient(135deg, #3b82f6 born, #2563eb 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
     border: none;
     padding: 0.75rem 2rem;
@@ -2790,6 +2790,66 @@ body.modal-open .navbar { pointer-events: none; }
         font-weight: bold;
         z-index: 10000;
         animation: slideIn 0.3s ease;
+    }
+}
+
+/* MÓVIL (≤480px): evitar “pantalla blanca” en páginas de estado (usuario / QR) */
+@media (max-width: 480px) {
+    html, body {
+        background: #0f0f0f !important;
+        background-color: #0f0f0f !important;
+    }
+
+    /* Páginas con encabezado de usuario (usuario.html y public/alumno.html) */
+    .user-header + main.container .search-section,
+    .user-header + main.container .result-container {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%) !important;
+        border: 1px solid rgba(220, 38, 38, 0.25) !important;
+        color: #ffffff !important;
+    }
+
+    .user-header + main.container .search-option {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-color: rgba(220, 38, 38, 0.25) !important;
+        color: #ffffff !important;
+    }
+
+    .user-header + main.container .search-option h3,
+    .user-header + main.container .search-title h2,
+    .user-header + main.container .search-title p {
+        color: #ffffff !important;
+    }
+
+    .user-header + main.container .manual-search input,
+    .user-header + main.container input[type="text"],
+    .user-header + main.container input[type="email"],
+    .user-header + main.container input[type="tel"] {
+        background: rgba(17, 24, 39, 0.9) !important;
+        color: #ffffff !important;
+        border-color: rgba(220, 38, 38, 0.35) !important;
+    }
+
+    .user-header + main.container .info-item {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-left-color: #dc2626 !important;
+    }
+
+    .user-header + main.container .info-item .label,
+    .user-header + main.container .info-item .value {
+        color: #ffffff !important;
+    }
+
+    .user-header + main.container .alert-banner {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+    }
+
+    /* Componentes internos que en móvil suelen verse “blancos” */
+    .user-header + main.container .info-item .value[style*="background: #f8f9fa"],
+    .user-header + main.container .info-item .value[style*="background:#f8f9fa"] {
+        background: rgba(0, 0, 0, 0.25) !important;
+        color: #ffffff !important;
     }
 }
 
