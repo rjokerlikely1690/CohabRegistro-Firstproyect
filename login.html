@@ -420,8 +420,10 @@
             const timeDiff = new Date() - new Date(lastAccess);
             const hoursDiff = timeDiff / (1000 * 60 * 60);
             
-            // Si han pasado menos de 24 horas, redirigir automáticamente
-            if (hoursDiff < 24) {
+            // Si han pasado menos de 24 horas, redirigir automáticamente SOLO si el usuario llegó "directo"
+            // (evita que botones de navegación terminen todos en la misma página por autoredirección)
+            const cameFromAnotherPage = !!document.referrer;
+            if (!cameFromAnotherPage && hoursDiff < 24) {
                 if (lastRole === 'admin') {
                     window.location.href = 'admin.html';
                 } else if (lastRole === 'management') {
