@@ -79,6 +79,142 @@
             line-height: 1.6;
             text-shadow: 0 1px 5px rgba(0, 0, 0, 0.8);
         }
+
+        /* Home (Marketing) - estructura tipo portal */
+        .nav-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1rem;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255,255,255,0.12);
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .nav-pill.primary {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
+        }
+
+        .nav-pill.secondary {
+            background: linear-gradient(135deg, #111827 0%, #0b1220 100%);
+            color: rgba(255,255,255,0.92);
+        }
+
+        .nav-pill:hover {
+            transform: translateY(-1px);
+            border-color: rgba(220,38,38,0.35);
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.75rem;
+        }
+
+        .hero-actions .action-btn {
+            padding: 1rem 2rem;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .feature-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #fff;
+            font-size: 1.05rem;
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: rgba(255,255,255,0.82);
+            font-size: 0.95rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .kpi {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.10) 0%, rgba(17, 24, 39, 0.35) 100%);
+            border: 1px solid rgba(220, 38, 38, 0.18);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .kpi .num {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi .label {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.95rem;
+        }
+
+        .muted {
+            color: rgba(255,255,255,0.75);
+        }
+
+        .access-strip {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1.25rem;
+        }
+
+        .access-note {
+            margin-top: 0.75rem;
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 900px) {
+            .section-grid { grid-template-columns: 1fr; }
+            .feature-grid, .kpi-grid { grid-template-columns: 1fr; }
+            .nav-actions { justify-content: center; }
+        }
         
         /* Secciones - Diseño Institucional */
         .home-section {
@@ -390,94 +526,146 @@
         <div class="container">
             <img src="logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
             <ul class="nav-links">
-                <li><a href="index.html" class="active">Inicio</a></li>
-                <li><a href="login.html?role=admin">Acceso Admin</a></li>
+                <li><a href="#inicio" class="active">Inicio</a></li>
+                <li><a href="#clases">Clases</a></li>
+                <li><a href="#metodologia">Metodología</a></li>
+                <li><a href="#comunidad">Comunidad</a></li>
+                <li><a href="#contacto">Contacto</a></li>
             </ul>
+            <div class="nav-actions">
+                <a class="nav-pill primary" href="public/alumno.html">Ingresar Alumno</a>
+                <a class="nav-pill secondary" href="login.html">Ingresar Staff / Admin</a>
+            </div>
         </div>
     </nav>
 
     <main class="home-container">
         <!-- Hero Section -->
-        <section class="home-hero">
-            <h1>Sistema de Control y Verificación</h1>
+        <section class="home-hero" id="inicio">
+            <h1>Entrena con estructura. Progresa con disciplina.</h1>
             <p class="hero-subtitle">Academia COHAB</p>
-            <p class="hero-description">Portal operativo del sistema (alumnos, verificación y administración).</p>
+            <p class="hero-description">
+                Aquí no vienes “a probar”. Vienes a construir constancia, técnica y carácter. Un entorno serio, con seguimiento y orden.
+            </p>
+            <div class="hero-actions">
+                <a href="#contacto" class="action-btn">Quiero entrenar</a>
+                <a href="#clases" class="action-btn secondary">Ver horarios</a>
+            </div>
         </section>
 
-        <!-- Portal operativo -->
-        <section class="home-section">
-            <h2>Portal Operativo</h2>
-            <p>
-                Elige tu acceso según tu rol. El alumno <strong>no inicia sesión</strong>. Profesor y Administrador <strong>requieren login</strong>.
-            </p>
-
-            <div class="roles-grid" style="grid-template-columns: 1.2fr 0.8fr; align-items: start;">
-                <div style="display: grid; gap: 1.5rem;">
-                    <div class="role-card">
-                        <h3>Zona Pública — Alumno</h3>
-                        <p><strong>Consulta tu estado</strong> usando tu QR o tu ID. Solo verás tu información.</p>
-                        <div class="action-buttons" style="margin-top: 1rem; justify-content: flex-start;">
-                            <a href="public/alumno.html" class="action-btn">Acceso Alumno (QR / ID)</a>
-                        </div>
+        <section class="home-section" id="clases">
+            <h2>Clases</h2>
+            <div class="section-grid">
+                <div>
+                    <p>
+                        Entrenamiento guiado, progresivo y exigente. Desde fundamentos hasta niveles avanzados.
+                        La prioridad es que avances con orden y seguridad.
+                    </p>
+                    <div class="kpi-grid">
+                        <div class="kpi"><div class="num">3+</div><div class="label">niveles de progreso</div></div>
+                        <div class="kpi"><div class="num">60</div><div class="label">min por sesión</div></div>
+                        <div class="kpi"><div class="num">100%</div><div class="label">enfoque técnico</div></div>
                     </div>
-
-                    <div class="role-card">
-                        <h3>Zona Operativa — Profesor / Verificador</h3>
-                        <p>Verifica QR, consulta estado y registra pagos operativos. Requiere sesión.</p>
-                        <div class="action-buttons" style="margin-top: 1rem; justify-content: flex-start;">
-                            <a href="login.html?role=verifier" class="action-btn">Acceso Profesor</a>
+                </div>
+                <div>
+                    <div class="feature-card">
+                        <h3>Horarios (referencia)</h3>
+                        <p class="muted" style="margin-bottom: 0.75rem;">
+                            Ajusta estos textos si tus horarios reales son otros.
+                        </p>
+                        <ul style="margin: 0.75rem 0 0 0; padding: 0; list-style: none;">
+                            <li style="margin: 0.5rem 0;"><strong>Lun–Vie:</strong> 19:00 – 21:00</li>
+                            <li style="margin: 0.5rem 0;"><strong>Sábado:</strong> 11:00 – 13:00</li>
+                            <li style="margin: 0.5rem 0;"><strong>Domingo:</strong> descanso / open mat</li>
+                        </ul>
+                        <div class="access-strip" style="justify-content: flex-start;">
+                            <a href="#contacto" class="action-btn">Solicitar cupo</a>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <div style="display: grid; gap: 1.5rem;">
-                    <div class="role-card" style="border-top-color: #dc2626;">
-                        <h3>Administración del Sistema</h3>
-                        <p style="color: rgba(255, 255, 255, 0.75);">
-                            Área privada. Gestión completa de alumnos y control del sistema.
+        <section class="home-section" id="metodologia">
+            <h2>Metodología</h2>
+            <p>
+                No es improvisación. Es un camino: fundamentos sólidos, repetición inteligente y progreso visible.
+            </p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Fundamentos</h3>
+                    <p>Base técnica clara para avanzar sin huecos.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Disciplina</h3>
+                    <p>Constancia, hábitos y enfoque: lo que transforma.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Progreso real</h3>
+                    <p>Seguimiento y orden para que el avance se note.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-section" id="comunidad">
+            <h2>Comunidad</h2>
+            <p>
+                Aquí se entrena en equipo. Se construye pertenencia, respeto y constancia.
+            </p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Pertenencia</h3>
+                    <p>Un ambiente serio que te empuja a mejorar.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Apoyo</h3>
+                    <p>Entrenas con gente que avanza contigo.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Constancia</h3>
+                    <p>La diferencia entre “intentar” y “lograr”.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-section" id="contacto">
+            <h2>Contacto</h2>
+            <div class="section-grid">
+                <div>
+                    <p>
+                        ¿Quieres empezar? Escríbenos y te guiamos en el primer paso.
+                        Tú entrenas. Nosotros ponemos el orden.
+                    </p>
+                    <div class="feature-card">
+                        <h3>Escríbenos</h3>
+                        <p class="muted" style="margin: 0;">
+                            WhatsApp / Instagram / Email (actualiza aquí tus datos reales).
                         </p>
-                        <div class="action-buttons" style="margin-top: 1rem; justify-content: flex-start;">
-                            <a href="login.html?role=admin" class="action-btn secondary">Acceso Administración</a>
-                        </div>
+                        <ul style="margin: 0.75rem 0 0 0; padding: 0; list-style: none;">
+                            <li style="margin: 0.5rem 0;"><strong>WhatsApp:</strong> +56 9 XXXX XXXX</li>
+                            <li style="margin: 0.5rem 0;"><strong>Instagram:</strong> @cohab</li>
+                            <li style="margin: 0.5rem 0;"><strong>Email:</strong> contacto@cohab.cl</li>
+                        </ul>
                     </div>
-
-                    <div class="role-card">
-                        <h3>Estado del Sistema</h3>
-                        <p style="margin-bottom: 0.75rem; color: rgba(255, 255, 255, 0.8);">
-                            Backend: <strong id="backendStatus">Verificando...</strong>
+                </div>
+                <div>
+                    <div class="feature-card">
+                        <h3>Accesos al sistema</h3>
+                        <p class="muted" style="margin-bottom: 0.75rem;">
+                            El sistema existe para darte orden y respaldo, sin complicarte.
                         </p>
-                        <p style="margin: 0; color: rgba(255, 255, 255, 0.65); font-size: 0.95rem;">
-                            Si el backend está caído, no se podrán validar pagos ni gestionar alumnos.
-                        </p>
+                        <div class="access-strip" style="justify-content: flex-start;">
+                            <a href="public/alumno.html" class="action-btn">Acceso Alumno</a>
+                            <a href="login.html" class="action-btn secondary">Staff / Admin</a>
+                        </div>
+                        <div class="access-note">
+                            Alumno: acceso por QR/ID. Staff/Admin: requiere sesión.
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
-
-    <script>
-        // Indicador simple (solo lectura) del estado del backend configurado
-        (function () {
-            const el = document.getElementById('backendStatus');
-            if (!el) return;
-            const apiUrl = (window.MONGO && typeof window.MONGO.getApiUrl === 'function') ? window.MONGO.getApiUrl() : '';
-            const base = (apiUrl || '').replace(/\/$/, '');
-            if (!base) {
-                el.textContent = 'No configurado';
-                return;
-            }
-            fetch(base + '/health', { method: 'GET' })
-                .then(r => r.ok ? r.json() : null)
-                .then(data => {
-                    if (data && data.status === 'ok') {
-                        el.textContent = 'Conectado';
-                    } else {
-                        el.textContent = 'No responde';
-                    }
-                })
-                .catch(() => { el.textContent = 'No responde'; });
-        })();
-    </script>
 
     <footer class="home-footer">
         <p>© 2025 Academia COHAB</p>
