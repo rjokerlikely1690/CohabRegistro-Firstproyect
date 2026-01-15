@@ -197,13 +197,13 @@
         const __HAS_ADMIN_ACCESS__ = checkAdminAccess();
         
         // Cerrar sesión
-        function logout() {
-            if (confirm('¿Estás seguro de cerrar sesión?')) {
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('lastAccess');
-                sessionStorage.clear();
-                window.location.href = '../login.html';
-            }
+        async function logout() {
+            const ok = await confirm('¿Estás seguro de cerrar sesión?');
+            if (!ok) return;
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('lastAccess');
+            sessionStorage.clear();
+            window.location.href = '../login.html';
         }
     </script>
     

@@ -873,7 +873,7 @@ function editAlumno(id) {
 
 // Eliminar alumno
 async function deleteAlumno(id) {
-    if (confirm('¿Estás seguro de eliminar este alumno?')) {
+    if (await confirm('¿Estás seguro de eliminar este alumno?')) {
         const alumnoEliminado = alumnos.find(a => a.id === id);
         
         try {
@@ -1222,7 +1222,7 @@ async function enviarQRPorEmail(id) {
         return;
     }
     
-    if (confirm(`¿Enviar código QR por email a ${alumno.nombre}?\n\nEmail: ${alumno.email}`)) {
+    if (await confirm(`¿Enviar código QR por email a ${alumno.nombre}?\n\nEmail: ${alumno.email}`)) {
         try {
             showNotification('Enviando QR por email...', 'info');
             await MONGO.enviarQr(id);

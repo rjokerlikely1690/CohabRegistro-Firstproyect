@@ -465,12 +465,12 @@
         }
 
         // Función de logout
-        function logout() {
-            if (confirm('¿Estás seguro de cerrar sesión?')) {
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('lastAccess');
-                window.location.href = 'login.html';
-            }
+        async function logout() {
+            const ok = await confirm('¿Estás seguro de cerrar sesión?');
+            if (!ok) return;
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('lastAccess');
+            window.location.href = 'login.html';
         }
 
         // Alternar cámara

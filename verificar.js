@@ -1060,7 +1060,7 @@ async function registrarPago() {
     const alumno = alumnos.find(a => a.id === alumnoId);
     if (!alumno) return;
     
-    if (confirm(`¿Confirmar pago de ${alumno.nombre} por $${alumno.monto}?`)) {
+    if (await confirm(`¿Confirmar pago de ${alumno.nombre} por $${alumno.monto}?`)) {
         try {
             // ✅ Registrar pago SOLO en MongoDB
             if (!window.MONGO || !MONGO.isConfigured()) {
