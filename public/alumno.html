@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Pago - Academia COHAB</title>
+    <!-- Página pensada para abrirse DIRECTAMENTE desde un QR (p. ej. cámara iPhone → Safari).
+         El QR DEBE llevar la URL completa con ?id=UUID. No se depende NUNCA de estado previo ni localStorage. -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Usuario">
+    <meta name="description" content="Consulta de estado de pago por alumno - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="../manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../logo_cohab.png">
+    <link rel="apple-touch-icon" href="../logo_cohab.png">
+    
+    <link rel="stylesheet" href="../styles.css?v=13">
+    <style>
+        .user-header {
+            background: linear-gradient(145deg, rgba(26, 26, 26, 0.6) 0%, rgba(13, 13, 13, 0.6) 100%);
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.1);
+        }
+        
+        .user-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .user-welcome {
+            text-align: center;
+        }
+        
+        .user-welcome h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .user-welcome p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .search-section {
+            background: linear-gradient(145deg, rgba(31, 31, 31, 0.4) 0%, rgba(20, 20, 20, 0.4) 100%);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .search-title {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-title h2 {
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .search-title p {
+            color: #a1a1aa;
+        }
+        
+        .search-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .search-option {
+            text-align: center;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.03);
+        }
+        
+        .search-option:hover {
+            border-color: rgba(220, 38, 38, 0.5);
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .search-option h3 {
+            color: #fff;
+        }
+        
+        .search-option p {
+            color: #a1a1aa;
+        }
+        
+        .search-option .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .search-option h3 {
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+        
+        .search-option p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+        
+        .camera-container {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .camera-container video {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .manual-search {
+            display: none;
+        }
+        
+        .manual-search input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .manual-search input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        
+        .result-container {
+            display: none;
+            background: linear-gradient(145deg, rgba(31, 31, 31, 0.4) 0%, rgba(20, 20, 20, 0.4) 100%);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-top: 2rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .result-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .result-header h2 {
+            color: #fff;
+        }
+        
+        .status-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status-icon svg {
+            width: 64px;
+            height: 64px;
+        }
+        
+        .status-aldia { color: #10b981; }
+        .status-proximo { color: #f59e0b; }
+        .status-atrasado { color: #dc2626; }
+        
+        .result-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-item {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #dc2626;
+        }
+        
+        .info-item .label {
+            font-weight: bold;
+            color: #a1a1aa;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .info-item .value {
+            color: #fff;
+        }
+        
+        .alert-banner {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .alert-banner.atrasado {
+            background: rgba(220, 38, 38, 0.15);
+            border-color: rgba(220, 38, 38, 0.4);
+            color: #fca5a5;
+        }
+        
+        .alert-banner.proximo {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: #fcd34d;
+        }
+        
+        /* ========================================
+           MOBILE RESPONSIVE - COMPLETO
+           ======================================== */
+        
+        @media (max-width: 768px) {
+            /* 1. LAYOUT GENERAL - Eliminar scroll horizontal */
+            body {
+                overflow-x: hidden;
+                width: 100%;
+                max-width: 100vw;
+            }
+            
+            .container {
+                padding: 0 1rem;
+                max-width: 100%;
+            }
+            
+            /* 2. NAVEGACIÓN - Compacta y funcional */
+            .navbar {
+                padding: 0.75rem 0;
+            }
+            
+            .navbar .container {
+                min-height: 60px;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .logo {
+                height: 40px;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                font-size: 0.85rem;
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .nav-links a {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+            
+            /* 3. HEADER DE USUARIO - Compacto y claro */
+            .user-header {
+                padding: 1rem 0;
+            }
+            
+            .user-nav {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+            }
+            
+            .role-badge {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+            }
+            
+            .user-nav button {
+                padding: 0.4rem 0.8rem !important;
+                font-size: 0.8rem !important;
+            }
+            
+            .user-welcome h1 {
+                font-size: 1.5rem !important;
+                margin-bottom: 0.25rem;
+            }
+            
+            .user-welcome p {
+                font-size: 0.9rem !important;
+            }
+            
+            /* 4. SECCIÓN DE BÚSQUEDA - Vertical y espaciada */
+            .search-section {
+                padding: 1.5rem 1rem;
+                margin-bottom: 1.5rem;
+                border-radius: 1rem;
+            }
+            
+            .search-title {
+                margin-bottom: 1.5rem;
+            }
+            
+            .search-title h2 {
+                font-size: 1.3rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .search-title p {
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+            
+            .search-options {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .search-option {
+                padding: 1.5rem 1rem;
+                border-radius: 1rem;
+            }
+            
+            .search-option .icon {
+                font-size: 2.5rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .search-option h3 {
+                font-size: 1.1rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .search-option p {
+                font-size: 0.9rem;
+                line-height: 1.5;
+                margin-bottom: 1.25rem;
+            }
+            
+            /* 5. BOTONES - Táctiles y grandes (mínimo 44px) */
+            .btn {
+                min-height: 48px;
+                padding: 0.875rem 1.25rem;
+                font-size: 1rem;
+                font-weight: 600;
+                border-radius: 0.75rem;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            .btn-primary {
+                width: 100%;
+            }
+            
+            .btn-secondary {
+                width: 100%;
+                margin-top: 0.75rem;
+            }
+            
+            /* 6. CÁMARA Y BÚSQUEDA MANUAL */
+            .camera-container {
+                margin-top: 1rem;
+            }
+            
+            .camera-container video {
+                max-width: 100%;
+                height: auto;
+                border-radius: 0.75rem;
+            }
+            
+            .manual-search {
+                margin-top: 1rem;
+            }
+            
+            .manual-search input {
+                padding: 0.875rem 1rem;
+                font-size: 16px; /* Evita zoom en iOS */
+                border-radius: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            /* 7. CONTENEDOR DE RESULTADOS */
+            .result-container {
+                padding: 1.5rem 1rem;
+                margin-top: 1.5rem;
+                border-radius: 1rem;
+            }
+            
+            .result-header {
+                margin-bottom: 1.5rem;
+                padding: 0 0.5rem;
+            }
+            
+            .status-icon {
+                font-size: 3rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .result-header h2 {
+                font-size: 1.4rem;
+                margin-bottom: 0.5rem;
+                line-height: 1.3;
+                word-break: break-word;
+            }
+            
+            .result-header p {
+                font-size: 1rem;
+                line-height: 1.4;
+            }
+            
+            /* 8. ALERT BANNER - Visible y claro */
+            .alert-banner {
+                padding: 1.25rem 1rem;
+                margin-bottom: 1.5rem;
+                border-radius: 0.75rem;
+            }
+            
+            .alert-banner h3 {
+                font-size: 1.1rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .alert-banner p {
+                font-size: 0.9rem;
+                line-height: 1.5;
+                margin: 0;
+            }
+            
+            /* 9. INFO GRID - Vertical en móvil */
+            .result-info {
+                grid-template-columns: 1fr;
+                gap: 0.875rem;
+            }
+            
+            .info-item {
+                padding: 0.875rem 1rem;
+                border-radius: 0.625rem;
+            }
+            
+            .info-item .label {
+                font-size: 0.8rem;
+                font-weight: 700;
+                margin-bottom: 0.375rem;
+                display: block;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .info-item .value {
+                font-size: 0.95rem;
+                word-break: break-word;
+                line-height: 1.4;
+            }
+            
+            /* 10. BOTONES DE ACCIÓN - Vertical en móvil */
+            .result-container > div:last-child {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                margin-top: 1.5rem;
+            }
+            
+            .result-container > div:last-child .btn {
+                width: 100%;
+            }
+            
+            /* 11. TIPOGRAFÍA - Legible en pantallas pequeñas */
+            * {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            
+            /* Evitar zoom en inputs (iOS) */
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: 16px !important;
+            }
+            
+            /* 12. ESPACIADO Y RITMO VISUAL */
+            main.container {
+                padding-top: 1rem;
+                padding-bottom: 2rem;
+            }
+            
+            /* 13. INTERACCIONES TÁCTILES */
+            button, .btn, a {
+                -webkit-tap-highlight-color: rgba(220, 38, 38, 0.2);
+                tap-highlight-color: rgba(220, 38, 38, 0.2);
+            }
+            
+            /* 14. MEJORAS DE CONTRASTE Y LEGIBILIDAD */
+            .search-option:hover {
+                transform: none; /* Desactivar hover en móvil */
+            }
+            
+            .search-option:active {
+                transform: scale(0.98);
+                transition: transform 0.1s;
+            }
+            
+            /* 15. URL DIRECTA - Ajuste específico */
+            .info-item .value[onclick] {
+                cursor: pointer;
+                word-break: break-all;
+                font-size: 0.75rem;
+                line-height: 1.4;
+                padding: 0.5rem;
+                background: rgba(0, 0, 0, 0.15) !important;
+                border-radius: 0.375rem;
+            }
+            
+            /* 16. ESTADOS DE PAGO - Visuales claros */
+            .status-aldia {
+                color: #10b981 !important;
+                font-weight: 700;
+            }
+            
+            .status-proximo {
+                color: #f59e0b !important;
+                font-weight: 700;
+            }
+            
+            .status-atrasado {
+                color: #dc2626 !important;
+                font-weight: 700;
+            }
+            
+            /* 17. AJUSTES PARA PANTALLAS MUY PEQUEÑAS */
+            @media (max-width: 380px) {
+                .container {
+                    padding: 0 0.75rem;
+                }
+                
+                .search-section,
+                .result-container {
+                    padding: 1.25rem 0.875rem;
+                }
+                
+                .search-title h2 {
+                    font-size: 1.2rem;
+                }
+                
+                .search-option {
+                    padding: 1.25rem 0.875rem;
+                }
+                
+                .btn {
+                    padding: 0.75rem 1rem;
+                    font-size: 0.95rem;
+                }
+                
+                .result-header h2 {
+                    font-size: 1.2rem;
+                }
+                
+                .info-item {
+                    padding: 0.75rem 0.875rem;
+                }
+            }
+            
+            /* 18. MODO LANDSCAPE (horizontal) */
+            @media (max-height: 500px) and (orientation: landscape) {
+                .user-header {
+                    padding: 0.75rem 0;
+                }
+                
+                .user-welcome h1 {
+                    font-size: 1.25rem !important;
+                }
+                
+                .search-section {
+                    padding: 1rem;
+                }
+                
+                .search-option .icon {
+                    font-size: 2rem;
+                    margin-bottom: 0.5rem;
+                }
+                
+                .result-container {
+                    padding: 1rem;
+                }
+            }
+        }
+
+        /* =========================================================
+           MEJORAS VISUALES - Página Alumno Premium
+           ========================================================= */
+
+        /* Badges de recomendación */
+        .recommended-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5);
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        .alternative-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(220, 38, 38, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+        }
+
+        /* Cards mejoradas */
+        .search-option {
+            position: relative;
+            padding: 2.5rem 1.5rem 1.5rem !important;
+            animation: fadeInUp 0.6s ease-out both;
+        }
+
+        .search-option-recommended {
+            border-color: rgba(220, 38, 38, 0.4) !important;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
+        }
+
+        .search-option-recommended:hover {
+            border-color: rgba(220, 38, 38, 0.7) !important;
+            transform: translateY(-8px) !important;
+            box-shadow: 0 12px 40px rgba(220, 38, 38, 0.3),
+                        0 0 30px rgba(220, 38, 38, 0.2);
+        }
+
+        .search-option-alternative {
+            animation-delay: 0.2s;
+        }
+
+        .search-option-alternative:hover {
+            transform: translateY(-5px) !important;
+        }
+
+        /* Iconos SVG mejorados */
+        .icon-svg {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.25rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(220, 38, 38, 0.05) 100%);
+            color: #dc2626;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-option-recommended .icon-svg {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(220, 38, 38, 0.05) 100%);
+            color: #dc2626;
+        }
+
+        .search-option:hover .icon-svg {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4);
+        }
+
+        .search-option-recommended:hover .icon-svg {
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.5);
+        }
+
+        /* Títulos mejorados */
+        .search-option h3 {
+            color: #ffffff !important;
+            font-size: 1.35rem !important;
+            font-weight: 800 !important;
+            margin-bottom: 0.5rem !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Subtítulos nuevos */
+        .option-subtitle {
+            color: #dc2626 !important;
+            font-size: 0.85rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem !important;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+        }
+
+        .search-option-alternative .option-subtitle {
+            color: rgba(255, 255, 255, 0.5) !important;
+            text-shadow: none;
+        }
+
+        /* Botones con iconos */
+        .btn-with-icon {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 1.75rem !important;
+            font-size: 1.05rem !important;
+            font-weight: 700 !important;
+        }
+
+        .btn-with-icon svg {
+            transition: transform 0.3s;
+        }
+
+        .btn-with-icon:hover svg {
+            transform: scale(1.15);
+        }
+
+        /* Animación stagger para las cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .search-option {
+                padding: 2rem 1rem 1.25rem !important;
+            }
+
+            .icon-svg {
+                width: 64px;
+                height: 64px;
+            }
+
+            .search-option h3 {
+                font-size: 1.15rem !important;
+            }
+
+            .recommended-badge,
+            .alternative-badge {
+                font-size: 0.65rem;
+                padding: 0.3rem 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <img src="../logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            <ul class="nav-links">
+                <li><a href="../index.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span> Inicio</a></li>
+                <li><a href="alumno.html" class="active"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></span> Estado de Pago</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="user-header">
+        <div class="container">
+            <div class="user-nav">
+                <div class="role-badge" style="font-size: 0.8rem; padding: 0.3rem 0.7rem; background: rgba(220,38,38,0.3); border: 1px solid rgba(220,38,38,0.5);">👤 USUARIO</div>
+                <button class="btn btn-secondary" onclick="volverAInicio()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1rem; font-size: 0.9rem;">← Volver</button>
+            </div>
+            
+            <div class="user-welcome">
+                <h1 id="welcomeH1" style="font-size: 1.5rem; margin-bottom: 0.3rem; color: #dc2626; display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    Estado de Pago
+                </h1>
+                <p id="welcomeP" style="font-size: 0.95rem; opacity: 0.8;">Escanea tu código QR para ver tu estado</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <section class="search-section">
+            <div class="search-title">
+                <h2>
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    Consultar Estado de Pago
+                </h2>
+                <p>Escanéa tu código QR o ingresa tu ID para verificar tu estado</p>
+            </div>
+            
+            <div class="search-options">
+                <div class="search-option search-option-recommended">
+                    <span class="recommended-badge">⭐ Recomendado</span>
+                    <div class="icon icon-svg">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                            <path d="M12 18h.01M8 6h8M8 10h8"/>
+                        </svg>
+                    </div>
+                    <h3>Escanear Código QR</h3>
+                    <p class="option-subtitle">Más rápido y seguro</p>
+                    <p>Usa la cámara de tu dispositivo para escanear tu código QR</p>
+                    <button class="btn btn-primary btn-with-icon" onclick="toggleCamera()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        Iniciar Cámara
+                    </button>
+                    
+                    <div class="camera-container" id="cameraContainer">
+                        <video id="video" width="300" height="200" autoplay></video>
+                        <canvas id="canvas" style="display: none;"></canvas>
+                        <button class="btn btn-secondary" onclick="stopCamera()">Detener Cámara</button>
+                    </div>
+                    <!-- Mensaje cuando el QR se leyó correctamente (feedback claro para el usuario) -->
+                    <div id="scanFeedback" style="display: none; text-align: center; padding: 2rem; background: #f0fdf4; border: 2px solid #10b981; border-radius: 0.5rem; margin-top: 1rem;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div>
+                        <p style="font-size: 1.1rem; font-weight: bold; color: #065f46; margin: 0;">Código QR leído correctamente</p>
+                        <p style="font-size: 0.95rem; color: #047857; margin: 0.5rem 0 0 0;">Consultando tu estado de suscripción...</p>
+                        <div style="margin-top: 1rem;"><span class="loading-spinner" style="display: inline-block; width: 24px; height: 24px; border: 3px solid #d1fae5; border-top-color: #10b981; border-radius: 50%; animation: spin 0.8s linear infinite;"></span></div>
+                    </div>
+                </div>
+                
+                <div class="search-option search-option-alternative">
+                    <span class="alternative-badge">Alternativa</span>
+                    <div class="icon icon-svg">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </div>
+                    <h3>Ingreso Manual</h3>
+                    <p class="option-subtitle">Si no tienes tu QR disponible</p>
+                    <p>Ingresa tu ID de alumno para consultar tu estado</p>
+                    <button class="btn btn-primary btn-with-icon" onclick="toggleManualSearch()">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        Buscar por ID
+                    </button>
+                    
+                    <div class="manual-search" id="manualSearch">
+                        <input type="text" id="userIdInput" placeholder="Ingresa tu ID de alumno">
+                        <button class="btn btn-primary" onclick="searchByUserId()">Consultar Estado</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resultado de la consulta -->
+        <div class="result-container" id="resultContainer">
+            <div class="result-header">
+                <div class="status-icon" id="statusIcon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <h2 id="studentName">Nombre del Alumno</h2>
+                <p id="paymentStatus" class="status-aldia">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;"><circle cx="12" cy="12" r="10"/></svg>
+                    Al día con los pagos
+                </p>
+            </div>
+            
+            <div id="alertBanner" class="alert-banner" style="display: none;">
+                <!-- Alertas se mostrarán aquí -->
+            </div>
+            
+            <div class="result-info" id="resultInfo">
+                <!-- Información del alumno se mostrará aquí -->
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn btn-secondary" onclick="closeResult()">Nueva Consulta</button>
+                <button class="btn btn-primary" onclick="shareStudentUrl()" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                        <polyline points="16 6 12 2 8 6"/>
+                        <line x1="12" y1="2" x2="12" y2="15"/>
+                    </svg>
+                    Compartir Mi Estado
+                </button>
+                <button class="btn btn-primary" onclick="showHistory()">Ver Historial</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="../cohab-config.js?v=1"></script>
+    <script src="../mongodb-client.js?v=6"></script>
+    <script src="../alert-system.js"></script>
+    
+    <script>
+        // ============================================================
+        // alumno.html está pensada para abrirse DIRECTAMENTE desde un QR (cámara iPhone → Safari).
+        // - El QR DEBE llevar la URL completa con ?id=UUID (ej: .../alumno.html?id=UUID).
+        // - No se depende NUNCA de estado previo, sesión ni localStorage para el alumno.
+        // - El ID se lee SOLO de la URL (query ?id= o path /alumno/ID vía _redirects).
+        // Flujo iPhone: QR → Safari → alumno.html?id=UUID → getStudentIdFromUrl() → validarSuscripcion(id) → render.
+        // ============================================================
+        
+        // VERIFICACIÓN TEMPRANA: Si hay un ID en la URL, NO permitir redirecciones
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasId = urlParams.has('id') || window.location.pathname.includes('/alumno/');
+            
+            if (hasId) {
+                console.log('🔒 Modo acceso público detectado - bloqueando redirecciones automáticas');
+                // Prevenir cualquier redirección automática
+                window.__BLOCK_REDIRECTS__ = true;
+            }
+        })();
+        
+        let video, canvas, context, scanning = false;
+        let currentStudent = null;
+
+        // Limpiar y extraer ID de una URL o string
+        function extractStudentId(input) {
+            if (!input) return null;
+            
+            // Si es una URL completa, extraer el ID del parámetro
+            if (input.includes('alumno.html?id=') || input.includes('usuario.html?id=')) {
+                const match = input.match(/[?&]id=([^&]+)/);
+                if (match && match[1]) {
+                    return decodeURIComponent(match[1]);
+                }
+            }
+            
+            // Si es una URL con /alumno/
+            if (input.includes('/alumno/')) {
+                const match = input.match(/\/alumno\/([^\/\?]+)/);
+                if (match && match[1]) {
+                    return decodeURIComponent(match[1]);
+                }
+            }
+            
+            // Si parece una URL completa, intentar extraer el último segmento
+            if (input.startsWith('http')) {
+                try {
+                    const url = new URL(input);
+                    const idParam = url.searchParams.get('id');
+                    if (idParam) return idParam;
+                    
+                    // Intentar desde pathname
+                    const pathMatch = url.pathname.match(/\/alumno\/([^\/]+)/);
+                    if (pathMatch && pathMatch[1]) {
+                        return decodeURIComponent(pathMatch[1]);
+                    }
+                } catch (e) {
+                    // Si no es una URL válida, continuar
+                }
+            }
+            
+            // Si no es una URL, devolver tal cual (limpio)
+            return input.trim();
+        }
+
+        function getStudentIdFromUrl() {
+            // Origen único del id: URL. Sin estado previo (crítico para iPhone/Safari al abrir desde QR).
+            // 1) Query ?id=XXX (canónico; el QR debe usar siempre esta forma)
+            const params = new URLSearchParams(window.location.search);
+            const queryId = params.get('id');
+            if (queryId) {
+                const cleanId = extractStudentId(queryId) || String(queryId).trim();
+                if (cleanId) return cleanId;
+            }
+
+            // 2) Pathname /alumno/ID o /public/alumno/ID
+            const pathMatch = window.location.pathname.match(/\/(?:public\/)?alumno\/([^\/\?]+)/i);
+            if (pathMatch && pathMatch[1]) {
+                return decodeURIComponent(pathMatch[1]).trim();
+            }
+
+            // 3) Pathname corto /u/ID
+            const uMatch = window.location.pathname.match(/\/u\/([^\/\?]+)/i);
+            if (uMatch && uMatch[1]) {
+                return decodeURIComponent(uMatch[1]).trim();
+            }
+
+            // 4) Hash #id=XXX (por si el QR lo genera así)
+            const hash = window.location.hash;
+            if (hash) {
+                const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+                const hashId = hashParams.get('id');
+                if (hashId) {
+                    const clean = String(hashId).trim();
+                    if (clean) return clean;
+                }
+            }
+
+            return null;
+        }
+        
+        // Cargar alumnos desde MongoDB (única fuente de verdad)
+        // Esta función NO debe usarse en página pública
+        // Los alumnos acceden SOLO vía QR con ID en URL
+        async function loadAlumnosFromCloud() {
+            // NO cargar lista de alumnos - esta página es pública y solo muestra datos cuando hay ID en URL
+            
+            try {
+                if (!window.MONGO || !MONGO.isConfigured()) {
+                    throw new Error('MongoDB no está configurado. Por favor configúralo en el panel de administración.');
+                }
+                
+                    const alumnos = await MONGO.listAlumnos();
+                
+                if (!Array.isArray(alumnos)) {
+                    throw new Error('Respuesta inválida del servidor');
+                }
+                
+                        return alumnos;
+                
+            } catch (error) {
+                console.error('❌ Error cargando alumnos desde MongoDB:', error);
+                console.error('   - Stack:', error.stack);
+                
+                // ⚠️ NO usar localStorage como fallback
+                // Si MongoDB falla, el sistema debe fallar explícitamente
+                throw error;
+            }
+        }
+
+        // Verificar acceso público (SOLO vía QR con ID)
+        function checkPublicAccess() {
+            // Esta página es PÚBLICA - solo requiere ID en URL (vía QR)
+            const publicId = getStudentIdFromUrl();
+            if (publicId) {
+                return true;
+            }
+
+            // Si NO hay ID, mostrar mensaje informativo
+                return false;
+        }
+
+        // Alternar cámara
+        function toggleCamera() {
+            const container = document.getElementById('cameraContainer');
+            if (container.style.display === 'none') {
+                startCamera();
+            } else {
+                stopCamera();
+            }
+        }
+
+        // Iniciar cámara
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas');
+                context = canvas.getContext('2d');
+                
+                video.srcObject = stream;
+                document.getElementById('cameraContainer').style.display = 'block';
+                document.getElementById('manualSearch').style.display = 'none';
+                
+                scanning = true;
+                scanQR();
+            } catch (err) {
+                alert('Error al acceder a la cámara: ' + err.message);
+            }
+        }
+
+        // Detener cámara
+        function stopCamera() {
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('cameraContainer').style.display = 'none';
+            scanning = false;
+        }
+
+        // Mostrar feedback cuando el QR se leyó correctamente (el usuario sabe que ya no está "en el aire")
+        function showScanFeedback() {
+            var el = document.getElementById('scanFeedback');
+            var cam = document.getElementById('cameraContainer');
+            if (el) el.style.display = 'block';
+            if (cam) cam.style.display = 'none';
+        }
+        function hideScanFeedback() {
+            var el = document.getElementById('scanFeedback');
+            if (el) el.style.display = 'none';
+        }
+        
+        // Escanear QR
+        function scanQR() {
+            if (!scanning) return;
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    scanning = false;
+                    showScanFeedback();
+                    stopCamera();
+                    var cleanId = extractStudentId(code.data);
+                    if (cleanId) {
+                        searchByUserId(cleanId);
+                    } else {
+                        hideScanFeedback();
+                        showCustomAlert('QR no válido', 'El código QR no contiene un ID de alumno válido. Escanea el QR que te entregó la academia.', 'warning');
+                    }
+                    return;
+                }
+            }
+            
+            requestAnimationFrame(scanQR);
+        }
+
+        // Alternar búsqueda manual
+        function toggleManualSearch() {
+            const manualSearch = document.getElementById('manualSearch');
+            if (manualSearch.style.display === 'none') {
+                manualSearch.style.display = 'block';
+                document.getElementById('cameraContainer').style.display = 'none';
+                stopCamera();
+            } else {
+                manualSearch.style.display = 'none';
+            }
+        }
+
+        // ============================================================
+        // FUNCIÓN PRINCIPAL DE VALIDACIÓN - SIN FALLBACKS
+        // ============================================================
+        // REGLA: El acceso SOLO puede depender del backend.
+        // NO hay fallback a localStorage para decisiones de acceso.
+        // ============================================================
+        async function searchByUserId(userId) {
+            // PASO 1: Obtener userId si no se proporcionó
+            if (!userId) {
+                userId = document.getElementById('userIdInput') ? document.getElementById('userIdInput').value.trim() : null;
+            }
+            
+            if (!userId) {
+                console.error('❌ [PASO 1] No se proporcionó userId');
+                showCustomAlert('ID requerido', 'Por favor ingresa un ID de alumno para buscar', 'warning');
+                return;
+            }
+            
+            // PASO 2: Extraer ID limpio
+            const cleanId = extractStudentId(userId);
+            
+            if (!cleanId) {
+                console.error('❌ [PASO 2] ID inválido después de extraer');
+                showCustomAlert('ID inválido', 'El ID proporcionado no es válido', 'error');
+                return;
+            }
+            
+            // PASO 3: Verificar configuración de MongoDB
+            if (!window.MONGO || !MONGO.isConfigured()) {
+                console.error('❌ [PASO 3] MongoDB NO CONFIGURADA');
+                
+                // ERROR EXPLÍCITO: No hay fallback, solo error claro
+                showCustomAlert(
+                    'Error de configuración del sistema',
+                    'El sistema de validación no está configurado correctamente.\n\n' +
+                    'Por favor contacta al administrador para configurar MongoDB.\n\n' +
+                    'Sin esta configuración, no es posible validar suscripciones.',
+                    'error'
+                );
+                
+                // Mostrar sección de búsqueda para que el usuario pueda intentar de nuevo
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.style.display = 'block';
+                }
+                return;
+            }
+            
+            // PASO 4: Llamar al endpoint de validación
+            try {
+                const inicioRequest = Date.now();
+                const resultado = await MONGO.validarSuscripcion(cleanId);
+                // const tiempoRequest = Date.now() - inicioRequest; // debugging si se requiere
+                
+                // PASO 5: Validar estructura de respuesta
+                if (!resultado || typeof resultado.acceso !== 'boolean') {
+                    console.error('❌ [PASO 5] Respuesta inválida del servidor');
+                    console.error('   Respuesta recibida:', resultado);
+                    throw new Error('Respuesta inválida del servidor: falta campo "acceso"');
+                }
+                
+                // PASO 6: Procesar resultado
+                await handleValidationResult(resultado, cleanId);
+                
+            } catch (error) {
+                console.error('═══════════════════════════════════════════════════');
+                console.error('❌ ERROR EN VALIDACIÓN');
+                console.error('═══════════════════════════════════════════════════');
+                console.error('   Tipo de error:', error.name);
+                console.error('   Mensaje:', error.message);
+                console.error('   Stack:', error.stack);
+                
+                // PASO 7: Manejar errores de forma explícita
+                let mensajeError = 'Error al validar la suscripción';
+                let tituloError = 'Error de validación';
+                
+                if (error.message.includes('404') || error.message.includes('no encontrado')) {
+                    tituloError = 'Alumno no encontrado';
+                    mensajeError = `No se encontró un alumno con el ID: ${cleanId}\n\n` +
+                                   'Verifica que el ID sea correcto.';
+                } else if (error.message.includes('400') || error.message.includes('requerido')) {
+                    tituloError = 'Datos incompletos';
+                    mensajeError = 'El alumno no tiene todos los datos necesarios para validar la suscripción.\n\n' +
+                                   'Contacta al administrador.';
+                } else if (error.message.includes('500') || error.message.includes('Error interno')) {
+                    tituloError = 'Error del servidor';
+                    mensajeError = 'El servidor encontró un error al procesar la solicitud.\n\n' +
+                                   'Por favor intenta nuevamente más tarde.';
+                } else if (error.message.includes('Failed to fetch') || 
+                          error.message.includes('NetworkError') ||
+                          error.message.includes('Network request failed') ||
+                          error.message.includes('Load failed')) {
+                    tituloError = 'Error de conexión';
+                    mensajeError = 'No se pudo conectar con el servidor de validación.\n\n' +
+                                   'Verifica:\n' +
+                                   '1. Tu conexión a internet\n' +
+                                   '2. Que el backend esté disponible\n' +
+                                   '3. Que la URL de MongoDB API esté configurada correctamente';
+                } else {
+                    tituloError = 'Error desconocido';
+                    mensajeError = `Error: ${error.message || 'Error desconocido'}\n\n` +
+                                   'Por favor contacta al administrador.';
+                }
+                
+                console.error('   Título del error:', tituloError);
+                console.error('   Mensaje del error:', mensajeError);
+                
+                // Mostrar error de forma explícita
+                showCustomAlert(tituloError, mensajeError, 'error');
+                
+                hideScanFeedback();
+                // Asegurar que se muestre la sección de búsqueda
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.style.display = 'block';
+                }
+                
+                // Asegurar que el contenedor de resultado esté oculto
+                const resultContainer = document.getElementById('resultContainer');
+                if (resultContainer) {
+                    resultContainer.style.display = 'none';
+                }
+                
+                console.error('═══════════════════════════════════════════════════');
+                console.error('❌ VALIDACIÓN FALLIDA - ERROR MOSTRADO AL USUARIO');
+                console.error('═══════════════════════════════════════════════════');
+                throw error;
+            }
+        }
+        
+        // ============================================================
+        // FUNCIÓN AUXILIAR: Manejar resultado de validación
+        // ============================================================
+        async function handleValidationResult(resultado, cleanId) {
+            hideScanFeedback();
+            var searchSection = document.querySelector('.search-section');
+            if (searchSection) searchSection.style.display = 'none';
+            
+            // Validar estructura
+            if (!resultado || typeof resultado.acceso !== 'boolean') {
+                console.error('❌ [handleValidationResult] Respuesta inválida');
+                throw new Error('Respuesta inválida del servidor: falta campo "acceso"');
+            }
+            
+            if (!resultado.alumno) {
+                console.error('❌ [handleValidationResult] Respuesta sin datos de alumno');
+                throw new Error('Respuesta inválida del servidor: falta campo "alumno"');
+            }
+            
+            // Guardar alumno actual
+            currentStudent = resultado.alumno;
+            
+            // Convertir respuesta del backend al formato esperado por showStudentResult
+            const estado = {
+                acceso: resultado.acceso,
+                estado: resultado.estado,
+                diasRestantes: resultado.diasRestantes,
+                diasDelMesVencido: resultado.diasDelMesVencido,
+                proximoPago: resultado.proximoPago,
+                mensaje: resultado.mensaje,
+                clase: resultado.acceso ? 'al-dia' : 'atrasado',
+                texto: resultado.mensaje,
+                proximo: resultado.proximoPago ? new Date(resultado.proximoPago).toLocaleDateString('es-ES') : '---'
+            };
+            
+            // Renderizar resultado
+            showStudentResult(resultado.alumno, estado);
+            
+            // Actualizar título de la página
+            document.title = `Estado de Pago - ${resultado.alumno.nombre}`;
+        }
+
+        // ============================================================
+        // FUNCIÓN: Mostrar resultado de validación
+        // ============================================================
+        // REGLA: SIEMPRE mostrar algo (éxito o error explícito)
+        // NO estados vacíos, NO silencios
+        // ============================================================
+        function showStudentResult(alumno, estado) {
+            // Validar parámetros
+            if (!alumno) {
+                console.error('❌ [showStudentResult] Alumno no proporcionado');
+                showCustomAlert('Error', 'No se pudo obtener la información del alumno', 'error');
+                return;
+            }
+            
+            if (!estado) {
+                console.error('❌ [showStudentResult] Estado no proporcionado');
+                showCustomAlert('Error', 'No se pudo obtener el estado de la suscripción', 'error');
+                return;
+            }
+            
+            // Actualizar icono y estado - basado en respuesta binaria del backend
+            const statusIcon = document.getElementById('statusIcon');
+            const paymentStatus = document.getElementById('paymentStatus');
+            
+            if (estado.acceso === true) {
+                // Suscripción ACTIVA
+                if (estado.diasRestantes <= 5) {
+                statusIcon.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+                statusIcon.className = 'status-icon status-proximo';
+                    paymentStatus.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;"><circle cx="12" cy="12" r="10"/></svg> Próximo a vencer (' + estado.diasRestantes + ' días)';
+                paymentStatus.className = 'status-proximo';
+            } else {
+                    statusIcon.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+                    statusIcon.className = 'status-icon status-aldia';
+                    paymentStatus.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;"><circle cx="12" cy="12" r="10"/></svg> Al día con los pagos (' + estado.diasRestantes + ' días restantes)';
+                    paymentStatus.className = 'status-aldia';
+                }
+            } else {
+                // Suscripción VENCIDA: preferir mensaje del backend (datos sincronizados)
+                statusIcon.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+                statusIcon.className = 'status-icon status-atrasado';
+                var textoAtraso = '';
+                if (estado.mensaje && typeof estado.mensaje === 'string' && estado.mensaje.indexOf('atraso') !== -1) {
+                    var parte = estado.mensaje.replace(/^Suscripción vencida\.\s*/i, '').replace(/\.$/, '').trim();
+                    if (parte) textoAtraso = parte;
+                }
+                if (!textoAtraso) {
+                    var d = (estado.diasDelMesVencido != null && estado.diasDelMesVencido > 0) ? estado.diasDelMesVencido : Math.abs(estado.diasRestantes);
+                    textoAtraso = d === 1 ? '1 día de atraso' : d + ' días de atraso';
+                }
+                paymentStatus.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="#ef4444" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;"><circle cx="12" cy="12" r="10"/></svg> Pago atrasado (' + textoAtraso + ')';
+                paymentStatus.className = 'status-atrasado';
+            }
+            
+            document.getElementById('studentName').textContent = alumno.nombre;
+            
+            // Mostrar alerta si es necesario
+            const alertBanner = document.getElementById('alertBanner');
+            if (estado.acceso === false) {
+                var textoDias = (estado.mensaje && typeof estado.mensaje === 'string' && estado.mensaje.indexOf('atraso') !== -1)
+                    ? estado.mensaje.replace(/^Suscripción vencida\.\s*/i, '').replace(/\.$/, '').trim()
+                    : null;
+                if (!textoDias) {
+                    var d = (estado.diasDelMesVencido != null && estado.diasDelMesVencido > 0) ? estado.diasDelMesVencido : Math.abs(estado.diasRestantes);
+                    textoDias = d === 1 ? '1 día de atraso' : d + ' días de atraso';
+                }
+                alertBanner.innerHTML = `
+                    <h3 style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        PAGO ATRASADO
+                    </h3>
+                    <p>Tu pago está atrasado: ${textoDias}. Por favor contacta a la administración.</p>
+                `;
+                alertBanner.className = 'alert-banner atrasado';
+                alertBanner.style.display = 'block';
+            } else if (estado.acceso === true && estado.diasRestantes <= 5) {
+                // ACTIVA pero próximo a vencer
+                alertBanner.innerHTML = `
+                    <h3 style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        PRÓXIMO A VENCER
+                    </h3>
+                    <p>Tu pago vence en ${estado.diasRestantes} días. Te recomendamos realizar el pago pronto.</p>
+                `;
+                alertBanner.className = 'alert-banner proximo';
+                alertBanner.style.display = 'block';
+            } else {
+                alertBanner.style.display = 'none';
+            }
+            
+            // Construir URL completa del alumno
+            const baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
+            const studentUrl = `${baseUrl}/alumno.html?id=${alumno.id}`;
+            
+            // Mostrar información completa
+            const resultInfo = document.getElementById('resultInfo');
+            resultInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="label">ID</div>
+                    <div class="value" style="font-family: monospace; font-size: 0.85rem; word-break: break-all;">${alumno.id}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Nombre</div>
+                    <div class="value" style="font-weight: bold; font-size: 1.1rem;">${alumno.nombre}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Email</div>
+                    <div class="value">${alumno.email || 'No especificado'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Teléfono</div>
+                    <div class="value">${alumno.telefono || 'No especificado'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Último Pago</div>
+                    <div class="value">${formatDate(alumno.fechaPago)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Próximo Pago</div>
+                    <div class="value">${estado.proximoPago ? formatDate(new Date(estado.proximoPago)) : '---'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Monto Mensual</div>
+                    <div class="value" style="font-weight: bold; color: #dc2626; font-size: 1.1rem;">$${parseFloat(alumno.monto || 0).toFixed(2)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Estado</div>
+                    <div class="value" style="font-weight: bold;">${estado.mensaje || estado.texto || (estado.diasRestantes < 0 ? Math.abs(estado.diasRestantes) + ' días atrasado' : estado.diasRestantes + ' días restantes')}</div>
+                </div>
+                <div class="info-item" style="border-left-color: #3b82f6; grid-column: 1 / -1;">
+                    <div class="label" style="color: #3b82f6; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                        URL Directa (clic para copiar)
+                    </div>
+                    <div class="value" style="font-family: monospace; font-size: 0.75rem; word-break: break-all; background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd;" onclick="navigator.clipboard.writeText('${studentUrl}').then(() => alert('✅ URL copiada al portapapeles')).catch(() => alert('URL: ' + '${studentUrl}'))" title="Clic para copiar">${studentUrl}</div>
+                </div>
+            `;
+            
+            // FORZAR VISIBILIDAD DEL RESULTADO
+            const resultContainer = document.getElementById('resultContainer');
+            if (resultContainer) {
+                resultContainer.style.display = 'block';
+                resultContainer.style.visibility = 'visible';
+                resultContainer.style.opacity = '1';
+                console.log('✅ [showStudentResult] Contenedor de resultado FORZADO a visible');
+            } else {
+                console.error('❌ [showStudentResult] No se encontró resultContainer');
+                showCustomAlert('Error', 'No se pudo mostrar el resultado. Error en la estructura de la página.', 'error');
+                return;
+            }
+            
+            // Ocultar búsqueda manual
+            const manualSearch = document.getElementById('manualSearch');
+            if (manualSearch) {
+                manualSearch.style.display = 'none';
+            }
+            
+            // Scroll suave al resultado después de un breve delay
+            setTimeout(() => {
+                if (resultContainer) {
+                    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    console.log('✅ [showStudentResult] Scroll al resultado ejecutado');
+                }
+            }, 200);
+            
+            console.log('✅ [showStudentResult] Renderizado completado exitosamente');
+            console.log('   Acceso:', estado.acceso);
+            console.log('   Estado:', estado.estado);
+            console.log('   Días restantes:', estado.diasRestantes);
+        }
+
+        // Cerrar resultado
+        function closeResult() {
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('userIdInput').value = '';
+            currentStudent = null;
+            // Mostrar la sección de búsqueda
+            document.querySelector('.search-section').style.display = 'block';
+            // Resetear textos del header
+            const welcomeH1 = document.getElementById('welcomeH1');
+            const welcomeP = document.getElementById('welcomeP');
+            if (welcomeH1) {
+                welcomeH1.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Estado de Pago';
+            }
+            if (welcomeP) welcomeP.textContent = 'Escanea tu código QR para ver tu estado';
+        }
+        
+        function volverAInicio() {
+            // Detener cámara si está activa
+            stopCamera();
+            // Redirigir a la página principal de estado de pago
+            window.location.href = '/public/alumno.html';
+        }
+
+        // Mostrar historial
+        function showHistory() {
+            alert('Función de historial en desarrollo...');
+        }
+
+        // Compartir URL del alumno
+        function shareStudentUrl() {
+            if (!currentStudent) {
+                alert('No hay información de alumno para compartir');
+                return;
+            }
+            
+            const currentUrl = window.location.href;
+            
+            if (navigator.share) {
+                // Usar Web Share API si está disponible
+                navigator.share({
+                    title: `Estado de Pago - ${currentStudent.nombre}`,
+                    text: `Consulta el estado de pago de ${currentStudent.nombre}`,
+                    url: currentUrl
+                }).catch(err => {
+                    console.log('Error al compartir:', err);
+                    copyToClipboard(currentUrl);
+                });
+            } else {
+                // Fallback: copiar al portapapeles
+                copyToClipboard(currentUrl);
+            }
+        }
+
+        // Copiar al portapapeles
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCustomAlert('URL Copiada', 'La URL ha sido copiada al portapapeles. Puedes compartirla con otros.', 'success');
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+
+        // Fallback para copiar al portapapeles
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showCustomAlert('URL Copiada', 'La URL ha sido copiada al portapapeles. Puedes compartirla con otros.', 'success');
+            } catch (err) {
+                console.error('Error al copiar:', err);
+                showCustomAlert('Error', 'No se pudo copiar la URL automáticamente. Cópiala manualmente: ' + text, 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Formatear fecha
+        function parseLocalDate(value) {
+            if (!value) return null;
+            if (value instanceof Date) {
+                return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+            }
+            if (typeof value === 'string') {
+                const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                if (match) {
+                    const year = Number(match[1]);
+                    const month = Number(match[2]) - 1;
+                    const day = Number(match[3]);
+                    return new Date(year, month, day);
+                }
+            }
+            const parsed = new Date(value);
+            if (!isNaN(parsed.getTime())) {
+                return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+            }
+            return null;
+        }
+
+        function formatDate(date) {
+            const d = parseLocalDate(date);
+            if (!d) return '---';
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // NOTA: La función calcularEstado() fue eliminada.
+        // Ahora el cálculo se hace en el backend (endpoint GET /alumnos/:id/validar)
+        // Esta es la fuente única de verdad para el estado de suscripciones.
+
+        // ============================================================
+        // INICIALIZACIÓN DE PÁGINA - FLUJO OBLIGATORIO
+        // ============================================================
+        // Si hay ID en URL → validar y mostrar estado. Si no → mostrar página para escanear/ingresar ID.
+        // Timeouts para no quedarse colgado: mensaje claro en la página si no carga.
+        // ============================================================
+        function showInitErrorInPage(searchSection, titulo, mensaje, showReload) {
+            if (!searchSection) return;
+            var html = '<div style="text-align: center; padding: 2rem;">' +
+                '<div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>' +
+                '<p style="font-size: 1.15rem; color: #374151; font-weight: bold; margin-bottom: 0.5rem;">' + (titulo || 'No se pudo cargar') + '</p>' +
+                '<p style="font-size: 0.95rem; color: #6b7280; line-height: 1.5;">' + (mensaje || '') + '</p>';
+            if (showReload !== false) {
+                html += '<p style="margin-top: 1.5rem;"><button type="button" class="btn btn-primary" onclick="window.location.reload();">🔄 Recargar página</button></p>';
+            }
+            html += '</div>';
+            searchSection.style.display = 'block';
+            searchSection.innerHTML = html;
+        }
+
+        function runPageInit() {
+            const searchSection = document.querySelector('.search-section');
+            const originalSearchSectionHTML = searchSection ? searchSection.innerHTML : null;
+            const studentId = getStudentIdFromUrl();
+            var initDone = false; // true cuando ya mostramos resultado o error en página
+
+            if (studentId) {
+                if (searchSection) {
+                    searchSection.style.display = 'block';
+                    searchSection.innerHTML = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                            <p style="font-size: 1.1rem; color: #666;">Validando suscripción...</p>
+                            <p style="font-size: 0.9rem; color: #999; margin-top: 0.5rem;">Por favor espera</p>
+                        </div>
+                    `;
+                }
+                var welcomeH1 = document.getElementById('welcomeH1');
+                var welcomeP = document.getElementById('welcomeP');
+                if (welcomeH1) {
+                    welcomeH1.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Estado de Pago';
+                }
+                if (welcomeP) welcomeP.textContent = 'Validando tu suscripción...';
+
+                // Timeout: si en 8 s MONGO no está configurado, mostrar mensaje en la página
+                var configTimeout = setTimeout(function() {
+                    if (initDone) return;
+                    if (!window.MONGO || !window.MONGO.isConfigured()) {
+                        initDone = true;
+                        showInitErrorInPage(searchSection,
+                            'Configuración no cargada',
+                            'No se pudo conectar con el servidor. Comprueba tu conexión a internet y recarga la página.',
+                            true);
+                    }
+                }, 8000);
+
+                // Timeout: si en 14 s no hemos mostrado resultado ni error, mostrar mensaje en la página
+                var globalTimeout = setTimeout(function() {
+                    if (initDone) return;
+                    var resultContainer = document.getElementById('resultContainer');
+                    var resultVisible = resultContainer && resultContainer.style.display === 'block';
+                    if (!resultVisible) {
+                        initDone = true;
+                        clearTimeout(configTimeout);
+                        showInitErrorInPage(searchSection,
+                            'No se pudo cargar el estado',
+                            'La validación está tardando demasiado. Comprueba tu conexión e intenta de nuevo. Si el problema continúa, contacta a la academia.',
+                            true);
+                    }
+                }, 14000);
+
+                (function doValidate() {
+                    if (!window.MONGO || !window.MONGO.isConfigured()) {
+                        setTimeout(doValidate, 400);
+                        return;
+                    }
+                    clearTimeout(configTimeout);
+                    searchByUserId(studentId).then(function() {
+                        initDone = true;
+                        clearTimeout(globalTimeout);
+                        if (searchSection) searchSection.style.display = 'none';
+                    }).catch(function(err) {
+                        initDone = true;
+                        clearTimeout(globalTimeout);
+                        console.error('[INICIO] Error validación:', err);
+                        showCustomAlert('Error al cargar', 'No se pudo validar la suscripción. ' + (err && err.message ? err.message : '') + '. Intenta de nuevo o contacta al administrador.', 'error');
+                        // Mostrar también en la página para que en móvil se vea seguro
+                        showInitErrorInPage(searchSection,
+                            'Error al cargar el estado',
+                            (err && err.message ? err.message : 'No se pudo validar la suscripción.') + ' Intenta de nuevo o contacta a la academia.',
+                            true);
+                    });
+                })();
+            } else {
+                var welcomeH1 = document.getElementById('welcomeH1');
+                var welcomeP = document.getElementById('welcomeP');
+                if (welcomeH1) {
+                    welcomeH1.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Estado de Pago';
+                }
+                if (welcomeP) welcomeP.textContent = 'Escanea tu código QR para ver tu estado de pago.';
+                if (searchSection) searchSection.style.display = 'block';
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runPageInit);
+        } else {
+            runPageInit();
+        }
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('../sw.js')
+                    .then(function(registration) {
+                        // no-op: evitar ruido en consola
+                    })
+                    .catch(function(error) {
+                        // no-op: evitar ruido en consola
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
