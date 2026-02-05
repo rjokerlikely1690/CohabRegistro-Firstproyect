@@ -1,29 +1,29 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v27';
+const CACHE_NAME = 'academia-cohab-v28';
 const urlsToCache = [
   '/',
-  '/index.html',
+  '/src/pages/marketing/index.html',
   // Páginas públicas (marketing)
-  '/clases.html',
-  '/metodologia.html',
-  '/comunidad.html',
-  '/horarios.html',
-  '/contacto.html',
-  '/ubicacion.html',
-  '/faq.html',
-  // Rutas públicas actuales (Clean URLs en Pages pueden servir sin .html)
-  '/public/alumno',
-  '/public/verificar',
+  '/src/pages/marketing/clases.html',
+  '/src/pages/marketing/metodologia.html',
+  '/src/pages/marketing/comunidad.html',
+  '/src/pages/marketing/horarios.html',
+  '/src/pages/marketing/contacto.html',
+  '/src/pages/marketing/ubicacion.html',
+  '/src/pages/marketing/faq.html',
+  // Rutas públicas
+  '/alumno',
+  '/verificar',
   // Compatibilidad (si se accede directo con .html)
-  '/public/alumno.html',
-  '/public/verificar.html',
-  '/app.js',
-  '/verificar.js',
-  '/styles.css',
-  '/logo_cohab.svg',
-  '/logo_cohab.png',
+  '/src/pages/public/alumno.html',
+  '/src/pages/public/verificar.html',
+  '/src/pages/admin/app.js',
+  '/src/pages/public/verificar.js',
+  '/src/styles/styles.css',
+  '/src/assets/logo_cohab.svg',
+  '/src/assets/logo_cohab.png',
   '/manifest.json',
   'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'

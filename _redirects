@@ -1,27 +1,41 @@
 # CRÍTICO: este archivo NO debe contener conflictos de git.
 # Reglas para Cloudflare Pages / Netlify-style redirects.
+# Estructura: src/assets, src/styles, src/js, src/pages/
 
-# Asegurar que assets bajo /public/ se sirvan como archivos reales (evitar fallback HTML)
-/public/styles.css /styles.css 200
-/public/app.js /app.js 200
-/public/verificar.js /verificar.js 200
-/public/mongodb-client.js /mongodb-client.js 200
-/public/alert-system.js /alert-system.js 200
-/public/manifest.json /manifest.json 200
-/public/logo_cohab.png /logo_cohab.png 200
-/public/logo_cohab.svg /logo_cohab.svg 200
-/public/sw.js /sw.js 200
+# Asegurar que assets se sirvan correctamente
+/styles.css /src/styles/styles.css 200
+/app.js /src/pages/admin/app.js 200
+/verificar.js /src/pages/public/verificar.js 200
+/sw.js /src/sw.js 200
+/manifest.json /manifest.json 200
+/logo_cohab.png /src/assets/logo_cohab.png 200
+/logo_cohab.svg /src/assets/logo_cohab.svg 200
+
+# Rutas raíz redirigen a nuevas ubicaciones
+/ /src/pages/marketing/index.html 200
+/login.html /src/pages/auth/login.html 200
+/admin.html /src/pages/admin/admin.html 200
+/gestion-alumnos.html /src/pages/admin/gestion-alumnos.html 200
+
+# Rutas de páginas marketing
+/clases.html /src/pages/marketing/clases.html 200
+/metodologia.html /src/pages/marketing/metodologia.html 200
+/comunidad.html /src/pages/marketing/comunidad.html 200
+/horarios.html /src/pages/marketing/horarios.html 200
+/contacto.html /src/pages/marketing/contacto.html 200
+/ubicacion.html /src/pages/marketing/ubicacion.html 200
+/faq.html /src/pages/marketing/faq.html 200
 
 # Rutas QR (canónicas)
-/alumno/:id /public/alumno.html?id=:id 200
-/u/:id /public/alumno.html?id=:id 200
+/alumno/:id /src/pages/public/alumno.html?id=:id 200
+/u/:id /src/pages/public/alumno.html?id=:id 200
 
 # Compatibilidad legacy
-/usuario.html* /public/alumno.html 301
+/usuario.html* /src/pages/public/alumno.html 301
 
 # Verificación (canónica/protegida)
-/verificar.html /public/verificar.html 301
-/verificar /public/verificar.html 301
+/verificar.html /src/pages/public/verificar.html 301
+/verificar /src/pages/public/verificar.html 301
 
-# Admin (canónico)
-/admin/dashboard.html /admin.html 200
+# Admin legacy
+/admin/dashboard.html /src/pages/admin/admin.html 200

@@ -1224,7 +1224,7 @@ async function enviarQRPorEmail(id) {
 
 // Ir a verificación
 function irAVerificacion() {
-    window.location.href = 'public/verificar.html';
+    window.location.href = '../public/verificar.html';
 }
 
 // Cerrar modales al hacer clic fuera
