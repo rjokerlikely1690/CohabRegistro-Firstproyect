@@ -4,7 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Página no encontrada | COHAB BJJ</title>
-  <link rel="stylesheet" href="/styles.css?v=36">
+  <script>
+    // Si la ruta es /src/pages/..., redirigir al archivo correcto
+    var path = window.location.pathname;
+    
+    // Si contiene /src/pages/, sacar /src/ y redirigir
+    if (path.includes('/src/pages/')) {
+      var newPath = path.replace('/src/', '/');
+      window.location.href = newPath + window.location.search + window.location.hash;
+    }
+    // Si es un 404, ir a inicio
+    else {
+      window.location.href = '/';
+    }
+  </script>
+  <link rel="stylesheet" href="../../styles/styles.css?v=36">
   <style>
     .error-wrap { text-align: center; padding: 3rem 1.5rem; max-width: 480px; margin: 0 auto; }
     .error-wrap h1 { font-size: 1.5rem; margin-bottom: 0.75rem; color: #fff; }
@@ -16,7 +30,7 @@
   <div class="error-wrap">
     <h1>Página no encontrada</h1>
     <p>El enlace puede estar roto o la página ya no existe.</p>
-    <a class="btn" href="/index.html">Volver al inicio</a>
+    <a class="btn" href="/">Volver al inicio</a>
   </div>
 </body>
 </html>
