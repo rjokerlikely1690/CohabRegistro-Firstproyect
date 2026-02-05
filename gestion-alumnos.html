@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Alumnos - Academia COHAB</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Sistema">
+    <meta name="description" content="Gestión de Alumnos - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_cohab.png">
+    <link rel="apple-touch-icon" href="logo_cohab.png">
+    
+    <link rel="stylesheet" href="styles.css?v=10">
+    <style>
+        /* Header fijo con buscador */
+        .admin-sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+            margin-bottom: 1.5rem;
+        }
+        .admin-sticky-header .container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+        }
+        .admin-sticky-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .admin-sticky-header .search-box {
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+        }
+        .admin-sticky-header .search-box input {
+            width: 100%;
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border-radius: 2rem;
+            border: 1px solid #333;
+            background: #1f1f1f;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+        .admin-sticky-header .search-box input::placeholder { color: #666; }
+        .admin-sticky-header .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        /* Stats compactos */
+        .stats-bar {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #1f1f1f;
+            border-radius: 2rem;
+            border: 1px solid #333;
+            font-size: 0.9rem;
+        }
+        .stat-pill .stat-num {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .stat-pill .stat-label { color: #888; }
+        .stat-pill.total .stat-num { color: #6366f1; }
+        .stat-pill.aldia .stat-num { color: #10b981; }
+        .stat-pill.vencido .stat-num { color: #f59e0b; }
+        .stat-pill.tarde .stat-num { color: #ef4444; }
+        @media (max-width: 768px) {
+            .admin-sticky-header .container { flex-direction: column; align-items: stretch; }
+            .admin-sticky-header .search-box { max-width: 100%; }
+            .admin-sticky-header .header-actions { justify-content: center; }
+            .stats-bar { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth check removido - se verifica en login y admin.html -->
+    <nav class="navbar" style="position: sticky; top: 0; z-index: 101;">
+        <div class="container">
+            <img src="logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            
+            <!-- Menú hamburguesa para móvil -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+            
+            <ul class="nav-links">
+                <li><a href="login.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span> Inicio</a></li>
+                <li><a href="gestion-alumnos.html" class="active"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span> Alumnos</a></li>
+                <li><a href="public/verificar.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Verificar</a></li>
+                <li><a href="admin.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></span> Admin</a></li>
+            </ul>
+            
+            <!-- Buscador en navbar -->
+            <div class="navbar-search" style="flex: 1; max-width: 300px; margin: 0 1rem;">
+                <input type="text" id="searchInput" placeholder="Buscar por nombre..." oninput="filterAlumnos()" style="width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; border-radius: 2rem; border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 0.9rem; background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23888%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>'); background-repeat: no-repeat; background-position: 0.75rem center;">
+            </div>
+        </div>
+        
+        <!-- Menú móvil -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="login.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span> Inicio</a>
+            <a href="gestion-alumnos.html" class="active"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span> Gestión de Alumnos</a>
+            <a href="public/verificar.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Verificar QR</a>
+            <a href="admin.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></span> Panel Admin</a>
+        </div>
+    </nav>
+
+    <main class="container" style="padding-top: 0;">
+        <!-- Acciones rápidas -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-small" onclick="forceSync()" title="Sincronizar"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></button>
+            <button class="btn btn-secondary btn-small" onclick="updateDatabase()" title="Actualizar"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
+            <button class="btn btn-info btn-small" onclick="exportarDatos()" title="Exportar CSV"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></button>
+            <button class="btn btn-primary btn-small" onclick="openModal()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Agregar</button>
+        </div>
+
+        <!-- Stats compactos -->
+        <div class="stats-bar">
+            <div class="stat-pill total">
+                <span class="stat-num" id="totalAlumnos">0</span>
+                <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-pill aldia">
+                <span class="stat-num" id="alumnosAlDia">0</span>
+                <span class="stat-label">Al día</span>
+            </div>
+            <div class="stat-pill vencido">
+                <span class="stat-num" id="alumnosVencidos">0</span>
+                <span class="stat-label">Vencidos</span>
+            </div>
+            <div class="stat-pill tarde">
+                <span class="stat-num" id="alumnosMorosos">0</span>
+                <span class="stat-label">+30 días</span>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <select id="filterEstado" onchange="filterAlumnos()" class="filter-select" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background: #1f1f1f; border: 1px solid #333; color: #fff;">
+                <option value="">Todos</option>
+                <option value="al-dia">Al Día</option>
+                <option value="por-vencer">Por Vencer</option>
+                <option value="vencido">Vencido</option>
+                <option value="moroso">+30 días</option>
+            </select>
+            <button class="btn btn-small btn-secondary" onclick="clearFilters()">Limpiar</button>
+        </div>
+
+        <section class="alumnos-grid" id="alumnosGrid">
+            <!-- Los alumnos se cargarán aquí dinámicamente -->
+        </section>
+    </main>
+
+    <!-- Modal para agregar/editar alumno -->
+    <div id="alumnoModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Agregar Nuevo Alumno</h2>
+            <form id="alumnoForm" onsubmit="saveAlumno(event)">
+                <input type="hidden" id="alumnoId">
+                
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo *</label>
+                    <input type="text" id="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono">
+                </div>
+
+                <div class="form-group">
+                    <label for="fechaPago">Fecha de Último Pago *</label>
+                    <input type="date" id="fechaPago" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="diaPago">Día de Pago Mensual *</label>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button type="button" id="btnDia30" class="btn btn-secondary" onclick="setDiaPago(30)" style="flex: 1;">Día 30</button>
+                        <button type="button" id="btnDia31" class="btn btn-secondary" onclick="setDiaPago(31)" style="flex: 1;">Día 31</button>
+                    </div>
+                    <small id="diaPagoInfo">Selecciona el día de pago para toda la academia</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="monto">Monto Mensual *</label>
+                    <input type="number" id="monto" step="0.01" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar QR - Diseño moderno -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content qr-modal-modern">
+            <button class="qr-close-btn" onclick="closeQRModal()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+            <h2 id="qrNombre" class="qr-title">Código QR</h2>
+            <div id="qrcode" class="qr-container-modern"></div>
+            <button class="qr-download-btn" onclick="downloadQR()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Descargar QR
+            </button>
+        </div>
+    </div>
+    
+    <style>
+        /* Modal QR - Diseño moderno */
+        .qr-modal-modern {
+            background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 420px;
+            width: 95%;
+            position: relative;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+        .qr-close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #999;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .qr-close-btn:hover {
+            background: rgba(220, 38, 38, 0.3);
+            color: #fff;
+        }
+        .qr-title {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0 0 1.5rem 0;
+            text-align: center;
+        }
+        .qr-container-modern {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .qr-container-modern canvas,
+        .qr-container-modern img {
+            border-radius: 0.75rem;
+            padding: 1rem;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .qr-wrapper {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 1rem;
+            display: inline-block;
+        }
+        .qr-info-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .qr-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+        .qr-info-row:last-child {
+            border-bottom: none;
+        }
+        .qr-info-label {
+            color: #888;
+        }
+        .qr-info-value {
+            color: #fff;
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+        }
+        .qr-info-value.status-ok { color: #10b981; }
+        .qr-info-value.status-warning { color: #f59e0b; }
+        .qr-info-value.status-danger { color: #ef4444; }
+        .qr-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .qr-action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .qr-action-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+        .qr-action-btn.copy { background: #4f46e5; color: #fff; }
+        .qr-action-btn.copy:hover { background: #4338ca; }
+        .qr-action-btn.whatsapp { background: #25D366; color: #fff; }
+        .qr-action-btn.whatsapp:hover { background: #1da851; }
+        .qr-action-btn.gmail { background: #EA4335; color: #fff; }
+        .qr-action-btn.gmail:hover { background: #d33426; }
+        .qr-action-btn.print { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+        .qr-action-btn.print:hover { background: rgba(255,255,255,0.15); }
+        .qr-timestamp {
+            text-align: center;
+            color: #666;
+            font-size: 0.75rem;
+            margin-top: 1rem;
+        }
+        .qr-download-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: #fff;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .qr-download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="cohab-config.js?v=2"></script>
+    <script src="auth-client.js?v=2"></script>
+    <script src="mongodb-client.js?v=8"></script>
+    <script src="alert-system.js"></script>
+    <script src="app.js?v=35"></script>
+    
+    <script>
+        // Auth check desactivado temporalmente - admin ya verificado en panel principal
+        console.log('[GESTION] Página cargada');
+        
+        // Función para toggle del menú móvil
+        // Verificar autenticación admin al cargar
+        (function checkAdminAuth() {
+            const token = localStorage.getItem('cohabAuthToken');
+            const role = localStorage.getItem('cohabUserRole');
+            if (!token || role !== 'admin') {
+                window.location.href = 'login.html';
+                return;
+            }
+        })();
+        
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+        
+        // Cerrar menú móvil al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (!mobileMenu.contains(event.target) && !menuBtn.contains(event.target)) {
+                mobileMenu.classList.remove('active');
+            }
+        });
+        
+        // Forzar sincronización
+        async function forceSync() {
+            try {
+                if ('caches' in window) {
+                    const names = await caches.keys();
+                    await Promise.all(names.map(n => caches.delete(n)));
+                }
+                const authToken = localStorage.getItem('cohabAuthToken');
+                const authRole = localStorage.getItem('cohabUserRole');
+                const authUser = localStorage.getItem('cohabUser');
+                localStorage.clear();
+                if (authToken) localStorage.setItem('cohabAuthToken', authToken);
+                if (authRole) localStorage.setItem('cohabUserRole', authRole);
+                if (authUser) localStorage.setItem('cohabUser', authUser);
+                location.reload(true);
+            } catch (e) { location.reload(true); }
+        }
+        
+        // Logout function
+        async function logout() {
+            if (typeof AUTH !== 'undefined') {
+                await AUTH.logout();
+            }
+            window.location.href = 'login.html';
+        }
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Error al registrar ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
