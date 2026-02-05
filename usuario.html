@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Estado de Pago - Academia COHAB (ACTUALIZADO)</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="COHAB Usuario">
+    <meta name="description" content="Consulta tu estado de pago - Academia COHAB">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo_cohab.png">
+    <link rel="apple-touch-icon" href="logo_cohab.png">
+    
+    <link rel="stylesheet" href="styles.css?v=9">
+    <style>
+        .user-header {
+            background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .user-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .user-welcome {
+            text-align: center;
+        }
+        
+        .user-welcome h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .user-welcome p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .search-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .search-title {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-title h2 {
+            color: #dc2626;
+            margin-bottom: 0.5rem;
+        }
+        
+        .search-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .search-option {
+            text-align: center;
+            padding: 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .search-option:hover {
+            border-color: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .search-option .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .search-option h3 {
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+        
+        .search-option p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+        
+        .camera-container {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .camera-container video {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .manual-search {
+            display: none;
+        }
+        
+        .manual-search input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .manual-search input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        
+        .result-container {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+        
+        .result-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .status-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-aldia { color: #10b981; }
+        .status-proximo { color: #f59e0b; }
+        .status-atrasado { color: #dc2626; }
+        
+        .result-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-item {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #dc2626;
+        }
+        
+        .info-item .label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-item .value {
+            color: #6b7280;
+        }
+        
+        .alert-banner {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .alert-banner.atrasado {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+        
+        .alert-banner.proximo {
+            background: #fffbeb;
+            border-color: #fed7aa;
+            color: #d97706;
+        }
+        
+        @media (max-width: 768px) {
+            .search-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <img src="logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            <ul class="nav-links">
+                <li><a href="index.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span> Inicio</a></li>
+                <li><a href="usuario.html" class="active"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></span> Mi Estado</a></li>
+                <li><a href="login.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></span> Acceso Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="user-header" style="background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%) !important;">
+        <div class="container">
+            <div class="user-nav">
+                <div class="role-badge" style="font-size: 0.8rem; padding: 0.3rem 0.7rem;">👤 USUARIO</div>
+                <button class="btn btn-secondary" onclick="logout()" style="background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); padding: 0.5rem 1rem; font-size: 0.9rem;">Cerrar</button>
+            </div>
+            
+            <div class="user-welcome">
+                <h1 style="font-size: 1.8rem; margin-bottom: 0.5rem;">¡Hola! 👋</h1>
+                <p style="font-size: 1rem; opacity: 0.9;">Consulta tu estado de pago</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <section class="search-section">
+            <div class="search-title">
+                <h2>🔍 Consultar Estado de Pago</h2>
+                <p>Escanéa tu código QR o ingresa tu ID para verificar tu estado</p>
+            </div>
+            
+            <div class="search-options">
+                <div class="search-option">
+                    <div class="icon">📱</div>
+                    <h3>Escanear Código QR</h3>
+                    <p>Usa la cámara de tu dispositivo para escanear tu código QR</p>
+                    <button class="btn btn-primary" onclick="toggleCamera()">Iniciar Cámara</button>
+                    
+                    <div class="camera-container" id="cameraContainer">
+                        <video id="video" width="300" height="200" autoplay></video>
+                        <canvas id="canvas" style="display: none;"></canvas>
+                        <button class="btn btn-secondary" onclick="stopCamera()">Detener Cámara</button>
+                    </div>
+                </div>
+                
+                <div class="search-option">
+                    <div class="icon">✏️</div>
+                    <h3>Ingreso Manual</h3>
+                    <p>Ingresa tu ID de alumno para consultar tu estado</p>
+                    <button class="btn btn-primary" onclick="toggleManualSearch()">Buscar por ID</button>
+                    
+                    <div class="manual-search" id="manualSearch">
+                        <input type="text" id="userIdInput" placeholder="Ingresa tu ID de alumno">
+                        <button class="btn btn-primary" onclick="searchByUserId()">Consultar Estado</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resultado de la consulta -->
+        <div class="result-container" id="resultContainer">
+            <div class="result-header">
+                <div class="status-icon" id="statusIcon">✅</div>
+                <h2 id="studentName">Nombre del Alumno</h2>
+                <p id="paymentStatus" class="status-aldia">🟢 Al día con los pagos</p>
+            </div>
+            
+            <div id="alertBanner" class="alert-banner" style="display: none;">
+                <!-- Alertas se mostrarán aquí -->
+            </div>
+            
+            <div class="result-info" id="resultInfo">
+                <!-- Información del alumno se mostrará aquí -->
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn btn-secondary" onclick="closeResult()">Nueva Consulta</button>
+                <button class="btn btn-primary" onclick="shareStudentUrl()">🔗 Compartir Mi Estado</button>
+                <button class="btn btn-primary" onclick="showHistory()">Ver Historial</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="mongodb-client.js?v=6"></script>
+    <script src="alert-system.js"></script>
+    
+    <script>
+        // VERIFICACIÓN TEMPRANA: Si hay un ID en la URL, NO permitir redirecciones
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasId = urlParams.has('id') || window.location.pathname.includes('/alumno/');
+            
+            if (hasId) {
+                console.log('🔒 Modo acceso público detectado - bloqueando redirecciones automáticas');
+                // Prevenir cualquier redirección automática
+                window.__BLOCK_REDIRECTS__ = true;
+            }
+        })();
+        
+        let video, canvas, context, scanning = false;
+        let currentStudent = null;
+
+        // Limpiar y extraer ID de una URL o string
+        function extractStudentId(input) {
+            if (!input) return null;
+            
+            // Si es una URL completa, extraer el ID del parámetro
+            if (input.includes('usuario.html?id=')) {
+                const match = input.match(/[?&]id=([^&]+)/);
+                if (match && match[1]) {
+                    return decodeURIComponent(match[1]);
+                }
+            }
+            
+            // Si es una URL con /alumno/
+            if (input.includes('/alumno/')) {
+                const match = input.match(/\/alumno\/([^\/\?]+)/);
+                if (match && match[1]) {
+                    return decodeURIComponent(match[1]);
+                }
+            }
+            
+            // Si parece una URL completa, intentar extraer el último segmento
+            if (input.startsWith('http')) {
+                try {
+                    const url = new URL(input);
+                    const idParam = url.searchParams.get('id');
+                    if (idParam) return idParam;
+                    
+                    // Intentar desde pathname
+                    const pathMatch = url.pathname.match(/\/alumno\/([^\/]+)/);
+                    if (pathMatch && pathMatch[1]) {
+                        return decodeURIComponent(pathMatch[1]);
+                    }
+                } catch (e) {
+                    // Si no es una URL válida, continuar
+                }
+            }
+            
+            // Si no es una URL, devolver tal cual (limpio)
+            return input.trim();
+        }
+
+        function getStudentIdFromUrl() {
+            console.log('🔍 getStudentIdFromUrl() - Analizando URL...');
+            console.log('   - window.location.href:', window.location.href);
+            console.log('   - window.location.search:', window.location.search);
+            console.log('   - window.location.pathname:', window.location.pathname);
+            
+            // Intentar obtener desde query parameter
+            const params = new URLSearchParams(window.location.search);
+            const queryId = params.get('id');
+            console.log('   - queryId obtenido:', queryId);
+            
+            if (queryId) {
+                // Limpiar el ID por si acaso viene con una URL completa
+                const cleanId = extractStudentId(queryId) || queryId.trim();
+                console.log('   - ID limpio desde query:', cleanId);
+                if (cleanId) return cleanId;
+            }
+
+            // Intentar obtener desde pathname (/alumno/ID)
+            const pathMatch = window.location.pathname.match(/\/alumno\/([^\/]+)/i);
+            if (pathMatch && pathMatch[1]) {
+                const pathId = decodeURIComponent(pathMatch[1]);
+                console.log('   - ID desde pathname:', pathId);
+                return pathId;
+            }
+
+            console.log('   - ❌ No se encontró ID en la URL');
+            return null;
+        }
+        
+        // Cargar alumnos desde MongoDB (única fuente de verdad)
+        async function loadAlumnosFromCloud() {
+            console.log('☁️ loadAlumnosFromCloud() - Iniciando carga desde MongoDB...');
+            
+            try {
+                if (!window.MONGO || !MONGO.isConfigured()) {
+                    throw new Error('MongoDB no está configurado. Por favor configúralo en el panel de administración.');
+                }
+                
+                console.log('📡 Intentando cargar desde MongoDB...');
+                const alumnos = await MONGO.listAlumnos();
+                console.log('📡 Respuesta de MongoDB:', alumnos);
+                
+                if (!Array.isArray(alumnos)) {
+                    throw new Error('Respuesta inválida del servidor');
+                }
+                
+                console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
+                return alumnos;
+                
+            } catch (error) {
+                console.error('❌ Error cargando alumnos desde MongoDB:', error);
+                console.error('   - Stack:', error.stack);
+                
+                // ⚠️ NO usar localStorage como fallback
+                // Si MongoDB falla, el sistema debe fallar explícitamente
+                throw error;
+            }
+        }
+
+        // Verificar que el usuario tenga permisos de usuario
+        function checkUserAccess() {
+            // BLOQUEAR redirecciones si hay un ID en la URL (acceso público)
+            if (window.__BLOCK_REDIRECTS__) {
+                console.log('🔒 Redirección bloqueada - acceso público activo');
+                return true;
+            }
+            
+            // PRIMERO verificar si hay un ID en la URL (acceso público)
+            const publicId = getStudentIdFromUrl();
+            if (publicId) {
+                console.log('✅ Acceso público detectado con ID:', publicId);
+                window.__BLOCK_REDIRECTS__ = true; // Bloquear futuras redirecciones
+                return true; // acceso público vía QR o enlace directo - NO redirigir
+            }
+
+            // Si no hay ID público, verificar roles de usuario
+            const userRole = localStorage.getItem('userRole');
+            if (userRole === 'usuario' || userRole === 'admin') {
+                return true;
+            }
+
+            // Solo redirigir si NO hay ID público y NO hay rol de usuario
+            // PERO verificar nuevamente que no haya ID antes de redirigir
+            const doubleCheckId = getStudentIdFromUrl();
+            if (doubleCheckId) {
+                console.log('✅ ID detectado en verificación doble - bloqueando redirección');
+                window.__BLOCK_REDIRECTS__ = true;
+                return true;
+            }
+            
+            console.log('⚠️ Acceso denegado - redirigiendo a login');
+            alert('Acceso denegado. Inicia sesión como usuario para ver tu estado.');
+                window.location.href = 'login.html';
+                return false;
+        }
+
+        // Función de logout
+        async function logout() {
+            const ok = await confirm('¿Estás seguro de cerrar sesión?');
+            if (!ok) return;
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('lastAccess');
+            window.location.href = 'login.html';
+        }
+
+        // Alternar cámara
+        function toggleCamera() {
+            const container = document.getElementById('cameraContainer');
+            if (container.style.display === 'none') {
+                startCamera();
+            } else {
+                stopCamera();
+            }
+        }
+
+        // Iniciar cámara
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas');
+                context = canvas.getContext('2d');
+                
+                video.srcObject = stream;
+                document.getElementById('cameraContainer').style.display = 'block';
+                document.getElementById('manualSearch').style.display = 'none';
+                
+                scanning = true;
+                scanQR();
+            } catch (err) {
+                alert('Error al acceder a la cámara: ' + err.message);
+            }
+        }
+
+        // Detener cámara
+        function stopCamera() {
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('cameraContainer').style.display = 'none';
+            scanning = false;
+        }
+
+        // Escanear QR
+        function scanQR() {
+            if (!scanning) return;
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    stopCamera();
+                    searchByUserId(code.data);
+                }
+            }
+            
+            requestAnimationFrame(scanQR);
+        }
+
+        // Alternar búsqueda manual
+        function toggleManualSearch() {
+            const manualSearch = document.getElementById('manualSearch');
+            if (manualSearch.style.display === 'none') {
+                manualSearch.style.display = 'block';
+                document.getElementById('cameraContainer').style.display = 'none';
+                stopCamera();
+            } else {
+                manualSearch.style.display = 'none';
+            }
+        }
+
+        // ============================================================
+        // FUNCIÓN PRINCIPAL DE VALIDACIÓN - SIN FALLBACKS
+        // ============================================================
+        // REGLA: El acceso SOLO puede depender del backend.
+        // NO hay fallback a localStorage para decisiones de acceso.
+        // ============================================================
+        async function searchByUserId(userId) {
+            console.log('═══════════════════════════════════════════════════');
+            console.log('🔎 [PASO 1] searchByUserId() INICIADO');
+            console.log('   Input recibido:', userId);
+            console.log('═══════════════════════════════════════════════════');
+            
+            // PASO 1: Obtener userId si no se proporcionó
+            if (!userId) {
+                userId = document.getElementById('userIdInput') ? document.getElementById('userIdInput').value.trim() : null;
+            }
+            
+            if (!userId) {
+                console.error('❌ [PASO 1] No se proporcionó userId');
+                showCustomAlert('ID requerido', 'Por favor ingresa un ID de alumno para buscar', 'warning');
+                return;
+            }
+            
+            // PASO 2: Extraer ID limpio
+            const cleanId = extractStudentId(userId);
+            console.log('🔍 [PASO 2] ID extraído:', cleanId);
+            
+            if (!cleanId) {
+                console.error('❌ [PASO 2] ID inválido después de extraer');
+                showCustomAlert('ID inválido', 'El ID proporcionado no es válido', 'error');
+                return;
+            }
+            
+            // PASO 3: Verificar configuración de MongoDB
+            console.log('🔍 [PASO 3] Verificando configuración de MongoDB...');
+            if (!window.MONGO || !MONGO.isConfigured()) {
+                console.error('❌ [PASO 3] MongoDB NO CONFIGURADA');
+                
+                // ERROR EXPLÍCITO: No hay fallback, solo error claro
+                showCustomAlert(
+                    'Error de configuración del sistema',
+                    'El sistema de validación no está configurado correctamente.\n\n' +
+                    'Por favor contacta al administrador para configurar MongoDB.\n\n' +
+                    'Sin esta configuración, no es posible validar suscripciones.',
+                    'error'
+                );
+                
+                // Mostrar sección de búsqueda para que el usuario pueda intentar de nuevo
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.style.display = 'block';
+                }
+                return;
+            }
+            
+            console.log('✅ [PASO 3] MongoDB configurada');
+            
+            // PASO 4: Llamar al endpoint de validación
+            console.log('📡 [PASO 4] Llamando a validación de MongoDB...');
+            console.log('   ID a validar:', cleanId);
+            
+            try {
+                const inicioRequest = Date.now();
+                const resultado = await MONGO.validarSuscripcion(cleanId);
+                const tiempoRequest = Date.now() - inicioRequest;
+                
+                console.log('✅ [PASO 4] Respuesta recibida del backend');
+                console.log('   Tiempo de respuesta:', tiempoRequest + 'ms');
+                console.log('   Respuesta completa:', resultado);
+                
+                // PASO 5: Validar estructura de respuesta
+                console.log('🔍 [PASO 5] Validando estructura de respuesta...');
+                if (!resultado || typeof resultado.acceso !== 'boolean') {
+                    console.error('❌ [PASO 5] Respuesta inválida del servidor');
+                    console.error('   Respuesta recibida:', resultado);
+                    throw new Error('Respuesta inválida del servidor: falta campo "acceso"');
+                }
+                
+                console.log('✅ [PASO 5] Respuesta válida');
+                console.log('   Acceso:', resultado.acceso);
+                console.log('   Estado:', resultado.estado);
+                console.log('   Días restantes:', resultado.diasRestantes);
+                
+                // PASO 6: Procesar resultado
+                console.log('🎨 [PASO 6] Procesando resultado y renderizando...');
+                await handleValidationResult(resultado, cleanId);
+                console.log('✅ [PASO 6] Resultado renderizado correctamente');
+                console.log('═══════════════════════════════════════════════════');
+                console.log('✅ VALIDACIÓN COMPLETADA EXITOSAMENTE');
+                console.log('═══════════════════════════════════════════════════');
+                
+            } catch (error) {
+                console.error('═══════════════════════════════════════════════════');
+                console.error('❌ ERROR EN VALIDACIÓN');
+                console.error('═══════════════════════════════════════════════════');
+                console.error('   Tipo de error:', error.name);
+                console.error('   Mensaje:', error.message);
+                console.error('   Stack:', error.stack);
+                
+                // PASO 7: Manejar errores de forma explícita
+                console.log('🔍 [PASO 7] Manejando error...');
+                
+                let mensajeError = 'Error al validar la suscripción';
+                let tituloError = 'Error de validación';
+                
+                if (error.message.includes('404') || error.message.includes('no encontrado')) {
+                    tituloError = 'Alumno no encontrado';
+                    mensajeError = `No se encontró un alumno con el ID: ${cleanId}\n\n` +
+                                   'Verifica que el ID sea correcto.';
+                } else if (error.message.includes('400') || error.message.includes('requerido')) {
+                    tituloError = 'Datos incompletos';
+                    mensajeError = 'El alumno no tiene todos los datos necesarios para validar la suscripción.\n\n' +
+                                   'Contacta al administrador.';
+                } else if (error.message.includes('500') || error.message.includes('Error interno')) {
+                    tituloError = 'Error del servidor';
+                    mensajeError = 'El servidor encontró un error al procesar la solicitud.\n\n' +
+                                   'Por favor intenta nuevamente más tarde.';
+                } else if (error.message.includes('Failed to fetch') || 
+                          error.message.includes('NetworkError') ||
+                          error.message.includes('Network request failed')) {
+                    tituloError = 'Error de conexión';
+                    mensajeError = 'No se pudo conectar con el servidor de validación.\n\n' +
+                                   'Verifica:\n' +
+                                   '1. Tu conexión a internet\n' +
+                                   '2. Que el backend esté disponible\n' +
+                                   '3. Que la URL de MongoDB API esté configurada correctamente';
+                } else {
+                    tituloError = 'Error desconocido';
+                    mensajeError = `Error: ${error.message || 'Error desconocido'}\n\n` +
+                                   'Por favor contacta al administrador.';
+                }
+                
+                console.error('   Título del error:', tituloError);
+                console.error('   Mensaje del error:', mensajeError);
+                
+                // Mostrar error de forma explícita
+                showCustomAlert(tituloError, mensajeError, 'error');
+                
+                // Asegurar que se muestre la sección de búsqueda
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.style.display = 'block';
+                }
+                
+                // Asegurar que el contenedor de resultado esté oculto
+                const resultContainer = document.getElementById('resultContainer');
+                if (resultContainer) {
+                    resultContainer.style.display = 'none';
+                }
+                
+                console.error('═══════════════════════════════════════════════════');
+                console.error('❌ VALIDACIÓN FALLIDA - ERROR MOSTRADO AL USUARIO');
+                console.error('═══════════════════════════════════════════════════');
+            }
+        }
+        
+        // ============================================================
+        // FUNCIÓN AUXILIAR: Manejar resultado de validación
+        // ============================================================
+        async function handleValidationResult(resultado, cleanId) {
+            console.log('🎨 [handleValidationResult] Procesando resultado...');
+            console.log('   Acceso:', resultado.acceso);
+            console.log('   Estado:', resultado.estado);
+            console.log('   Alumno:', resultado.alumno?.nombre);
+            
+            // Validar estructura
+            if (!resultado || typeof resultado.acceso !== 'boolean') {
+                console.error('❌ [handleValidationResult] Respuesta inválida');
+                throw new Error('Respuesta inválida del servidor: falta campo "acceso"');
+            }
+            
+            if (!resultado.alumno) {
+                console.error('❌ [handleValidationResult] Respuesta sin datos de alumno');
+                throw new Error('Respuesta inválida del servidor: falta campo "alumno"');
+            }
+            
+            // Guardar alumno actual
+            currentStudent = resultado.alumno;
+            console.log('✅ [handleValidationResult] Alumno guardado:', currentStudent.nombre);
+            
+            // Convertir respuesta del backend al formato esperado por showStudentResult
+            const estado = {
+                acceso: resultado.acceso,
+                estado: resultado.estado,
+                diasRestantes: resultado.diasRestantes,
+                proximoPago: resultado.proximoPago,
+                mensaje: resultado.mensaje,
+                // Para compatibilidad con UI existente
+                clase: resultado.acceso ? 'al-dia' : 'atrasado',
+                texto: resultado.mensaje,
+                proximo: resultado.proximoPago ? new Date(resultado.proximoPago).toLocaleDateString('es-ES') : '---'
+            };
+            
+            console.log('✅ [handleValidationResult] Estado formateado:', estado);
+            
+            // Renderizar resultado
+            console.log('🎨 [handleValidationResult] Llamando a showStudentResult()...');
+            showStudentResult(resultado.alumno, estado);
+            console.log('✅ [handleValidationResult] Resultado renderizado');
+            
+            // Actualizar título de la página
+            document.title = `Estado de Pago - ${resultado.alumno.nombre}`;
+            console.log('✅ [handleValidationResult] Título actualizado');
+        }
+
+        // ============================================================
+        // FUNCIÓN: Mostrar resultado de validación
+        // ============================================================
+        // REGLA: SIEMPRE mostrar algo (éxito o error explícito)
+        // NO estados vacíos, NO silencios
+        // ============================================================
+        function showStudentResult(alumno, estado) {
+            console.log('🎨 [showStudentResult] INICIANDO renderizado');
+            console.log('   Alumno:', alumno?.nombre);
+            console.log('   Estado recibido:', estado);
+            
+            // Validar parámetros
+            if (!alumno) {
+                console.error('❌ [showStudentResult] Alumno no proporcionado');
+                showCustomAlert('Error', 'No se pudo obtener la información del alumno', 'error');
+                return;
+            }
+            
+            if (!estado) {
+                console.error('❌ [showStudentResult] Estado no proporcionado');
+                showCustomAlert('Error', 'No se pudo obtener el estado de la suscripción', 'error');
+                return;
+            }
+            
+            console.log('✅ [showStudentResult] Parámetros válidos');
+            
+            // Actualizar icono y estado - basado en respuesta binaria del backend
+            const statusIcon = document.getElementById('statusIcon');
+            const paymentStatus = document.getElementById('paymentStatus');
+            
+            if (estado.acceso === true) {
+                // Suscripción ACTIVA
+                if (estado.diasRestantes <= 5) {
+                statusIcon.textContent = '⚠️';
+                statusIcon.className = 'status-icon status-proximo';
+                    paymentStatus.textContent = `🟠 Próximo a vencer (${estado.diasRestantes} días)`;
+                paymentStatus.className = 'status-proximo';
+            } else {
+                    statusIcon.textContent = '✅';
+                    statusIcon.className = 'status-icon status-aldia';
+                    paymentStatus.textContent = `🟢 Al día con los pagos (${estado.diasRestantes} días restantes)`;
+                    paymentStatus.className = 'status-aldia';
+                }
+            } else {
+                // Suscripción VENCIDA
+                statusIcon.textContent = '❌';
+                statusIcon.className = 'status-icon status-atrasado';
+                paymentStatus.textContent = `🔴 Pago atrasado (${Math.abs(estado.diasRestantes)} días)`;
+                paymentStatus.className = 'status-atrasado';
+            }
+            
+            document.getElementById('studentName').textContent = alumno.nombre;
+            
+            // Mostrar alerta si es necesario
+            const alertBanner = document.getElementById('alertBanner');
+            if (estado.acceso === false) {
+                // VENCIDA
+                alertBanner.innerHTML = `
+                    <h3>🚨 PAGO ATRASADO</h3>
+                    <p>Tu pago está atrasado por ${Math.abs(estado.diasRestantes)} días. Por favor contacta a la administración.</p>
+                `;
+                alertBanner.className = 'alert-banner atrasado';
+                alertBanner.style.display = 'block';
+            } else if (estado.acceso === true && estado.diasRestantes <= 5) {
+                // ACTIVA pero próximo a vencer
+                alertBanner.innerHTML = `
+                    <h3>⚠️ PRÓXIMO A VENCER</h3>
+                    <p>Tu pago vence en ${estado.diasRestantes} días. Te recomendamos realizar el pago pronto.</p>
+                `;
+                alertBanner.className = 'alert-banner proximo';
+                alertBanner.style.display = 'block';
+            } else {
+                alertBanner.style.display = 'none';
+            }
+            
+            // Construir URL completa del alumno
+            const baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
+            const studentUrl = `${baseUrl}/usuario.html?id=${alumno.id}`;
+            
+            // Mostrar información completa
+            const resultInfo = document.getElementById('resultInfo');
+            resultInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="label">ID</div>
+                    <div class="value" style="font-family: monospace; font-size: 0.85rem; word-break: break-all;">${alumno.id}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Nombre</div>
+                    <div class="value" style="font-weight: bold; font-size: 1.1rem;">${alumno.nombre}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Email</div>
+                    <div class="value">${alumno.email || 'No especificado'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Teléfono</div>
+                    <div class="value">${alumno.telefono || 'No especificado'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Último Pago</div>
+                    <div class="value">${formatDate(alumno.fechaPago)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Próximo Pago</div>
+                    <div class="value">${estado.proximoPago ? formatDate(new Date(estado.proximoPago)) : '---'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Monto Mensual</div>
+                    <div class="value" style="font-weight: bold; color: #dc2626; font-size: 1.1rem;">$${parseFloat(alumno.monto || 0).toFixed(2)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Estado</div>
+                    <div class="value" style="font-weight: bold;">${estado.mensaje || estado.texto || (estado.diasRestantes < 0 ? Math.abs(estado.diasRestantes) + ' días atrasado' : estado.diasRestantes + ' días restantes')}</div>
+                </div>
+                <div class="info-item" style="border-top: 2px solid #e5e7eb; padding-top: 1rem; margin-top: 1rem;">
+                    <div class="label" style="color: #dc2626; font-weight: bold;">🔗 URL Directa</div>
+                    <div class="value" style="font-family: monospace; font-size: 0.8rem; word-break: break-all; background: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem; cursor: pointer;" onclick="navigator.clipboard.writeText('${studentUrl}').then(() => alert('✅ URL copiada al portapapeles')).catch(() => alert('URL: ' + '${studentUrl}'))" title="Clic para copiar">${studentUrl}</div>
+                </div>
+            `;
+            
+            // FORZAR VISIBILIDAD DEL RESULTADO
+            const resultContainer = document.getElementById('resultContainer');
+            if (resultContainer) {
+                resultContainer.style.display = 'block';
+                resultContainer.style.visibility = 'visible';
+                resultContainer.style.opacity = '1';
+                console.log('✅ [showStudentResult] Contenedor de resultado FORZADO a visible');
+            } else {
+                console.error('❌ [showStudentResult] No se encontró resultContainer');
+                showCustomAlert('Error', 'No se pudo mostrar el resultado. Error en la estructura de la página.', 'error');
+                return;
+            }
+            
+            // Ocultar búsqueda manual
+            const manualSearch = document.getElementById('manualSearch');
+            if (manualSearch) {
+                manualSearch.style.display = 'none';
+            }
+            
+            // Scroll suave al resultado después de un breve delay
+            setTimeout(() => {
+                if (resultContainer) {
+                    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    console.log('✅ [showStudentResult] Scroll al resultado ejecutado');
+                }
+            }, 200);
+            
+            console.log('✅ [showStudentResult] Renderizado completado exitosamente');
+            console.log('   Acceso:', estado.acceso);
+            console.log('   Estado:', estado.estado);
+            console.log('   Días restantes:', estado.diasRestantes);
+        }
+
+        // Cerrar resultado
+        function closeResult() {
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('userIdInput').value = '';
+            currentStudent = null;
+        }
+
+        // Mostrar historial
+        function showHistory() {
+            alert('Función de historial en desarrollo...');
+        }
+
+        // Compartir URL del alumno
+        function shareStudentUrl() {
+            if (!currentStudent) {
+                alert('No hay información de alumno para compartir');
+                return;
+            }
+            
+            const currentUrl = window.location.href;
+            
+            if (navigator.share) {
+                // Usar Web Share API si está disponible
+                navigator.share({
+                    title: `Estado de Pago - ${currentStudent.nombre}`,
+                    text: `Consulta el estado de pago de ${currentStudent.nombre}`,
+                    url: currentUrl
+                }).catch(err => {
+                    console.log('Error al compartir:', err);
+                    copyToClipboard(currentUrl);
+                });
+            } else {
+                // Fallback: copiar al portapapeles
+                copyToClipboard(currentUrl);
+            }
+        }
+
+        // Copiar al portapapeles
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCustomAlert('URL Copiada', 'La URL ha sido copiada al portapapeles. Puedes compartirla con otros.', 'success');
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+
+        // Fallback para copiar al portapapeles
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showCustomAlert('URL Copiada', 'La URL ha sido copiada al portapapeles. Puedes compartirla con otros.', 'success');
+            } catch (err) {
+                console.error('Error al copiar:', err);
+                showCustomAlert('Error', 'No se pudo copiar la URL automáticamente. Cópiala manualmente: ' + text, 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Formatear fecha
+        function parseLocalDate(value) {
+            if (!value) return null;
+            if (value instanceof Date) {
+                return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+            }
+            if (typeof value === 'string') {
+                const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                if (match) {
+                    const year = Number(match[1]);
+                    const month = Number(match[2]) - 1;
+                    const day = Number(match[3]);
+                    return new Date(year, month, day);
+                }
+            }
+            const parsed = new Date(value);
+            if (!isNaN(parsed.getTime())) {
+                return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+            }
+            return null;
+        }
+
+        function formatDate(date) {
+            const d = parseLocalDate(date);
+            if (!d) return '---';
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // NOTA: La función calcularEstado() fue eliminada.
+        // Ahora el cálculo se hace en el backend (endpoint GET /alumnos/:id/validar)
+        // Esta es la fuente única de verdad para el estado de suscripciones.
+
+        // ============================================================
+        // INICIALIZACIÓN DE PÁGINA - FLUJO OBLIGATORIO
+        // ============================================================
+        // REGLA: Si hay ID en URL → SIEMPRE disparar validación
+        // NO hay excepciones, NO hay silencios, SIEMPRE mostrar resultado o error
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('═══════════════════════════════════════════════════');
+            console.log('🚀 [INICIO] Inicializando usuario.html');
+            console.log('═══════════════════════════════════════════════════');
+            console.log('📍 URL completa:', window.location.href);
+            console.log('🔍 Query params:', window.location.search);
+            console.log('🛤️ Pathname:', window.location.pathname);
+            
+            // PASO 1: Extraer ID de la URL
+            const studentId = getStudentIdFromUrl();
+            console.log('🆔 [INICIO] ID detectado en URL:', studentId);
+            
+            if (studentId) {
+                console.log('✅ [INICIO] Modo acceso público detectado');
+                console.log('   ID extraído:', studentId);
+                console.log('   Acción: Disparar validación inmediatamente');
+                
+                // Mostrar indicador de carga
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.innerHTML = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                            <p style="font-size: 1.1rem; color: #666;">Validando suscripción...</p>
+                            <p style="font-size: 0.9rem; color: #999; margin-top: 0.5rem;">Por favor espera</p>
+                        </div>
+                    `;
+                }
+                
+                // Cambiar título de la página
+                const welcomeH1 = document.querySelector('.user-welcome h1');
+                const welcomeP = document.querySelector('.user-welcome p');
+                if (welcomeH1) welcomeH1.textContent = '📱 Estado de Pago';
+                if (welcomeP) welcomeP.textContent = 'Validando tu suscripción...';
+                
+                try {
+                    // DISPARAR VALIDACIÓN INMEDIATAMENTE
+                    // NO cargar alumnos desde la nube primero
+                    // La validación se hace directamente con el endpoint
+                    console.log('📡 [INICIO] Disparando validación con ID:', studentId);
+                    await searchByUserId(studentId);
+                    
+                    // Ocultar sección de búsqueda después de validar
+                    if (searchSection) {
+                        searchSection.style.display = 'none';
+                    }
+                    
+                } catch (error) {
+                    console.error('═══════════════════════════════════════════════════');
+                    console.error('❌ [INICIO] ERROR CRÍTICO en inicialización');
+                    console.error('═══════════════════════════════════════════════════');
+                    console.error('   Error:', error);
+                    console.error('   Stack:', error.stack);
+                    
+                    // ERROR EXPLÍCITO: No silenciar errores
+                    showCustomAlert(
+                        'Error al cargar información',
+                        'No se pudo validar la suscripción.\n\n' +
+                        'Error: ' + (error.message || 'Error desconocido') + '\n\n' +
+                        'Por favor intenta nuevamente o contacta al administrador.',
+                        'error'
+                    );
+                    
+                    // Mostrar opciones de búsqueda en caso de error
+                if (searchSection) {
+                        searchSection.style.display = 'block';
+                        searchSection.innerHTML = ''; // Restaurar contenido original
+                    }
+                }
+            } else {
+                // Comportamiento normal para usuarios (sin ID en URL)
+                console.log('👤 [INICIO] Modo usuario normal (sin ID en URL)');
+                console.log('   Acción: Verificar acceso de usuario');
+                
+                if (checkUserAccess()) {
+                    console.log('✅ [INICIO] Usuario tiene acceso');
+                    // Cargar alumnos desde la nube si está disponible (solo para búsqueda manual)
+                    await loadAlumnosFromCloud();
+                } else {
+                    console.log('❌ [INICIO] Usuario sin acceso');
+                }
+            }
+            
+            console.log('═══════════════════════════════════════════════════');
+            console.log('✅ [INICIO] Inicialización completada');
+            console.log('═══════════════════════════════════════════════════');
+        });
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registrado exitosamente:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('Error al registrar ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
