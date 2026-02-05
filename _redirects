@@ -1,0 +1,27 @@
+# CRÍTICO: este archivo NO debe contener conflictos de git.
+# Reglas para Cloudflare Pages / Netlify-style redirects.
+
+# Asegurar que assets bajo /public/ se sirvan como archivos reales (evitar fallback HTML)
+/public/styles.css /styles.css 200
+/public/app.js /app.js 200
+/public/verificar.js /verificar.js 200
+/public/mongodb-client.js /mongodb-client.js 200
+/public/alert-system.js /alert-system.js 200
+/public/manifest.json /manifest.json 200
+/public/logo_cohab.png /logo_cohab.png 200
+/public/logo_cohab.svg /logo_cohab.svg 200
+/public/sw.js /sw.js 200
+
+# Rutas QR (canónicas)
+/alumno/:id /public/alumno.html?id=:id 200
+/u/:id /public/alumno.html?id=:id 200
+
+# Compatibilidad legacy
+/usuario.html* /public/alumno.html 301
+
+# Verificación (canónica/protegida)
+/verificar.html /public/verificar.html 301
+/verificar /public/verificar.html 301
+
+# Admin (canónico)
+/admin/dashboard.html /admin.html 200

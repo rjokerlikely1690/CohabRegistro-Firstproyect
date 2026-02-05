@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: cohab-mongodb-api
+    runtime: node
+    rootDir: mongodb-api
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: DB_NAME
+        value: cohab
+      - key: COLLECTION_NAME
+        value: alumnos
+      - key: PUBLIC_BASE_URL
+        value: https://cohabregistro-firstproyect.pages.dev/
+
