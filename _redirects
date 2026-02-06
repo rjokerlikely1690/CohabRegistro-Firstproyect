@@ -28,10 +28,3 @@
 
 # Admin (canónico)
 /admin/dashboard.html /admin.html 200
-
-# Login - rutas alternativas (Cloudflare Pages puede generar /src/pages/auth/login)
-/src/pages/auth/login /login.html 302
-/src/pages/auth/login* /login.html 302
-/auth/login /login.html 302
-/auth/login* /login.html 302
-/login /login.html 302
