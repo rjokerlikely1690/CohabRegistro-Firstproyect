@@ -74,13 +74,64 @@
             </div>
           </div>
           <aside class="hero-aside">
-            <p class="aside-title">Oferta principal</p>
-            <p class="aside-line"><strong>BJJ (Gi):</strong> técnica, control y detalles</p>
-            <p class="aside-line"><strong>BJJ (NoGi):</strong> ritmo, agarres y transición</p>
-            <p class="aside-line"><strong>Open Mat:</strong> sparring supervisado</p>
-            <p class="aside-line" style="margin-top: 0.85rem; color: rgba(255,255,255,0.72);">
-              Si no sabes por dónde empezar, te orientamos según tu nivel y objetivos.
-            </p>
+            <div style="margin-bottom: 1.5rem;">
+              <p class="aside-title">Oferta principal</p>
+              <p class="aside-line"><strong>BJJ (Gi):</strong> técnica, control y detalles</p>
+              <p class="aside-line"><strong>BJJ (NoGi):</strong> ritmo, agarres y transición</p>
+              <p class="aside-line"><strong>Open Mat:</strong> sparring supervisado</p>
+              <p class="aside-line" style="margin-top: 0.85rem; color: rgba(255,255,255,0.72);">
+                Si no sabes por dónde empezar, te orientamos según tu nivel y objetivos.
+              </p>
+            </div>
+            
+            <!-- Nueva sección: Consulta de estado -->
+            <div class="alumno-consulta-card" style="background: rgba(26, 26, 26, 0.6); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem;">
+              <p class="aside-title" style="margin-bottom: 0.75rem; color: #dc2626;">¿Eres alumno? Consulta tu estado</p>
+              <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.25rem;">
+                Escanea tu código QR o ingresa tu ID para ver el estado de tus pagos y acceder a tu información personal.
+              </p>
+              
+              <!-- Opción 1: Escanear QR -->
+              <div style="margin-bottom: 1rem;">
+                <button id="scanQRBtn" class="btn btn-secondary" style="width: 100%; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem;" onclick="toggleQRScanner()">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 13h1.5v1.5H13V18zm1.5 1.5H16V21h-1.5v-1.5zm3.75-3.75h1.5v1.5h-1.5v-1.5zM19 13h1.5v6H19v-6zm-8.25 3.75h1.5v1.5h-1.5v-1.5zm0-3.75h1.5v1.5h-1.5V13z"/>
+                  </svg>
+                  <span id="scanQRText">Escanear QR</span>
+                </button>
+                <div id="qrScannerContainer" style="display: none; margin-top: 0.75rem;">
+                  <div id="qrScanningOverlay" style="position: relative; width: 100%; aspect-ratio: 1; background: #000; border-radius: 8px; overflow: hidden;">
+                    <video id="qrVideo" style="width: 100%; height: 100%; object-fit: cover; display: block;"></video>
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center;">
+                      <div style="width: 200px; height: 200px; border: 3px solid #dc2626; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);"></div>
+                    </div>
+                  </div>
+                  <canvas id="qrCanvas" style="display: none;"></canvas>
+                  <button class="btn btn-secondary" onclick="stopQRScanner()" style="width: 100%; margin-top: 0.5rem;">Detener cámara</button>
+                </div>
+              </div>
+              
+              <!-- Opción 2: Ingresar ID manualmente -->
+              <div style="margin-bottom: 1rem;">
+                <input 
+                  type="text" 
+                  id="alumnoIdInput" 
+                  placeholder="Ingresa tu ID de alumno" 
+                  style="width: 100%; padding: 0.75rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(0,0,0,0.3); color: #fff; font-size: 0.9rem; margin-bottom: 0.75rem;"
+                  onkeypress="if(event.key === 'Enter') consultarAlumno()"
+                >
+                <button class="btn btn-primary" onclick="consultarAlumno()" style="width: 100%; justify-content: center;">
+                  Consultar estado
+                </button>
+              </div>
+              
+              <!-- Link de ayuda -->
+              <p style="text-align: center; margin-top: 1rem;">
+                <a href="contacto.html" style="color: rgba(220, 38, 38, 0.9); text-decoration: none; font-size: 0.85rem; border-bottom: 1px solid rgba(220, 38, 38, 0.3);">
+                  ¿No tienes tu QR? Contáctanos
+                </a>
+              </p>
+            </div>
           </aside>
         </div>
       </section>
@@ -189,6 +240,121 @@
       if (backdrop) backdrop.addEventListener('click', closeDrawer);
       window.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
     })();
+  </script>
+  
+  <!-- Script para consulta de alumnos -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    let qrStream = null;
+    let qrScanning = false;
+    let qrAnimationFrame = null;
+    
+    async function toggleQRScanner() {
+      const container = document.getElementById('qrScannerContainer');
+      const video = document.getElementById('qrVideo');
+      const overlay = document.getElementById('qrScanningOverlay');
+      const btn = document.getElementById('scanQRBtn');
+      const btnText = document.getElementById('scanQRText');
+      
+      if (qrScanning) {
+        stopQRScanner();
+        return;
+      }
+      
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Tu navegador no soporta acceso a la cámara. Por favor, ingresa tu ID manualmente.');
+        return;
+      }
+      
+      try {
+        qrStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        
+        video.srcObject = qrStream;
+        video.setAttribute('playsinline', 'true');
+        await video.play();
+        
+        container.style.display = 'block';
+        overlay.style.display = 'block';
+        qrScanning = true;
+        btnText.textContent = 'Escaneando...';
+        
+        const canvas = document.getElementById('qrCanvas');
+        const context = canvas.getContext('2d');
+        
+        function scanQR() {
+          if (!qrScanning) return;
+          
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+              const url = new URL(code.data);
+              const id = url.searchParams.get('id');
+              if (id) {
+                stopQRScanner();
+                window.location.href = `public/alumno.html?id=${id}`;
+                return;
+              }
+            }
+          }
+          
+          qrAnimationFrame = requestAnimationFrame(scanQR);
+        }
+        
+        scanQR();
+      } catch (error) {
+        console.error('Error accediendo a la cámara:', error);
+        alert('No se pudo acceder a la cámara. Por favor, ingresa tu ID manualmente.');
+        stopQRScanner();
+      }
+    }
+    
+    function stopQRScanner() {
+      qrScanning = false;
+      if (qrAnimationFrame) {
+        cancelAnimationFrame(qrAnimationFrame);
+        qrAnimationFrame = null;
+      }
+      if (qrStream) {
+        qrStream.getTracks().forEach(track => track.stop());
+        qrStream = null;
+      }
+      
+      const video = document.getElementById('qrVideo');
+      const container = document.getElementById('qrScannerContainer');
+      const overlay = document.getElementById('qrScanningOverlay');
+      const btnText = document.getElementById('scanQRText');
+      
+      if (video) {
+        video.srcObject = null;
+        video.pause();
+      }
+      if (overlay) overlay.style.display = 'none';
+      if (container) container.style.display = 'none';
+      if (btnText) btnText.textContent = 'Escanear QR';
+    }
+    
+    function consultarAlumno() {
+      const input = document.getElementById('alumnoIdInput');
+      const id = input.value.trim();
+      
+      if (!id) {
+        alert('Por favor ingresa tu ID de alumno');
+        return;
+      }
+      
+      window.location.href = `public/alumno.html?id=${id}`;
+    }
+    
+    // Limpiar al salir de la página
+    window.addEventListener('beforeunload', stopQRScanner);
   </script>
   <!-- WhatsApp Flotante -->
   <a href="https://wa.me/56912345678?text=Hola!%20Quiero%20información%20sobre%20clases%20de%20BJJ"
