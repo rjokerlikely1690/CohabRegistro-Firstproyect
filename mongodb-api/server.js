@@ -2,15 +2,8 @@
 // Este servidor expone una API REST segura para MongoDB
 // Desplegar en Railway, Render, Vercel, o similar
 
-const express = require('express');
-const { MongoClient, ObjectId } = require('mongodb');
-const cors = require('cors');
-const QRCode = require('qrcode');
-const nodemailer = require('nodemailer');
-const dns = require('dns');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
+
+
 
 // En algunos entornos, la resolución DNS de registros SRV puede fallar.
 // Forzamos resolvers públicos para estabilizar la conexión a MongoDB Atlas.
@@ -256,6 +249,118 @@ async function generateQrBuffer(alumno) {
     });
 }
 
+// Generar template HTML profesional para email del alumno
+function generateEmailTemplate(alumno, alumnoUrl, qrBase64) {
+    const monto = Number(alumno.monto || 0).toFixed(2);
+    const fechaPago = alumno.fechaPago ? new Date(alumno.fechaPago).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'No registrada';
+    
+    return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu acceso a COHAB</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0d0d0d; line-height: 1.6;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #0d0d0d; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); padding: 30px 40px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 900; letter-spacing: 0.02em;">COHAB BJJ</h1>
+                            <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500;">Tu acceso personal</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Contenido principal -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px 0; color: #dc2626; font-size: 24px; font-weight: 700;">Hola ${alumno.nombre},</h2>
+                            <p style="margin: 0 0 30px 0; color: #e5e5e5; font-size: 16px;">Te enviamos tu código QR personal para consultar el estado de tus pagos en cualquier momento.</p>
+                            
+                            <!-- QR Code Card -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; padding: 30px; margin: 30px 0; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <tr>
+                                    <td>
+                                        <p style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 18px; font-weight: 700;">Código QR</p>
+                                        <img src="data:image/png;base64,${qrBase64}" alt="QR Code - ${alumno.nombre}" style="max-width: 280px; width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px;" />
+                                        <p style="margin: 20px 0 0 0; color: #666; font-size: 14px; font-family: monospace; word-break: break-all;">ID: ${alumno.id}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Información del alumno -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #2a2a2a; border-radius: 8px; padding: 0; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <table role="presentation" width="100%" cellpadding="8" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #a1a1aa; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #3a3a3a;">Nombre</td>
+                                                <td style="color: #ffffff; font-size: 14px; font-weight: 600; padding: 8px 0; border-bottom: 1px solid #3a3a3a; text-align: right;">${alumno.nombre}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #a1a1aa; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #3a3a3a;">Último pago</td>
+                                                <td style="color: #ffffff; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #3a3a3a; text-align: right;">${fechaPago}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #a1a1aa; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #3a3a3a;">Monto mensual</td>
+                                                <td style="color: #dc2626; font-size: 16px; font-weight: 700; padding: 8px 0; border-bottom: 1px solid #3a3a3a; text-align: right;">$${monto}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #a1a1aa; font-size: 14px; padding: 8px 0;">ID de alumno</td>
+                                                <td style="color: #ffffff; font-size: 12px; font-family: monospace; padding: 8px 0; text-align: right; word-break: break-all;">${alumno.id}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Botón CTA -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="${alumnoUrl}" style="display: inline-block; background-color: #dc2626; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; box-shadow: 0 2px 8px rgba(220,38,38,0.3);">Ver mi estado de pago</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Instrucciones -->
+                            <div style="background-color: #1a1a1a; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                                <p style="margin: 0 0 8px 0; color: #ffffff; font-size: 14px; font-weight: 600;">📱 Cómo usar tu QR:</p>
+                                <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #a1a1aa; font-size: 14px;">
+                                    <li style="margin-bottom: 6px;">Escanea el código QR con la cámara de tu teléfono</li>
+                                    <li style="margin-bottom: 6px;">O haz clic en el botón "Ver mi estado de pago"</li>
+                                    <li style="margin-bottom: 0;">Guarda este email para consultar cuando lo necesites</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Link alternativo -->
+                            <p style="margin: 20px 0 0 0; color: #666; font-size: 12px; text-align: center;">
+                                O copia este enlace: <a href="${alumnoUrl}" style="color: #dc2626; text-decoration: underline; word-break: break-all;">${alumnoUrl}</a>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #0d0d0d; padding: 30px 40px; text-align: center; border-top: 1px solid #2a2a2a;">
+                            <p style="margin: 0 0 8px 0; color: #666; font-size: 14px; font-weight: 600;">Academia COHAB BJJ</p>
+                            <p style="margin: 0; color: #666; font-size: 12px;">San Carlos de Apoquindo, Las Condes</p>
+                            <p style="margin: 12px 0 0 0; color: #666; font-size: 12px;">Si tienes dudas, contáctanos por WhatsApp o email.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `.trim();
+}
+
 async function sendStudentEmail(alumno) {
     if (!SEND_EMAILS) {
         return;
@@ -272,18 +377,7 @@ async function sendStudentEmail(alumno) {
     // Usar API de Resend si está configurado (más simple y sin restricciones)
     if (USE_RESEND_API && RESEND_API_KEY) {
         try {
-            const emailHtml = `
-                <p>Hola ${alumno.nombre},</p>
-                <p>Te enviamos tu acceso a COHAB. Con este QR o el enlace podrás consultar tus pagos en cualquier momento.</p>
-                <ul>
-                    <li><strong>Nombre:</strong> ${alumno.nombre}</li>
-                    <li><strong>Monto mensual:</strong> $${Number(alumno.monto || 0).toFixed(2)}</li>
-                    <li><strong>Enlace directo:</strong> <a href="${alumnoUrl}">${alumnoUrl}</a></li>
-                </ul>
-                <p>Escanea el código adjunto para acceder desde tu teléfono.</p>
-                <p><img src="data:image/png;base64,${qrBase64}" alt="QR Code" style="max-width: 400px;" /></p>
-                <p>Un abrazo,<br>Equipo COHAB</p>
-            `;
+            const emailHtml = generateEmailTemplate(alumno, alumnoUrl, qrBase64);
 
             // Extraer email del formato "COHAB <email@domain.com>" o usar directamente
             let fromEmail = EMAIL_FROM;
@@ -326,18 +420,7 @@ async function sendStudentEmail(alumno) {
     // Usar API de MailerSend si está configurado
     if (USE_MAILERSEND_API && MAILERSEND_API_TOKEN) {
         try {
-            const emailHtml = `
-                <p>Hola ${alumno.nombre},</p>
-                <p>Te enviamos tu acceso a COHAB. Con este QR o el enlace podrás consultar tus pagos en cualquier momento.</p>
-                <ul>
-                    <li><strong>Nombre:</strong> ${alumno.nombre}</li>
-                    <li><strong>Monto mensual:</strong> $${Number(alumno.monto || 0).toFixed(2)}</li>
-                    <li><strong>Enlace directo:</strong> <a href="${alumnoUrl}">${alumnoUrl}</a></li>
-                </ul>
-                <p>Escanea el código adjunto para acceder desde tu teléfono.</p>
-                <p><img src="data:image/png;base64,${qrBase64}" alt="QR Code" style="max-width: 400px;" /></p>
-                <p>Un abrazo,<br>Equipo COHAB</p>
-            `;
+            const emailHtml = generateEmailTemplate(alumno, alumnoUrl, qrBase64);
 
             // Extraer email del formato "COHAB <email@domain.com>" o usar directamente
             let fromEmail = EMAIL_FROM;
@@ -398,17 +481,7 @@ async function sendStudentEmail(alumno) {
         from: EMAIL_FROM,
         to: alumno.email,
         subject: `Tu acceso a COHAB - ${alumno.nombre}`,
-        html: `
-            <p>Hola ${alumno.nombre},</p>
-            <p>Te enviamos tu acceso a COHAB. Con este QR o el enlace podrás consultar tus pagos en cualquier momento.</p>
-            <ul>
-                <li><strong>Nombre:</strong> ${alumno.nombre}</li>
-                <li><strong>Monto mensual:</strong> $${Number(alumno.monto || 0).toFixed(2)}</li>
-                <li><strong>Enlace directo:</strong> <a href="${alumnoUrl}">${alumnoUrl}</a></li>
-            </ul>
-            <p>Escanea el código adjunto para acceder desde tu teléfono.</p>
-            <p>Un abrazo,<br>Equipo COHAB</p>
-        `,
+        html: generateEmailTemplate(alumno, alumnoUrl, qrBase64),
         attachments: [
             {
                 filename: `qr-${alumno.id}.png`,
