@@ -185,23 +185,26 @@ self.addEventListener('fetch', function(event) {
       
       if (isLoginHtml) {
         // Para login.html: SIEMPRE network-first, nunca cache (igual que index.html)
+        // También eliminar cualquier versión cacheada anterior
         event.respondWith(
-          fetch(req, { cache: 'no-store' })
-            .then(res => {
-              if (res.status === 404) {
-                return caches.delete(CACHE_NAME).then(() => res);
-              }
-              return res;
-            })
-            .catch(() => {
-              return caches.match(req).then(cached => {
-                if (!cached) return new Response('Sin conexión', { status: 503 });
-                if (cached.status === 404 || cached.url.includes('404')) {
-                  return fetch(req).catch(() => new Response('Error de conexión', { status: 503 }));
-                }
-                return cached;
-              });
-            })
+          caches.open(CACHE_NAME).then(cache => {
+            return cache.delete(req).then(() => {
+              return fetch(req, { cache: 'no-store' })
+                .then(res => {
+                  if (res.status === 404) {
+                    return caches.delete(CACHE_NAME).then(() => res);
+                  }
+                  // No cachear login.html nunca
+                  return res;
+                })
+                .catch(() => {
+                  // Si falla la red, intentar fetch de nuevo sin cache
+                  return fetch(req, { cache: 'no-store' }).catch(() => {
+                    return new Response('Error de conexión', { status: 503 });
+                  });
+                });
+            });
+          })
         );
         return;
       }
