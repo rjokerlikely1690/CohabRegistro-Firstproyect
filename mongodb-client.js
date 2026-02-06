@@ -1,19 +1,84 @@
+/**
+ * ========================================
+ * MONGODB CLIENT WRAPPER - ACCESO A BASE DE DATOS
+ * ========================================
+ * 
+ * PROPÓSITO: Cliente centralizado para todas las operaciones en MongoDB
+ * Actúa como intermediario entre frontend y backend API
+ * 
+ * OPERACIONES SOPORTADAS:
+ * - CRUD completo de alumnos (create, read, update, delete)
+ * - Búsqueda por ID
+ * - Validación de suscripción y estado de pago
+ * - Cálculo de próxima fecha de vencimiento
+ * - Listado filtrado de alumnos
+ * 
+ * SEGURIDAD:
+ * - NUNCA exponer credenciales MongoDB al frontend
+ * - SIEMPRE usar backend API como intermediario
+ * - Backend valida autenticación y autorización
+ * - Frontend solo puede ver datos propios (alumno) o admin panel
+ * 
+ * CONFIGURACIÓN:
+ * - URL del API se obtiene de COHAB_CONFIG.mongodbApiUrl
+ * - Fallback a Render.com en producción
+ * - Localhost en desarrollo local (http://localhost:3000)
+ * 
+ * ÚLTIMA ACTUALIZACIÓN: 2026-02-06
+ * ========================================
+ */
+
 // MongoDB client wrapper for COHAB app
 // Requires a backend API endpoint to handle MongoDB operations securely
 (function () {
+    /**
+     * getStored(key)
+     * 
+     * Lee valor de localStorage de forma segura (sin errores si localStorage no disponible)
+     * Usado para guardar configuración temporal
+     * 
+     * @param {string} key - Clave a leer
+     * @returns {string} - Valor guardado o string vacío si no existe
+     */
     function getStored(key) {
         try { return localStorage.getItem(key) || ''; } catch (_) { return ''; }
     }
 
+    /**
+     * setStored(key, val)
+     * 
+     * Guarda valor en localStorage de forma segura
+     * No lanza errores si localStorage no disponible (silenciosamente falla)
+     * 
+     * @param {string} key - Clave a guardar
+     * @param {string} val - Valor a guardar
+     */
     function setStored(key, val) {
         try { localStorage.setItem(key, val); } catch (_) {}
     }
 
+    /**
+     * isConfigured()
+     * 
+     * Verifica si el API está correctamente configurado
+     * Necesario antes de hacer cualquier llamada a MongoDB
+     * 
+     * @returns {boolean} - true si API URL es válida
+     */
     function isConfigured() {
         const apiUrl = getApiUrl(); // Usa getApiUrl() que incluye el valor por defecto
         return /^https?:\/\//i.test(apiUrl) && apiUrl.length > 10;
     }
 
+    /**
+     * getConfiguredFromGlobal()
+     * 
+     * Lee URL del API desde COHAB_CONFIG (configuración global)
+     * Esta es la FUENTE DE VERDAD para la URL del backend
+     * Se define en cohab-config.js antes de cargar este script
+     * 
+     * @returns {string} - URL del API o string vacío si no configurado
+     */
     function getConfiguredFromGlobal() {
         try {
             const cfg = window.COHAB_CONFIG;
@@ -24,6 +89,17 @@
         }
     }
 
+    /**
+     * getDefaultApiUrlByHost()
+     * 
+     * Determina URL por defecto basado en el host actual
+     * 
+     * LÓGICA:
+     * - Si está en localhost → http://localhost:3000 (desarrollo)
+     * - Si está en producción → https://cohabregistro-firstproyect.onrender.com
+     * 
+     * @returns {string} - URL del API a usar como default
+     */
     function getDefaultApiUrlByHost() {
         // En producción, siempre usar el backend de Render
         const PRODUCTION_API = 'https://cohabregistro-firstproyect.onrender.com';
@@ -38,6 +114,16 @@
         return PRODUCTION_API;
     }
 
+    /**
+     * getApiUrl()
+     * 
+     * Obtiene URL del API con prioridades:
+     * 1. COHAB_CONFIG.mongodbApiUrl (configuración global - PRINCIPAL)
+     * 2. localStorage.mongodbApiUrl (fallback admin)
+     * 3. Default por entorno (localhost o Render)
+     * 
+     * @returns {string} - URL completa del API "https://api.example.com"
+     */
     function getApiUrl() {
         // 1) Configuración global (funciona para TODOS los dispositivos)
         const globalCfg = getConfiguredFromGlobal();
