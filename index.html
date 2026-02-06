@@ -127,30 +127,100 @@
             </div>
           </div>
           <aside class="hero-aside">
-            <p class="aside-title">San Carlos de Apoquindo, Las Condes</p>
+            <div style="margin-bottom: 1.5rem;">
+              <p class="aside-title">San Carlos de Apoquindo, Las Condes</p>
 
-            <!-- Stats visuales -->
-            <div class="hero-stats">
-              <div class="stat-item">
-                <div class="stat-number">200+</div>
-                <div class="stat-label">Alumnos activos</div>
+              <!-- Stats visuales -->
+              <div class="hero-stats">
+                <div class="stat-item">
+                  <div class="stat-number">200+</div>
+                  <div class="stat-label">Alumnos activos</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number">15</div>
+                  <div class="stat-label">Años de experiencia</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number">6</div>
+                  <div class="stat-label">Clases semanales</div>
+                </div>
               </div>
-              <div class="stat-item">
-                <div class="stat-number">15</div>
-                <div class="stat-label">Años de experiencia</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">6</div>
-                <div class="stat-label">Clases semanales</div>
-              </div>
+
+              <p class="aside-line" style="margin-top: 1rem;"><strong>Dirección:</strong> Av. San Carlos de Apoquindo 3450</p>
+              <p class="aside-line"><strong>WhatsApp:</strong> +56 9 1234 5678</p>
+              <p class="aside-line"><strong>Instagram:</strong> @cohabbjjscl</p>
+              <p class="aside-line" style="margin-top: 0.85rem; color: rgba(255,255,255,0.72);">
+                Principiantes bienvenidos. Primera clase guiada (Gi/NoGi).
+              </p>
             </div>
-
-            <p class="aside-line" style="margin-top: 1rem;"><strong>Dirección:</strong> Av. San Carlos de Apoquindo 3450</p>
-            <p class="aside-line"><strong>WhatsApp:</strong> +56 9 1234 5678</p>
-            <p class="aside-line"><strong>Instagram:</strong> @cohabbjjscl</p>
-            <p class="aside-line" style="margin-top: 0.85rem; color: rgba(255,255,255,0.72);">
-              Principiantes bienvenidos. Primera clase guiada (Gi/NoGi).
-            </p>
+            
+            <!-- Nueva sección: Consulta de estado -->
+            <div class="alumno-consulta-card" style="background: rgba(26, 26, 26, 0.6); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem;">
+              <div style="text-align: center; margin-bottom: 1rem;">
+                <svg viewBox="0 0 100 120" width="64" height="76" style="display: block; margin: 0 auto; filter: drop-shadow(0 2px 8px rgba(220, 38, 38, 0.3));">
+                  <!-- Cabeza -->
+                  <circle cx="50" cy="25" r="12" fill="#fff" stroke="#dc2626" stroke-width="1.5"/>
+                  <!-- Ojos -->
+                  <circle cx="46" cy="23" r="1.5" fill="#1a1a1a"/>
+                  <circle cx="54" cy="23" r="1.5" fill="#1a1a1a"/>
+                  <!-- Cuerpo (Kimono) -->
+                  <path d="M 35 40 L 35 95 L 65 95 L 65 40 Z" fill="#dc2626" stroke="#991b1b" stroke-width="1.5"/>
+                  <!-- Cinturón -->
+                  <rect x="30" y="70" width="40" height="8" fill="#1a1a1a" rx="2"/>
+                  <!-- Brazos -->
+                  <path d="M 25 45 L 20 60 L 30 58 L 35 50 Z" fill="#dc2626" stroke="#991b1b" stroke-width="1.5"/>
+                  <path d="M 75 45 L 80 60 L 70 58 L 65 50 Z" fill="#dc2626" stroke="#991b1b" stroke-width="1.5"/>
+                  <!-- Piernas -->
+                  <rect x="38" y="95" width="8" height="20" fill="#1a1a1a" rx="2"/>
+                  <rect x="54" y="95" width="8" height="20" fill="#1a1a1a" rx="2"/>
+                </svg>
+              </div>
+              <p class="aside-title" style="margin-bottom: 0.75rem; color: #dc2626; text-align: center;">¿Eres alumno? Consulta tu estado</p>
+              <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.25rem;">
+                Escanea tu código QR o ingresa tu ID para ver el estado de tus pagos y acceder a tu información personal.
+              </p>
+              
+              <!-- Opción 1: Escanear QR -->
+              <div style="margin-bottom: 1rem;">
+                <button id="scanQRBtnIndex" class="btn btn-secondary" style="width: 100%; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem;" onclick="toggleQRScannerIndex()">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 13h1.5v1.5H13V18zm1.5 1.5H16V21h-1.5v-1.5zm3.75-3.75h1.5v1.5h-1.5v-1.5zM19 13h1.5v6H19v-6zm-8.25 3.75h1.5v1.5h-1.5v-1.5zm0-3.75h1.5v1.5h-1.5V13z"/>
+                  </svg>
+                  <span id="scanQRTextIndex">Escanear QR</span>
+                </button>
+                <div id="qrScannerContainerIndex" style="display: none; margin-top: 0.75rem;">
+                  <div id="qrScanningOverlayIndex" style="position: relative; width: 100%; aspect-ratio: 1; background: #000; border-radius: 8px; overflow: hidden;">
+                    <video id="qrVideoIndex" style="width: 100%; height: 100%; object-fit: cover; display: block;"></video>
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center;">
+                      <div style="width: 200px; height: 200px; border: 3px solid #dc2626; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);"></div>
+                    </div>
+                  </div>
+                  <canvas id="qrCanvasIndex" style="display: none;"></canvas>
+                  <button class="btn btn-secondary" onclick="stopQRScannerIndex()" style="width: 100%; margin-top: 0.5rem;">Detener cámara</button>
+                </div>
+              </div>
+              
+              <!-- Opción 2: Ingresar ID manualmente -->
+              <div style="margin-bottom: 1rem;">
+                <input 
+                  type="text" 
+                  id="alumnoIdInputIndex" 
+                  placeholder="Ingresa tu ID de alumno" 
+                  style="width: 100%; padding: 0.75rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(0,0,0,0.3); color: #fff; font-size: 0.9rem; margin-bottom: 0.75rem;"
+                  onkeypress="if(event.key === 'Enter') consultarAlumnoIndex()"
+                >
+                <button class="btn btn-primary" onclick="consultarAlumnoIndex()" style="width: 100%; justify-content: center;">
+                  Consultar estado
+                </button>
+              </div>
+              
+              <!-- Link de ayuda -->
+              <p style="text-align: center; margin-top: 1rem;">
+                <a href="contacto.html" style="color: rgba(220, 38, 38, 0.9); text-decoration: none; font-size: 0.85rem; border-bottom: 1px solid rgba(220, 38, 38, 0.3);">
+                  ¿No tienes tu QR? Contáctanos
+                </a>
+              </p>
+            </div>
           </aside>
         </div>
       </section>
@@ -253,7 +323,7 @@
               <div class="day-head">Sábado</div>
               <ul>
                 <li class="slot"><div class="time">12:00</div><div><div class="what">Open Mat</div><div class="meta">Sparring supervisado</div></div></li>
-              </ul>
+           </ul>
             </div>
           </div>
           <aside class="schedule-side">
@@ -353,6 +423,236 @@
     </svg>
     <span>WhatsApp</span>
   </a>
+
+  <!-- Script para consulta de alumnos -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    let qrStreamIndex = null;
+    let qrScanningIndex = false;
+    let qrAnimationFrameIndex = null;
+    
+    async function toggleQRScannerIndex() {
+      const container = document.getElementById('qrScannerContainerIndex');
+      const video = document.getElementById('qrVideoIndex');
+      const overlay = document.getElementById('qrScanningOverlayIndex');
+      const btn = document.getElementById('scanQRBtnIndex');
+      const btnText = document.getElementById('scanQRTextIndex');
+      
+      if (qrScanningIndex) {
+        stopQRScannerIndex();
+        return;
+      }
+      
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Tu navegador no soporta acceso a la cámara. Por favor, ingresa tu ID manualmente.');
+        return;
+      }
+      
+      try {
+        qrStreamIndex = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        
+        video.srcObject = qrStreamIndex;
+        video.setAttribute('playsinline', 'true');
+        await video.play();
+        
+        container.style.display = 'block';
+        overlay.style.display = 'block';
+        qrScanningIndex = true;
+        btnText.textContent = 'Escaneando...';
+        
+        const canvas = document.getElementById('qrCanvasIndex');
+        const context = canvas.getContext('2d');
+        
+        function scanQR() {
+          if (!qrScanningIndex) return;
+          
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+              const url = new URL(code.data);
+              const id = url.searchParams.get('id');
+              if (id) {
+                stopQRScannerIndex();
+                window.location.href = `public/alumno.html?id=${id}`;
+                return;
+              }
+            }
+          }
+          
+          qrAnimationFrameIndex = requestAnimationFrame(scanQR);
+        }
+        
+        scanQR();
+      } catch (error) {
+        console.error('Error accediendo a la cámara:', error);
+        alert('No se pudo acceder a la cámara. Por favor, ingresa tu ID manualmente.');
+        stopQRScannerIndex();
+      }
+    }
+    
+    function stopQRScannerIndex() {
+      qrScanningIndex = false;
+      if (qrAnimationFrameIndex) {
+        cancelAnimationFrame(qrAnimationFrameIndex);
+        qrAnimationFrameIndex = null;
+      }
+      if (qrStreamIndex) {
+        qrStreamIndex.getTracks().forEach(track => track.stop());
+        qrStreamIndex = null;
+      }
+      
+      const video = document.getElementById('qrVideoIndex');
+      const container = document.getElementById('qrScannerContainerIndex');
+      const overlay = document.getElementById('qrScanningOverlayIndex');
+      const btnText = document.getElementById('scanQRTextIndex');
+      
+      if (video) {
+        video.srcObject = null;
+        video.pause();
+      }
+      if (overlay) overlay.style.display = 'none';
+      if (container) container.style.display = 'none';
+      if (btnText) btnText.textContent = 'Escanear QR';
+    }
+    
+    function consultarAlumnoIndex() {
+      const input = document.getElementById('alumnoIdInputIndex');
+      const id = input.value.trim();
+      
+      if (!id) {
+        alert('Por favor ingresa tu ID de alumno');
+        return;
+      }
+      
+      window.location.href = `public/alumno.html?id=${id}`;
+    }
+    
+    // Limpiar al salir de la página
+    window.addEventListener('beforeunload', stopQRScannerIndex);
+  </script>
+
+  <!-- Script para consulta de alumnos -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    let qrStreamIndex = null;
+    let qrScanningIndex = false;
+    let qrAnimationFrameIndex = null;
+    
+    async function toggleQRScannerIndex() {
+      const container = document.getElementById('qrScannerContainerIndex');
+      const video = document.getElementById('qrVideoIndex');
+      const overlay = document.getElementById('qrScanningOverlayIndex');
+      const btn = document.getElementById('scanQRBtnIndex');
+      const btnText = document.getElementById('scanQRTextIndex');
+      
+      if (qrScanningIndex) {
+        stopQRScannerIndex();
+        return;
+      }
+      
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Tu navegador no soporta acceso a la cámara. Por favor, ingresa tu ID manualmente.');
+        return;
+      }
+      
+      try {
+        qrStreamIndex = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        
+        video.srcObject = qrStreamIndex;
+        video.setAttribute('playsinline', 'true');
+        await video.play();
+        
+        container.style.display = 'block';
+        overlay.style.display = 'block';
+        qrScanningIndex = true;
+        btnText.textContent = 'Escaneando...';
+        
+        const canvas = document.getElementById('qrCanvasIndex');
+        const context = canvas.getContext('2d');
+        
+        function scanQR() {
+          if (!qrScanningIndex) return;
+          
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+              const url = new URL(code.data);
+              const id = url.searchParams.get('id');
+              if (id) {
+                stopQRScannerIndex();
+                window.location.href = `public/alumno.html?id=${id}`;
+                return;
+              }
+            }
+          }
+          
+          qrAnimationFrameIndex = requestAnimationFrame(scanQR);
+        }
+        
+        scanQR();
+      } catch (error) {
+        console.error('Error accediendo a la cámara:', error);
+        alert('No se pudo acceder a la cámara. Por favor, ingresa tu ID manualmente.');
+        stopQRScannerIndex();
+      }
+    }
+    
+    function stopQRScannerIndex() {
+      qrScanningIndex = false;
+      if (qrAnimationFrameIndex) {
+        cancelAnimationFrame(qrAnimationFrameIndex);
+        qrAnimationFrameIndex = null;
+      }
+      if (qrStreamIndex) {
+        qrStreamIndex.getTracks().forEach(track => track.stop());
+        qrStreamIndex = null;
+      }
+      
+      const video = document.getElementById('qrVideoIndex');
+      const container = document.getElementById('qrScannerContainerIndex');
+      const overlay = document.getElementById('qrScanningOverlayIndex');
+      const btnText = document.getElementById('scanQRTextIndex');
+      
+      if (video) {
+        video.srcObject = null;
+        video.pause();
+      }
+      if (overlay) overlay.style.display = 'none';
+      if (container) container.style.display = 'none';
+      if (btnText) btnText.textContent = 'Escanear QR';
+    }
+    
+    function consultarAlumnoIndex() {
+      const input = document.getElementById('alumnoIdInputIndex');
+      const id = input.value.trim();
+      
+      if (!id) {
+        alert('Por favor ingresa tu ID de alumno');
+        return;
+      }
+      
+      window.location.href = `public/alumno.html?id=${id}`;
+    }
+    
+    // Limpiar al salir de la página
+    window.addEventListener('beforeunload', stopQRScannerIndex);
+  </script>
 
   <script>
     (function () {
