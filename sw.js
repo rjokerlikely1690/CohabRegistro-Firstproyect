@@ -1,7 +1,7 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v29';
+const CACHE_NAME = 'academia-cohab-v30';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -180,7 +180,32 @@ self.addEventListener('fetch', function(event) {
           })
       );
     } else {
-      // Para otros HTML: network-first con cache, pero NUNCA cachear/servir 404
+      // Para otros HTML (incluyendo login.html): network-first con cache, pero NUNCA cachear/servir 404
+      const isLoginHtml = url.pathname === '/login.html' || url.pathname === '/login';
+      
+      if (isLoginHtml) {
+        // Para login.html: SIEMPRE network-first, nunca cache (igual que index.html)
+        event.respondWith(
+          fetch(req, { cache: 'no-store' })
+            .then(res => {
+              if (res.status === 404) {
+                return caches.delete(CACHE_NAME).then(() => res);
+              }
+              return res;
+            })
+            .catch(() => {
+              return caches.match(req).then(cached => {
+                if (!cached) return new Response('Sin conexión', { status: 503 });
+                if (cached.status === 404 || cached.url.includes('404')) {
+                  return fetch(req).catch(() => new Response('Error de conexión', { status: 503 }));
+                }
+                return cached;
+              });
+            })
+        );
+        return;
+      }
+      
       event.respondWith(
         fetch(req, { cache: 'no-store' })
           .then(res => {
