@@ -16,8 +16,8 @@
     <link rel="manifest" href="manifest.json">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="logo_cohab.png">
-    <link rel="apple-touch-icon" href="logo_cohab.png">
+    <link rel="icon" type="image/png" href="img/logo_cohab.png">
+    <link rel="apple-touch-icon" href="img/logo_cohab.png">
     
     <style>
         * {
@@ -611,7 +611,7 @@
         <!-- Panel izquierdo - Bienvenida -->
         <div class="welcome-panel">
             <div class="logo-container">
-                <img src="logo_cohab.svg" alt="Academia COHAB" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+                <img src="img/logo_cohab.svg" alt="Academia COHAB" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
             </div>
             <h1>Acceso Privado</h1>
             <p class="subtitle">COHAB BJJ</p>
@@ -639,6 +639,7 @@
                                 style="width: 100%; padding: 1rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(0,0,0,0.3); color: #fff; font-size: 1rem;">
                         </div>
                         <div id="loginError" style="color: #f87171; margin-bottom: 1rem; text-align: center; display: none;"></div>
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 1rem; text-align: center;">Si es la primera vez, crea un admin en el backend: <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.4rem; border-radius: 4px;">cd mongodb-api && npm run seed-admin</code>. Por defecto: admin@cohab.cl / Admin123!</p>
                         <button type="button" onclick="handleAdminLogin()" class="role-button role-admin" style="width: 100%; justify-content: center;">
                             <span class="role-icon">🔐</span>
                             <div class="role-content" style="text-align: center;">
@@ -652,7 +653,7 @@
                     </div>
                     
                     <div id="roleSelector">
-                    <a href="#" onclick="showAdminLogin(event)" class="role-button role-admin" style="display:none">
+                    <a href="#" onclick="showAdminLogin(event)" class="role-button role-admin">
                         <span class="role-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg></span>
                         <div class="role-content">
                             <div class="role-title">ADMINISTRADOR</div>
@@ -674,8 +675,8 @@
     </div>
     
     <!-- Auth Client -->
-    <script src="cohab-config.js?v=2"></script>
-    <script src="auth-client.js?v=2"></script>
+    <script src="js/cohab-config.js?v=2"></script>
+    <script src="js/auth-client.js?v=2"></script>
     
     <script>
         // Rol deseado desde query (?role=admin | ?role=verifier)
@@ -687,17 +688,12 @@
         const adminLoginForm = document.getElementById('adminLoginForm');
         const roleSelector = document.getElementById('roleSelector');
         
-        // Si viene role explícito, ocultar opciones no válidas para evitar ambigüedad
+        // Si viene ?role=admin, ir directo al formulario de admin
         (function enforceRoleUi() {
             const adminBtn = document.querySelector('#roleSelector .role-button.role-admin');
-            const verifierBtn = document.querySelector('.role-button.role-verifier');
             const alumnoBtn = document.querySelector('.role-button.role-user');
 
-            // Por defecto, Admin no se muestra públicamente
-            if (adminBtn) adminBtn.style.display = 'none';
-
             if (desiredRole === 'admin') {
-                // Mostrar formulario de login directamente
                 showAdminLogin();
                 return;
             }
@@ -752,8 +748,10 @@
                         throw new Error('Esta página es solo para administradores');
                     }
                     
-                    // Redirigir a admin o a la URL de redirect
-                    const destination = redirectUrl || '/admin.html';
+                    // Redirigir a admin o a la URL de redirect (respetar base path del sitio)
+                    const path = window.location.pathname;
+                    const base = path.substring(0, path.lastIndexOf('/') + 1);
+                    const destination = redirectUrl || (base + 'admin.html');
                     window.location.href = destination;
                 }
             } catch (error) {
@@ -782,7 +780,9 @@
                 const user = await AUTH.checkAuth();
                 if (user && user.role === 'admin') {
                     // Ya autenticado, redirigir
-                    window.location.href = redirectUrl || '/admin.html';
+                    const path = window.location.pathname;
+                    const base = path.substring(0, path.lastIndexOf('/') + 1);
+                    window.location.href = redirectUrl || (base + 'admin.html');
                 }
             }
         })();

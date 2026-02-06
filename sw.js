@@ -1,7 +1,7 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v27';
+const CACHE_NAME = 'academia-cohab-v28';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -13,17 +13,16 @@ const urlsToCache = [
   '/contacto.html',
   '/ubicacion.html',
   '/faq.html',
-  // Rutas públicas actuales (Clean URLs en Pages pueden servir sin .html)
+  // Rutas públicas actuales
   '/public/alumno',
   '/public/verificar',
-  // Compatibilidad (si se accede directo con .html)
   '/public/alumno.html',
   '/public/verificar.html',
-  '/app.js',
-  '/verificar.js',
-  '/styles.css',
-  '/logo_cohab.svg',
-  '/logo_cohab.png',
+  '/js/app.js',
+  '/js/verificar.js',
+  '/css/styles.css',
+  '/img/logo_cohab.svg',
+  '/img/logo_cohab.png',
   '/manifest.json',
   'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js',
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'
@@ -193,8 +192,8 @@ self.addEventListener('fetch', function(event) {
 self.addEventListener('push', function(event) {
   const options = {
     body: event.data ? event.data.text() : 'Nueva notificación del sistema COHAB',
-    icon: '/logo_cohab.png',
-    badge: '/logo_cohab.png',
+    icon: '/img/logo_cohab.png',
+    badge: '/img/logo_cohab.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -204,12 +203,12 @@ self.addEventListener('push', function(event) {
       {
         action: 'explore',
         title: 'Ver detalles',
-        icon: '/logo_cohab.png'
+        icon: '/img/logo_cohab.png'
       },
       {
         action: 'close',
         title: 'Cerrar',
-        icon: '/logo_cohab.png'
+        icon: '/img/logo_cohab.png'
       }
     ]
   };

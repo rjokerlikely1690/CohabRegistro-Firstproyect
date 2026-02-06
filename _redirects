@@ -1,20 +1,23 @@
 # CRÍTICO: este archivo NO debe contener conflictos de git.
 # Reglas para Cloudflare Pages / Netlify-style redirects.
 
-# Asegurar que assets bajo /public/ se sirvan como archivos reales (evitar fallback HTML)
-/public/styles.css /styles.css 200
-/public/app.js /app.js 200
-/public/verificar.js /verificar.js 200
-/public/mongodb-client.js /mongodb-client.js 200
-/public/alert-system.js /alert-system.js 200
-/public/manifest.json /manifest.json 200
-/public/logo_cohab.png /logo_cohab.png 200
-/public/logo_cohab.svg /logo_cohab.svg 200
-/public/sw.js /sw.js 200
+# Assets: rutas canónicas (css, js, img en raíz lógica)
+/styles.css /css/styles.css 200
+/app.js /js/app.js 200
+/verificar.js /js/verificar.js 200
+/mongodb-client.js /js/mongodb-client.js 200
+/alert-system.js /js/alert-system.js 200
+/cohab-config.js /js/cohab-config.js 200
+/auth-client.js /js/auth-client.js 200
+/logo_cohab.png /img/logo_cohab.png 200
+/logo_cohab.svg /img/logo_cohab.svg 200
 
-# Rutas QR (canónicas)
-/alumno/:id /public/alumno.html?id=:id 200
-/u/:id /public/alumno.html?id=:id 200
+# Rutas alumno / QR (Cloudflare Pages solo admite 301/302, no 200)
+/alumno /public/alumno.html 302
+/alumno/ /public/alumno.html 302
+/alumno/:id /public/alumno.html?id=:id 302
+/u/:id /public/alumno.html?id=:id 302
+/alumno.html /public/alumno.html 302
 
 # Compatibilidad legacy
 /usuario.html* /public/alumno.html 301

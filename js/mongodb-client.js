@@ -86,7 +86,7 @@
         }
 
         const response = await fetch(url, options);
-        
+
         if (!response.ok) {
             const text = await response.text();
             let errMsg = response.statusText;

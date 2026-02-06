@@ -34,18 +34,33 @@ const AUTH = {
         return headers;
     },
 
-    // Iniciar sesión
+    // Iniciar sesión (credentials: 'include' para cookies cross-origin)
     login: async function(email, password) {
-        const response = await fetch(`${this.getApiUrl()}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
+        let response;
+        try {
+            response = await fetch(`${this.getApiUrl()}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+                credentials: 'include'
+            });
+        } catch (err) {
+            throw new Error('No se pudo conectar con el servidor. Comprueba la URL del API (cohab-config.js) y que el backend esté en ejecución.');
+        }
 
-        const data = await response.json();
+        let data;
+        try {
+            data = await response.json();
+        } catch (_) {
+            throw new Error(response.status === 503 ? 'Base de datos no disponible. Revisa MONGODB_URI en el backend.' : 'Error inesperado del servidor.');
+        }
 
         if (!response.ok) {
-            throw new Error(data.mensaje || data.error || 'Error al iniciar sesión');
+            const msg = data.mensaje || data.error || 'Error al iniciar sesión';
+            if (response.status === 503) {
+                throw new Error('Servidor o base de datos no disponible. Si usas Render, espera ~1 min (cold start) y vuelve a intentar. Revisa MONGODB_URI.');
+            }
+            throw new Error(msg);
         }
 
         // Guardar token y datos del usuario
@@ -67,7 +82,8 @@ const AUTH = {
             if (token) {
                 await fetch(`${this.getApiUrl()}/auth/logout`, {
                     method: 'POST',
-                    headers: this.getAuthHeaders()
+                    headers: this.getAuthHeaders(),
+                    credentials: 'include'
                 });
             }
         } catch (e) {
@@ -92,7 +108,8 @@ const AUTH = {
         try {
             const response = await fetch(`${this.getApiUrl()}/auth/me`, {
                 method: 'GET',
-                headers: this.getAuthHeaders()
+                headers: this.getAuthHeaders(),
+                credentials: 'include'
             });
 
             if (!response.ok) {
@@ -147,18 +164,22 @@ const AUTH = {
         localStorage.removeItem('cohabUserRole');
     },
 
-    // Proteger página
-    requireAuth: async function(requiredRole = null, redirectUrl = '/login.html') {
+    // Proteger página (redirectUrl se construye desde pathname si no se pasa)
+    requireAuth: async function(requiredRole = null, redirectUrl) {
+        const path = window.location.pathname;
+        const base = path.substring(0, path.lastIndexOf('/') + 1);
+        const loginUrl = redirectUrl != null ? redirectUrl : (base + 'login.html');
+
         const user = await this.checkAuth();
 
         if (!user) {
-            window.location.href = redirectUrl + '?redirect=' + encodeURIComponent(window.location.pathname);
+            window.location.href = loginUrl + (loginUrl.indexOf('?') >= 0 ? '&' : '?') + 'redirect=' + encodeURIComponent(path);
             return false;
         }
 
         if (requiredRole && user.role !== requiredRole) {
             alert('No tienes permisos para acceder a esta página');
-            window.location.href = redirectUrl;
+            window.location.href = loginUrl;
             return false;
         }
 
@@ -166,8 +187,11 @@ const AUTH = {
     },
 
     // Proteger página para admin
-    requireAdmin: async function(redirectUrl = '/login.html?role=admin') {
-        return this.requireAuth('admin', redirectUrl);
+    requireAdmin: async function(redirectUrl) {
+        const path = window.location.pathname;
+        const base = path.substring(0, path.lastIndexOf('/') + 1);
+        const defaultLogin = base + 'login.html?role=admin';
+        return this.requireAuth('admin', redirectUrl != null ? redirectUrl : defaultLogin);
     }
 };
 

@@ -18,30 +18,47 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const app = express();
 
-// CORS configurado para cookies cross-origin - Configuración simplificada
+// CORS configurado para cookies cross-origin
+const corsAllowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'https://cohabregistro-firstproyect.pages.dev',
+    'https://cohabregistro-firstproyect.pages.dev/',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080'
+];
+if (process.env.FRONTEND_URL) {
+    const url = process.env.FRONTEND_URL.trim().replace(/\/$/, '');
+    if (url && !corsAllowedOrigins.includes(url)) corsAllowedOrigins.push(url);
+}
 const corsOptions = {
-    origin: [
-        'http://localhost:3000',
-        'http://localhost:5500',
-        'http://127.0.0.1:5500',
-        'https://cohabregistro-firstproyect.pages.dev'
-    ],
+    origin: function (origin, callback) {
+        // Sin origin = misma origen o peticiones tipo Postman
+        if (!origin) return callback(null, true);
+        if (corsAllowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+        // Permitir cualquier subdominio de pages.dev
+        if (origin.endsWith('.pages.dev')) return callback(null, true);
+        callback(new Error('CORS no permitido para: ' + origin));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
     optionsSuccessStatus: 200
 };
 
-// Agregar FRONTEND_URL si existe
-if (process.env.FRONTEND_URL) {
-    corsOptions.origin.push(process.env.FRONTEND_URL);
-}
-
 // Aplicar CORS a todas las rutas
 app.use(cors(corsOptions));
 
 // Preflight OPTIONS explícito
 app.options('*', cors(corsOptions));
+
+// Log de peticiones (diagnóstico: ver en Render/Railway que el backend recibe tráfico)
+app.use((req, res, next) => {
+    const path = req.path || req.url.split('?')[0];
+    if (path === '/' || path === '/health') console.log('[BACKEND]', req.method, path);
+    next();
+});
 
 app.use(express.json());
 app.use(cookieParser());

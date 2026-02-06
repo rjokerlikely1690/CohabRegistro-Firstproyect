@@ -21,10 +21,10 @@
     <link rel="manifest" href="../manifest.json">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="../logo_cohab.png">
-    <link rel="apple-touch-icon" href="../logo_cohab.png">
+    <link rel="icon" type="image/png" href="../img/logo_cohab.png">
+    <link rel="apple-touch-icon" href="../img/logo_cohab.png">
     
-    <link rel="stylesheet" href="../styles.css?v=13">
+    <link rel="stylesheet" href="../css/styles.css?v=13">
     <style>
         .user-header {
             background: linear-gradient(145deg, rgba(26, 26, 26, 0.6) 0%, rgba(13, 13, 13, 0.6) 100%);
@@ -796,7 +796,7 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="container">
-            <img src="../logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
+            <img src="../img/logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
             <ul class="nav-links">
                 <li><a href="../index.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span> Inicio</a></li>
                 <li><a href="alumno.html" class="active"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></span> Estado de Pago</a></li>
@@ -942,9 +942,9 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-    <script src="../cohab-config.js?v=1"></script>
-    <script src="../mongodb-client.js?v=6"></script>
-    <script src="../alert-system.js"></script>
+    <script src="../js/cohab-config.js?v=1"></script>
+    <script src="../js/mongodb-client.js?v=6"></script>
+    <script src="../js/alert-system.js"></script>
     
     <script>
         // ============================================================
@@ -1453,9 +1453,9 @@
                 alertBanner.style.display = 'none';
             }
             
-            // Construir URL completa del alumno
-            const baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
-            const studentUrl = `${baseUrl}/alumno.html?id=${alumno.id}`;
+            // Construir URL completa del alumno (ruta canónica: public/alumno.html)
+            const baseUrl = window.location.origin || 'https://cohabregistro-firstproyect.pages.dev';
+            const studentUrl = `${baseUrl}/public/alumno.html?id=${alumno.id}`;
             
             // Mostrar información completa
             const resultInfo = document.getElementById('resultInfo');
@@ -1556,8 +1556,8 @@
         function volverAInicio() {
             // Detener cámara si está activa
             stopCamera();
-            // Redirigir a la página principal de estado de pago
-            window.location.href = '/public/alumno.html';
+            // Recargar esta misma página (ruta relativa para que funcione en cualquier dominio/subruta)
+            window.location.href = 'alumno.html';
         }
 
         // Mostrar historial
@@ -1735,6 +1735,8 @@
                     searchByUserId(studentId).then(function() {
                         initDone = true;
                         clearTimeout(globalTimeout);
+                        // Restaurar el panel (Escanear QR + Ingreso manual) para que "Nueva Consulta" lo muestre de nuevo
+                        if (searchSection && originalSearchSectionHTML) searchSection.innerHTML = originalSearchSectionHTML;
                         if (searchSection) searchSection.style.display = 'none';
                     }).catch(function(err) {
                         initDone = true;

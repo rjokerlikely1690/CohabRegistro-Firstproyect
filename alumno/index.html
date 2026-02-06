@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirigiendo - COHAB</title>
+    <script>
+        // Redirigir a la página canónica preservando query (?id=...)
+        var target = '/public/alumno.html';
+        if (window.location.search) target += window.location.search;
+        window.location.replace(target);
+    </script>
+    <meta http-equiv="refresh" content="0;url=/public/alumno.html">
+</head>
+<body>
+    <p>Redirigiendo a <a href="/public/alumno.html">Estado de pago</a>...</p>
+</body>
+</html>
