@@ -279,6 +279,62 @@
             line-height: 1.5;
         }
         
+        /* Botón de login más compacto */
+        .login-submit-btn {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 3px solid #ef4444;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.02em;
+        }
+        
+        .login-submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transition: left 0.6s;
+        }
+        
+        .login-submit-btn:hover::before {
+            left: 100%;
+        }
+        
+        .login-submit-btn:hover {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+            border-left-color: #fca5a5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4),
+                        0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .login-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         /* ========================================
            MOBILE RESPONSIVE - LOGIN
            ======================================== */
@@ -640,11 +696,11 @@
                         </div>
                         <div id="loginError" style="color: #f87171; margin-bottom: 1rem; text-align: center; display: none;"></div>
                         <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 1rem; text-align: center;">Si es la primera vez, crea un admin en el backend: <code style="background: rgba(0,0,0,0.3); padding: 0.2rem 0.4rem; border-radius: 4px;">cd mongodb-api && npm run seed-admin</code>. Por defecto: admin@cohab.cl / Admin123!</p>
-                        <button type="button" onclick="handleAdminLogin()" class="role-button role-admin" style="width: 100%; justify-content: center;">
-                            <span class="role-icon">🔐</span>
-                            <div class="role-content" style="text-align: center;">
-                                <div class="role-title">INICIAR SESIÓN</div>
-                            </div>
+                        <button type="button" onclick="handleAdminLogin()" class="login-submit-btn">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="margin-right: 0.5rem;">
+                                <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/>
+                            </svg>
+                            <span>INICIAR SESIÓN</span>
                         </button>
                         <button type="button" onclick="showRoleSelector()" 
                             style="width: 100%; margin-top: 1rem; padding: 0.75rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: rgba(255,255,255,0.7); cursor: pointer;">
@@ -731,10 +787,9 @@
             }
             
             // Desactivar botón mientras procesa
-            const loginBtn = document.querySelector('#adminLoginForm .role-button');
+            const loginBtn = document.querySelector('#adminLoginForm .login-submit-btn');
             if (loginBtn) {
                 loginBtn.disabled = true;
-                loginBtn.style.opacity = '0.7';
             }
             
             try {
@@ -760,7 +815,6 @@
             } finally {
                 if (loginBtn) {
                     loginBtn.disabled = false;
-                    loginBtn.style.opacity = '1';
                 }
             }
         }
