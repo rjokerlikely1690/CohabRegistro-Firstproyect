@@ -180,34 +180,7 @@ self.addEventListener('fetch', function(event) {
           })
       );
     } else {
-      // Para otros HTML (incluyendo login.html): network-first con cache, pero NUNCA cachear/servir 404
-      const isLoginHtml = url.pathname === '/login.html' || url.pathname === '/login';
-      
-      if (isLoginHtml) {
-        // Para login.html: SIEMPRE network-first, nunca cache (igual que index.html)
-        // También eliminar cualquier versión cacheada anterior
-        event.respondWith(
-          caches.open(CACHE_NAME).then(cache => {
-            return cache.delete(req).then(() => {
-              return fetch(req, { cache: 'no-store' })
-                .then(res => {
-                  if (res.status === 404) {
-                    return caches.delete(CACHE_NAME).then(() => res);
-                  }
-                  // No cachear login.html nunca
-                  return res;
-                })
-                .catch(() => {
-                  // Si falla la red, intentar fetch de nuevo sin cache
-                  return fetch(req, { cache: 'no-store' }).catch(() => {
-                    return new Response('Error de conexión', { status: 503 });
-                  });
-                });
-            });
-          })
-        );
-        return;
-      }
+      // Para otros HTML: network-first con cache, pero NUNCA cachear/servir 404
       
       event.respondWith(
         fetch(req, { cache: 'no-store' })
