@@ -1,7 +1,7 @@
 // Service Worker para Sistema Academia COHAB
 // Permite funcionar offline después de la primera carga
 
-const CACHE_NAME = 'academia-cohab-v28';
+const CACHE_NAME = 'academia-cohab-v29';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -13,9 +13,7 @@ const urlsToCache = [
   '/contacto.html',
   '/ubicacion.html',
   '/faq.html',
-  // Rutas públicas actuales
-  '/public/alumno',
-  '/public/verificar',
+  // Rutas públicas actuales (solo con .html para evitar 404)
   '/public/alumno.html',
   '/public/verificar.html',
   '/js/app.js',
@@ -33,25 +31,51 @@ self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
-        return cache.addAll(urlsToCache);
+        // Cachear solo recursos que existan (no 404)
+        return Promise.allSettled(
+          urlsToCache.map(url => {
+            return fetch(url).then(res => {
+              if (res.ok && res.status !== 404) {
+                return cache.put(url, res);
+              }
+            }).catch(() => {
+              // Si falla, no cachear
+            });
+          })
+        );
       })
   );
+  // Forzar activación inmediata para evitar cache viejo
   self.skipWaiting();
 });
 
-// Activar Service Worker
+// Activar Service Worker - limpiar caches viejos y forzar actualización
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
       return Promise.all(
         cacheNames.map(function(cacheName) {
           if (cacheName !== CACHE_NAME) {
+            console.log('[SW] Eliminando cache viejo:', cacheName);
             return caches.delete(cacheName);
           }
         })
-      );
+      ).then(() => {
+        // Limpiar cualquier entrada 404 que pueda estar cacheada
+        return caches.open(CACHE_NAME).then(cache => {
+          return cache.keys().then(keys => {
+            return Promise.all(keys.map(request => {
+              if (request.url.includes('404') || request.url.endsWith('/404')) {
+                console.log('[SW] Eliminando entrada 404 del cache:', request.url);
+                return cache.delete(request);
+              }
+            }));
+          });
+        });
+      });
     })
   );
+  // Forzar que el SW tome control inmediatamente (evita cache viejo)
   self.clients.claim();
 });
 
@@ -131,26 +155,58 @@ self.addEventListener('fetch', function(event) {
     if (isIndexHtml) {
       // Para index.html: SIEMPRE network-first, nunca cache
       event.respondWith(
-        fetch(req)
+        fetch(req, { cache: 'no-store' })
           .then(res => {
             // No cachear index.html para asegurar que siempre sea la versión más reciente
+            // Y NUNCA servir 404 desde cache
+            if (res.status === 404) {
+              // Si la red devuelve 404, intentar limpiar cache y recargar
+              return caches.delete(CACHE_NAME).then(() => res);
+            }
             return res;
           })
           .catch(() => {
             // Solo usar cache como último recurso si no hay red
-            return caches.match(req);
+            return caches.match(req).then(cached => {
+              // Si el cache es 404.html o tiene status 404, NO servirlo
+              if (!cached) return new Response('Sin conexión', { status: 503 });
+              // Verificar si la respuesta cacheada es 404
+              if (cached.status === 404 || cached.url.includes('404')) {
+                // No servir 404 desde cache - intentar red de nuevo o mostrar error de conexión
+                return fetch(req).catch(() => new Response('Error de conexión', { status: 503 }));
+              }
+              return cached;
+            });
           })
       );
     } else {
-      // Para otros HTML: network-first con cache
+      // Para otros HTML: network-first con cache, pero NUNCA cachear/servir 404
       event.respondWith(
-        fetch(req)
+        fetch(req, { cache: 'no-store' })
           .then(res => {
-            const resClone = res.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(req, resClone));
+            // No cachear respuestas 404 y eliminar del cache si existía
+            if (res.status === 404) {
+              caches.open(CACHE_NAME).then(cache => cache.delete(req));
+              return res;
+            }
+            // Solo cachear respuestas exitosas
+            if (res.ok) {
+              const resClone = res.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(req, resClone));
+            }
             return res;
           })
-          .catch(() => caches.match(req))
+          .catch(() => {
+            return caches.match(req).then(cached => {
+              // Si el cache es 404.html o tiene status 404, NO servirlo
+              if (!cached) return new Response('Sin conexión', { status: 503 });
+              if (cached.status === 404 || cached.url.includes('404')) {
+                // No servir 404 desde cache
+                return fetch(req).catch(() => new Response('Error de conexión', { status: 503 }));
+              }
+              return cached;
+            });
+          })
       );
     }
     return;

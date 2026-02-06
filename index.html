@@ -427,6 +427,40 @@
       });
     })();
   </script>
+  
+  <!-- Service Worker Registration con actualización forzada -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+          .then(function(registration) {
+            console.log('[SW] Registrado:', registration.scope);
+            
+            // Si hay una nueva versión del SW, forzar actualización inmediata
+            registration.addEventListener('updatefound', function() {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // Nueva versión instalada - recargar para usar la nueva
+                    console.log('[SW] Nueva versión disponible, recargando...');
+                    window.location.reload();
+                  }
+                });
+              }
+            });
+            
+            // Verificar actualizaciones periódicamente
+            setInterval(function() {
+              registration.update();
+            }, 60000); // Cada minuto
+          })
+          .catch(function(error) {
+            console.warn('[SW] Error al registrar:', error);
+          });
+      });
+    }
+  </script>
 </body>
 </html>
 
