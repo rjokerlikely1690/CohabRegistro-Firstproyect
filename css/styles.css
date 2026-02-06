@@ -980,9 +980,56 @@ body.marketing .navbar .container {
         font-size: 0.8rem;
     }
     
-    /* HERO ASIDE MÓVIL - Ocultar para dar más espacio al contenido principal */
+    /* HERO ASIDE MÓVIL - Mostrar solo la sección de consulta de estado */
     .hero-aside {
-        display: none; /* Ocultar aside en móvil para que el contenido principal quepa completo */
+        display: block !important;
+        margin-top: 1.5rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 12px;
+    }
+    
+    /* Ocultar stats y info de contacto en móvil, solo mostrar consulta QR */
+    .hero-aside > div:first-child {
+        display: none !important;
+    }
+    
+    /* Mostrar y optimizar la sección de consulta de estado */
+    .hero-aside .alumno-consulta-card {
+        margin-top: 0 !important;
+        padding: 1rem !important;
+        background: rgba(26, 26, 26, 0.8) !important;
+    }
+    
+    /* Optimizar imagen del monito en móvil */
+    .hero-aside .alumno-consulta-card img {
+        width: 60px !important;
+        height: auto !important;
+    }
+    
+    /* Optimizar texto en móvil */
+    .hero-aside .alumno-consulta-card .aside-title {
+        font-size: 0.95rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .hero-aside .alumno-consulta-card p {
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Botones más compactos en móvil */
+    .hero-aside .alumno-consulta-card .btn {
+        padding: 0.65rem 1rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Input más compacto */
+    .hero-aside .alumno-consulta-card input {
+        padding: 0.65rem !important;
+        font-size: 0.9rem !important;
     }
     
     .stat-label {
