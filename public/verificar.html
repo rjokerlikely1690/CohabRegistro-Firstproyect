@@ -58,9 +58,16 @@
                 Verificar Acceso (Admin)
             </h2>
             <p class="subtitle">Escanea el código QR del alumno o ingresa el ID manualmente para verificar su estado de pago</p>
-            
+            <!-- Foto 1: encabezado verificación -->
+            <div style="text-align: center; margin: 1rem 0;">
+                <img src="../img/verificar/verificar-1.jpg" alt="Verificación de acceso" style="max-width: 200px; height: auto; display: inline-block; border-radius: 0.75rem;">
+            </div>
             <div class="verificar-options">
                 <div class="option-card">
+                    <!-- Foto 2: tarjeta Escanear QR -->
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <img src="../img/verificar/verificar-2.jpg" alt="" style="max-width: 120px; height: auto; display: inline-block; border-radius: 0.5rem;">
+                    </div>
                     <h3 style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
@@ -125,6 +132,10 @@
                 <div class="option-divider">O</div>
                 
                 <div class="option-card">
+                    <!-- Foto 3: tarjeta Ingreso Manual -->
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <img src="../img/verificar/verificar-3.jpg" alt="" style="max-width: 120px; height: auto; display: inline-block; border-radius: 0.5rem;">
+                    </div>
                     <h3 style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -170,6 +181,10 @@
                         <div class="info-row">
                             <span class="label">ID del Alumno:</span>
                             <span class="value" id="alumnoId">ID123456</span>
+                        </div>
+                        <div class="info-row" id="alumnoRutRow" style="display: none;">
+                            <span class="label">RUT:</span>
+                            <span class="value" id="alumnoRut"></span>
                         </div>
                         <div class="info-row">
                             <span class="label">Email:</span>
@@ -264,6 +279,10 @@
 
         <!-- Vista Rápida de Todos los Alumnos -->
         <section class="todos-alumnos-section">
+            <!-- Foto 4: Vista Rápida - Todos los Alumnos -->
+            <div style="text-align: center; margin-bottom: 0.75rem;">
+                <img src="../img/verificar/verificar-4.jpg" alt="Alumnos COHAB" style="max-width: 280px; height: auto; display: inline-block; border-radius: 0.75rem;">
+            </div>
             <h3 style="display: flex; align-items: center; gap: 0.5rem;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>

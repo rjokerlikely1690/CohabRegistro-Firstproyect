@@ -1008,6 +1008,7 @@ function showQR(id) {
     else if (estado?.clase === 'proximo') statusClass = 'status-warning';
     
     // Crear tarjeta de información con diseño moderno
+    const rutTexto = (alumno.rut != null && String(alumno.rut).trim() !== '') ? String(alumno.rut).trim() : '';
     const infoDiv = document.createElement('div');
     infoDiv.className = 'qr-info-card';
     infoDiv.innerHTML = `
@@ -1015,6 +1016,10 @@ function showQR(id) {
             <span class="qr-info-label">Nombre</span>
             <span class="qr-info-value">${alumno.nombre}</span>
         </div>
+        ${rutTexto ? `<div class="qr-info-row">
+            <span class="qr-info-label">RUT</span>
+            <span class="qr-info-value">${rutTexto}</span>
+        </div>` : ''}
         <div class="qr-info-row">
             <span class="qr-info-label">Último pago</span>
             <span class="qr-info-value">${ultimoPagoTexto}</span>

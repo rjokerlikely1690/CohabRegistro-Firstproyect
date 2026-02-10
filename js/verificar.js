@@ -699,6 +699,17 @@ function mostrarResultado(alumno, estado) {
     
     // Información personal
     document.getElementById('alumnoId').textContent = alumno.id;
+    const rutVal = (alumno.rut != null && String(alumno.rut).trim() !== '') ? String(alumno.rut).trim() : '';
+    const rutRow = document.getElementById('alumnoRutRow');
+    const rutEl = document.getElementById('alumnoRut');
+    if (rutRow && rutEl) {
+        if (rutVal) {
+            rutEl.textContent = rutVal;
+            rutRow.style.display = '';
+        } else {
+            rutRow.style.display = 'none';
+        }
+    }
     document.getElementById('alumnoEmail').textContent = alumno.email || 'No especificado';
     document.getElementById('alumnoTelefono').textContent = alumno.telefono || 'No especificado';
     
@@ -940,6 +951,18 @@ function mostrarQRCompleto() {
                 <p style="margin: 0; color: #a1a1aa; font-size: 0.85rem;">ID del alumno</p>
                 <p style="margin: 0.25rem 0 0 0; color: #fff; font-size: 0.8rem; font-family: monospace; word-break: break-all;">${alumno.id}</p>
             </div>
+            ${(alumno.rut != null && String(alumno.rut).trim() !== '') ? `
+            <div style="
+                margin-top: 1rem;
+                padding: 1rem;
+                background: rgba(255,255,255,0.05);
+                border-radius: 0.75rem;
+                border: 1px solid rgba(255,255,255,0.1);
+            ">
+                <p style="margin: 0; color: #a1a1aa; font-size: 0.85rem;">RUT</p>
+                <p style="margin: 0.25rem 0 0 0; color: #fff; font-size: 0.8rem; font-family: monospace;">${String(alumno.rut).trim()}</p>
+            </div>
+            ` : ''}
             <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: center;">
                 <button onclick="downloadQRCompleto()" style="
                     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
