@@ -1394,6 +1394,82 @@ function extractAlumnoUrl(raw) {
     return null;
 }
 
+// --- Modal Agregar alumno (Verificar) ---
+function openModalVerificar() {
+    const modal = document.getElementById('verificarAlumnoModal');
+    if (!modal) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const fechaInput = document.getElementById('verificarFechaPago');
+    if (fechaInput) fechaInput.value = today;
+    const diaInput = document.getElementById('verificarDiaPago');
+    if (diaInput) diaInput.value = '';
+    document.getElementById('verificarBtnDia30')?.classList.remove('active');
+    document.getElementById('verificarBtnDia31')?.classList.remove('active');
+    document.getElementById('verificarAlumnoForm')?.reset();
+    if (fechaInput) fechaInput.value = today;
+    modal.style.display = 'flex';
+}
 
+function closeModalVerificar() {
+    const modal = document.getElementById('verificarAlumnoModal');
+    if (modal) modal.style.display = 'none';
+}
 
+function setDiaPagoVerificar(dia) {
+    const input = document.getElementById('verificarDiaPago');
+    if (input) input.value = String(dia);
+    document.getElementById('verificarBtnDia30')?.classList.toggle('active', dia === 30);
+    document.getElementById('verificarBtnDia31')?.classList.toggle('active', dia === 31);
+}
 
+async function saveAlumnoVerificar(event) {
+    if (event) event.preventDefault();
+    const nombre = (document.getElementById('verificarNombre')?.value || '').trim();
+    const diaPagoEl = document.getElementById('verificarDiaPago');
+    const diaPago = diaPagoEl && diaPagoEl.value ? parseInt(diaPagoEl.value, 10) : null;
+    if (!nombre) {
+        alert('El nombre es obligatorio.');
+        return;
+    }
+    if (diaPago !== 30 && diaPago !== 31) {
+        alert('Selecciona el día de pago (30 o 31).');
+        return;
+    }
+    const fechaPago = (document.getElementById('verificarFechaPago')?.value || '').trim();
+    const montoVal = document.getElementById('verificarMonto')?.value;
+    const monto = montoVal != null && montoVal !== '' ? parseFloat(montoVal) : NaN;
+    if (!fechaPago || isNaN(monto) || monto < 0) {
+        alert('Completa fecha de último pago y monto mensual.');
+        return;
+    }
+    if (!window.MONGO || !MONGO.isConfigured()) {
+        alert('MongoDB no está configurado.');
+        return;
+    }
+    const alumnoNoId = {
+        nombre,
+        email: (document.getElementById('verificarEmail')?.value || '').trim() || undefined,
+        telefono: (document.getElementById('verificarTelefono')?.value || '').trim() || undefined,
+        fechaPago,
+        diaPago,
+        monto
+    };
+    try {
+        await MONGO.insertAlumnoReturningId(alumnoNoId);
+        closeModalVerificar();
+        if (typeof loadTodosAlumnos === 'function') loadTodosAlumnos();
+        if (window.showAlert) showAlert('Alumno agregado correctamente.', 'success');
+        else alert('Alumno agregado correctamente.');
+    } catch (err) {
+        console.error(err);
+        alert('Error al guardar: ' + (err.message || 'Revisa la consola'));
+    }
+}
+
+// Exponer en window para onclick desde verificar.html (evitar cache/scope)
+if (typeof window !== 'undefined') {
+    window.openModalVerificar = openModalVerificar;
+    window.closeModalVerificar = closeModalVerificar;
+    window.setDiaPagoVerificar = setDiaPagoVerificar;
+    window.saveAlumnoVerificar = saveAlumnoVerificar;
+}
