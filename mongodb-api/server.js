@@ -2,8 +2,15 @@
 // Este servidor expone una API REST segura para MongoDB
 // Desplegar en Railway, Render, Vercel, o similar
 
-
-
+const dns = require('dns');
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const nodemailer = require('nodemailer');
+const { MongoClient, ObjectId } = require('mongodb');
+const QRCode = require('qrcode');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // En algunos entornos, la resolución DNS de registros SRV puede fallar.
 // Forzamos resolvers públicos para estabilizar la conexión a MongoDB Atlas.
