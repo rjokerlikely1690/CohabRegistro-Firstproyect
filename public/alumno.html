@@ -970,6 +970,14 @@
         let video, canvas, context, scanning = false;
         let currentStudent = null;
 
+        // Normalizar RUT chileno para URL (formato xxxxxxxx-x). Usado al mostrar/compartir URL con RUT.
+        function normalizeRut(str) {
+            if (!str || typeof str !== 'string') return '';
+            var cleaned = str.replace(/\./g, '').replace(/\s/g, '').toUpperCase().trim();
+            var match = cleaned.match(/^(\d{1,8})-?([0-9K])$/);
+            return match ? match[1] + '-' + match[2] : str.trim();
+        }
+
         // Limpiar y extraer ID de una URL o string
         function extractStudentId(input) {
             if (!input) return null;
