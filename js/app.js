@@ -579,7 +579,7 @@ async function saveAlumno(event) {
             nombre: document.getElementById('nombre').value.trim(),
             email: document.getElementById('email').value.trim(),
             telefono: document.getElementById('telefono').value.trim(),
-            rut: rutValue || undefined,
+            rut: rutValue,
             fechaPago: fechaPagoValue, // Guardar exactamente la fecha que el usuario ingresó (YYYY-MM-DD)
             diaPago: diaPagoGlobal, // Usar el día de pago actual (puede ser del alumno si está editando)
             monto: parseFloat(document.getElementById('monto').value)
@@ -591,6 +591,14 @@ async function saveAlumno(event) {
         // Validaciones
         if (!formData.nombre) {
             alert('El nombre es obligatorio');
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Guardar';
+            }
+            return;
+        }
+        if (!formData.rut) {
+            alert('El RUT es obligatorio. Se usa en el link del alumno y en el QR para validar identidad.');
             if (submitButton) {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Guardar';

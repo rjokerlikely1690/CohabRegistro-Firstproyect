@@ -229,12 +229,22 @@ function authMiddleware(req, res, next) {
     next();
 }
 
-// QR debe llevar siempre URL directa con ?id= (iPhone/Safari: sin estado previo)
+// Normalizar RUT chileno para URL (formato xxxxxxxx-x). Solo para incluir en QR; no reemplaza al ID.
+function normalizeRutServer(str) {
+    if (!str || typeof str !== 'string') return '';
+    const cleaned = str.replace(/\./g, '').replace(/\s/g, '').toUpperCase().trim();
+    const match = cleaned.match(/^(\d{1,8})-?([0-9K])$/);
+    return match ? match[1] + '-' + match[2] : '';
+}
+// QR: id obligatorio; RUT obligatorio en QRs nuevos (link = ?id=ID&rut=XXXXXXXX-X). Compatible con links antiguos sin rut.
 function buildStudentUrl(alumno) {
     const id = (alumno && (alumno.id != null && alumno.id !== '' ? String(alumno.id) : (alumno._id ? String(alumno._id) : ''))) || '';
     if (!id) return null;
     const base = (PUBLIC_BASE_URL || 'https://cohabregistro-firstproyect.pages.dev/').trim().replace(/\/$/, '') + '/';
-    return `${base}alumno.html?id=${encodeURIComponent(id)}`;
+    let url = `${base}alumno.html?id=${encodeURIComponent(id)}`;
+    const rut = alumno.rut ? normalizeRutServer(String(alumno.rut)) : '';
+    if (rut) url += '&rut=' + encodeURIComponent(rut);
+    return url;
 }
 
 async function generateQrBuffer(alumno) {
@@ -826,14 +836,32 @@ app.get('/alumnos', verifyToken, requireRole(['admin']), async (req, res) => {
     }
 });
 
+// Generar ID corto para nuevos alumnos (8–10 caracteres, legible). No se usa para alumnos existentes.
+function generarIdCorto() {
+    const prefijo = 'ALU-';
+    const digitos = String(Math.floor(1000 + Math.random() * 9000)); // 4 dígitos: 1000–9999
+    return prefijo + digitos; // ej: ALU-4821 (8 caracteres)
+}
+async function generarIdCortoUnico(collection) {
+    const maxIntentos = 20;
+    for (let i = 0; i < maxIntentos; i++) {
+        const id = generarIdCorto();
+        const existente = await collection.findOne({ id });
+        if (!existente) return id;
+    }
+    // Fallback muy improbable: añadir sufijo
+    return generarIdCorto() + '-' + Date.now().toString(36).slice(-4);
+}
+
 // POST /alumnos - Crear nuevo alumno (PROTEGIDO: Solo admin)
 app.post('/alumnos', verifyToken, requireRole(['admin']), async (req, res) => {
     try {
         const alumno = req.body;
-        
-        // Generar ID si no existe
-        if (!alumno.id) {
-            alumno.id = require('crypto').randomUUID();
+        const collection = db.collection(COLLECTION_NAME);
+
+        // ID: si viene, respetarlo; si no, generar ID corto (solo nuevos alumnos). No tocar existentes.
+        if (!alumno.id || String(alumno.id).trim() === '') {
+            alumno.id = await generarIdCortoUnico(collection);
         }
         
         // Convertir fecha si es necesario
@@ -841,7 +869,6 @@ app.post('/alumnos', verifyToken, requireRole(['admin']), async (req, res) => {
             alumno.fechaPago = new Date(alumno.fechaPago);
         }
         
-        const collection = db.collection(COLLECTION_NAME);
         const result = await collection.insertOne(alumno);
         
         if (SEND_EMAILS && alumno.email) {
@@ -1076,7 +1103,8 @@ app.get('/alumnos/:id/validar', async (req, res) => {
                 email: alumno.email || null,
                 telefono: alumno.telefono || null,
                 monto: alumno.monto || null,
-                fechaPago: alumno.fechaPago || null
+                fechaPago: alumno.fechaPago || null,
+                rut: alumno.rut || null
             }
         });
     } catch (error) {
