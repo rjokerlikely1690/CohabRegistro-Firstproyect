@@ -9,6 +9,10 @@ let currentFilter = 'all';
 let currentTrack = null;
 let currentDeviceId = null;
 
+// Reinicio automático tras verificación exitosa (deja listo para el siguiente alumno)
+const RESET_TIME = 15000; // ms
+let resetTimeoutId = null;
+
 // URL base del servidor para construir enlaces válidos en móviles
 function getServerBaseUrl() {
     // Prioridad 1: URL configurada manualmente
@@ -60,6 +64,10 @@ function getServerBaseUrl() {
 // Cargar al iniciar
 document.addEventListener('DOMContentLoaded', function() {
     loadTodosAlumnos();
+    var manualInput = document.getElementById('manualId');
+    if (manualInput) {
+        manualInput.focus();
+    }
 });
 
 // NOTA: La función calcularEstado() fue eliminada.
@@ -174,7 +182,7 @@ async function startScanner() {
     }
 }
 
-// Detener escáner
+// Detener escáner y devolver foco al input manual (para no bloquear lector externo)
 function stopScanner() {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -182,7 +190,16 @@ function stopScanner() {
         currentTrack = null;
     }
     scanning = false;
-    document.getElementById('scanner-container').style.display = 'none';
+    const scannerEl = document.getElementById('scanner-container');
+    if (scannerEl) scannerEl.style.display = 'none';
+    // Foco al input manual para que el lector externo (teclado) pueda enviar la URL sin bloquear
+    setTimeout(() => {
+        const manualInput = document.getElementById('manualId');
+        if (manualInput) {
+            manualInput.focus();
+            manualInput.select?.();
+        }
+    }, 50);
 }
 
 // Escanear código QR
@@ -237,23 +254,20 @@ function scanQRCode(video, canvas) {
     requestAnimationFrame(() => scanQRCode(video, canvas));
 }
 
-// Construir URL de alumno estable en el mismo host
-function buildStudentUrl(alumnoId) {
-    // Prioridad: URL configurada > Cloudflare Pages por defecto
+// Construir URL de alumno. ID = corto y estable (obligatorio). RUT = opcional (solo para QRs nuevos).
+function buildStudentUrl(alumnoId, rutOptional) {
     let baseUrl = localStorage.getItem('serverBaseUrl');
-    
-    // Si no hay URL configurada o no es Cloudflare Pages, usar la por defecto
     if (!baseUrl || !baseUrl.includes('pages.dev')) {
         baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
     }
-    
-    // Limpiar la URL: remover cualquier ruta adicional y trailing slash
-    baseUrl = baseUrl.replace(/\/verificar\/.*$/, ''); // Remover /verificar/ si existe
-    baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, ''); // Remover cualquier .html
-    baseUrl = baseUrl.replace(/\/$/, ''); // Remover trailing slash
-    
-    // URL canónica de alumno (sin login): /alumno/:id
-    return `${baseUrl}/alumno/${encodeURIComponent(alumnoId)}`;
+    baseUrl = baseUrl.replace(/\/verificar\/.*$/, '');
+    baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, '');
+    baseUrl = baseUrl.replace(/\/$/, '');
+    var url = baseUrl + '/public/alumno.html?id=' + encodeURIComponent(alumnoId);
+    if (rutOptional && String(rutOptional).trim()) {
+        url += '&rut=' + encodeURIComponent(String(rutOptional).trim());
+    }
+    return url;
 }
 
 // Alternar linterna si está disponible
@@ -340,27 +354,26 @@ function decodeFromImage(event) {
     reader.readAsDataURL(file);
 }
 
-// Verificar manual
+// Verificar manual: acepta URL completa o ID. Enter procesa de inmediato.
 function verificarManual() {
-    const id = document.getElementById('manualId').value.trim();
+    var inputEl = document.getElementById('manualId');
+    var id = (inputEl && inputEl.value) ? inputEl.value.trim() : '';
     if (!id) {
-        showCustomAlert('ID requerido', 'Por favor ingresa un ID de alumno o escanea un código QR', 'warning');
+        showCustomAlert('URL o ID requerido', 'Pega aquí la URL del QR o ingresa el ID del alumno.', 'warning');
         return;
     }
-    
-    // Extraer el ID limpio antes de verificar
-    const cleanId = extractStudentId(id);
+
+    var cleanId = extractStudentId(id);
     if (!cleanId) {
-        showCustomAlert('ID inválido', 'El ID proporcionado no es válido. Asegúrate de ingresar un ID correcto o escanear un código QR válido.', 'error');
+        showCustomAlert('URL o ID inválido', 'El texto no es una URL válida del sistema ni un ID de alumno. Pega la URL del QR o un ID correcto.', 'error');
         return;
     }
-    
-    // Si el ID extraído es diferente al ingresado, actualizar el campo
-    if (cleanId !== id) {
-        document.getElementById('manualId').value = cleanId;
+
+    if (cleanId !== id && inputEl) {
+        inputEl.value = cleanId;
     }
-    
-    verificarAlumno(cleanId);
+
+    verificarAlumno(id);
 }
 
 // Limpiar y extraer ID de una URL o string (mejorada para manejar todos los casos)
@@ -547,7 +560,13 @@ async function verificarAlumno(id) {
         console.log('═══════════════════════════════════════════════════');
         console.log('✅ VERIFICACIÓN COMPLETADA EXITOSAMENTE');
         console.log('═══════════════════════════════════════════════════');
-        
+
+        // Reinicio automático para dejar listo el siguiente alumno
+        if (resetTimeoutId) clearTimeout(resetTimeoutId);
+        resetTimeoutId = setTimeout(function() {
+            location.reload();
+        }, RESET_TIME);
+
     } catch (error) {
         console.error('═══════════════════════════════════════════════════');
         console.error('❌ ERROR EN VERIFICACIÓN');
@@ -768,6 +787,15 @@ function mostrarResultado(alumno, estado) {
         }
     }, 200);
     
+    // Devolver foco al input manual para poder usar lector externo o pegar otro QR sin bloquear
+    setTimeout(() => {
+        const manualInput = document.getElementById('manualId');
+        if (manualInput) {
+            manualInput.focus();
+            manualInput.value = '';
+        }
+    }, 400);
+
     // Mostrar toast de confirmación
     setTimeout(() => {
         if (typeof showToast === 'function') {
@@ -800,7 +828,7 @@ function generarQRResultado(alumno) {
     }
     
     // Crear URL directa para el alumno usando base configurada
-    const studentUrl = buildStudentUrl(alumno.id);
+    const studentUrl = buildStudentUrl(alumno.id, alumno.rut);
     
     try {
     // Generar QR con URL directa
@@ -933,7 +961,7 @@ function mostrarQRCompleto() {
     const qrCompleto = document.getElementById('qrCompleto');
     
     // Crear URL directa para el alumno usando base configurada
-    const studentUrl = buildStudentUrl(alumno.id);
+    const studentUrl = buildStudentUrl(alumno.id, alumno.rut);
     
     const qrData = {
         id: alumno.id,

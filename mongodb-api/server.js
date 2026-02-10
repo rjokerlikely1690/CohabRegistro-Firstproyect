@@ -229,12 +229,22 @@ function authMiddleware(req, res, next) {
     next();
 }
 
-// QR debe llevar siempre URL directa con ?id= (iPhone/Safari: sin estado previo)
+// Normalizar RUT chileno (formato xxxxxxxx-x). Solo para URLs; no es identificador principal.
+function normalizeRutServer(str) {
+    if (!str || typeof str !== 'string') return '';
+    const cleaned = str.replace(/\./g, '').replace(/\s/g, '').toUpperCase().trim();
+    const match = cleaned.match(/^(\d{1,8})-?([0-9K])$/);
+    return match ? match[1] + '-' + match[2] : '';
+}
+// QR: URL con ID corto (obligatorio). RUT opcional como parámetro adicional; legacy sin RUT no se toca.
 function buildStudentUrl(alumno) {
     const id = (alumno && (alumno.id != null && alumno.id !== '' ? String(alumno.id) : (alumno._id ? String(alumno._id) : ''))) || '';
     if (!id) return null;
     const base = (PUBLIC_BASE_URL || 'https://cohabregistro-firstproyect.pages.dev/').trim().replace(/\/$/, '') + '/';
-    return `${base}alumno.html?id=${encodeURIComponent(id)}`;
+    let url = `${base}alumno.html?id=${encodeURIComponent(id)}`;
+    const rut = alumno.rut ? normalizeRutServer(String(alumno.rut)) : '';
+    if (rut) url += '&rut=' + encodeURIComponent(rut);
+    return url;
 }
 
 async function generateQrBuffer(alumno) {
@@ -1076,7 +1086,8 @@ app.get('/alumnos/:id/validar', async (req, res) => {
                 email: alumno.email || null,
                 telefono: alumno.telefono || null,
                 monto: alumno.monto || null,
-                fechaPago: alumno.fechaPago || null
+                fechaPago: alumno.fechaPago || null,
+                rut: alumno.rut || null
             }
         });
     } catch (error) {

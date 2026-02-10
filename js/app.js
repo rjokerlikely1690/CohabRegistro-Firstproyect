@@ -572,11 +572,14 @@ async function saveAlumno(event) {
             return;
         }
         
+        const rutInput = document.getElementById('rut');
+        const rutValue = rutInput ? rutInput.value.trim() : '';
         const formData = {
             id: editingAlumno || null,
             nombre: document.getElementById('nombre').value.trim(),
             email: document.getElementById('email').value.trim(),
             telefono: document.getElementById('telefono').value.trim(),
+            rut: rutValue || undefined,
             fechaPago: fechaPagoValue, // Guardar exactamente la fecha que el usuario ingresó (YYYY-MM-DD)
             diaPago: diaPagoGlobal, // Usar el día de pago actual (puede ser del alumno si está editando)
             monto: parseFloat(document.getElementById('monto').value)
@@ -760,6 +763,7 @@ function editAlumno(id) {
     document.getElementById('nombre').value = alumno.nombre;
     document.getElementById('email').value = alumno.email || '';
     document.getElementById('telefono').value = alumno.telefono || '';
+    document.getElementById('rut').value = alumno.rut || '';
     
     // Asegurar que la fecha esté en formato YYYY-MM-DD para el input type="date"
     let fechaParaInput = alumno.fechaPago;
@@ -865,8 +869,8 @@ function showQR(id) {
     // URL fija de Cloudflare Pages
     const baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
     
-    // URL con parámetro ?id= para máxima compatibilidad
-    const studentUrl = `${baseUrl}/public/alumno.html?id=${encodeURIComponent(alumno.id)}`;
+    // URL: ID obligatorio; RUT opcional (QRs nuevos incluyen RUT si está registrado)
+    const studentUrl = buildStudentUrl(alumno.id, alumno.rut);
     
     console.log('🔲 [QR] ============ GENERANDO QR ============');
     console.log('🔲 [QR] Alumno ID:', alumno.id);
@@ -1069,21 +1073,20 @@ function imprimirQR(id) {
     ventanaImpresion.document.close();
 }
 
-// Helper para construir URL del estudiante
-function buildStudentUrl(alumnoId) {
+// Helper para construir URL del estudiante. ID = identificador corto (obligatorio). RUT = opcional (solo para QRs nuevos).
+function buildStudentUrl(alumnoId, rutOptional) {
     let baseUrl = localStorage.getItem('serverBaseUrl');
-    
-    // Si no hay URL configurada o no es Cloudflare Pages, usar la por defecto
     if (!baseUrl || !baseUrl.includes('pages.dev')) {
         baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
     }
-    
-    // Limpiar la URL: remover cualquier ruta adicional y trailing slash
     baseUrl = baseUrl.replace(/\/verificar\/.*$/, '');
     baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, '');
     baseUrl = baseUrl.replace(/\/$/, '');
-    
-    return `${baseUrl}/alumno/${encodeURIComponent(alumnoId)}`;
+    let url = baseUrl + '/public/alumno.html?id=' + encodeURIComponent(alumnoId);
+    if (rutOptional && String(rutOptional).trim()) {
+        url += '&rut=' + encodeURIComponent(String(rutOptional).trim());
+    }
+    return url;
 }
 
 // Compartir QR por WhatsApp con imagen

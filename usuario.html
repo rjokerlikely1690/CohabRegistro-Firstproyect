@@ -326,6 +326,44 @@
         let video, canvas, context, scanning = false;
         let currentStudent = null;
 
+        // RUT (Chile): atributo secundario; solo se valida si viene en la URL. ID = identificador corto.
+        function normalizeRut(str) {
+            if (!str || typeof str !== 'string') return '';
+            var cleaned = str.replace(/\./g, '').replace(/\s/g, '').toUpperCase().trim();
+            var match = cleaned.match(/^(\d{1,8})-?([0-9K])$/);
+            return match ? match[1] + '-' + match[2] : '';
+        }
+        function validateChileanRut(rut) {
+            var n = normalizeRut(rut);
+            if (!n) return { valid: false };
+            var parts = n.split('-');
+            var body = parts[0], dv = parts[1];
+            var digits = body.split('').map(Number).reverse();
+            var series = [2,3,4,5,6,7,2,3,4,5,6,7,2,3,4,5,6,7];
+            var sum = 0;
+            for (var i = 0; i < digits.length; i++) sum += digits[i] * (series[i] || 2);
+            var rest = 11 - (sum % 11);
+            var expectedDv = rest === 11 ? '0' : rest === 10 ? 'K' : String(rest);
+            if (dv !== expectedDv) return { valid: false };
+            return { valid: true, normalized: n };
+        }
+        function getRutFromUrl() {
+            var params = new URLSearchParams(window.location.search);
+            var rut = params.get('rut');
+            return (rut && typeof rut === 'string') ? rut.trim() : null;
+        }
+        function getRutFromInput(input) {
+            if (!input || typeof input !== 'string') return null;
+            try {
+                if (input.startsWith('http') || input.includes('?')) {
+                    var url = input.startsWith('http') ? new URL(input) : new URL('https://x/?' + (input.split('?')[1] || ''));
+                    var r = url.searchParams.get('rut');
+                    return (r && r.trim()) ? r.trim() : null;
+                }
+            } catch (e) {}
+            return null;
+        }
+
         // Limpiar y extraer ID de una URL o string
         function extractStudentId(input) {
             if (!input) return null;
@@ -549,11 +587,12 @@
 
         // ============================================================
         // FUNCIÓN PRINCIPAL DE VALIDACIÓN - SIN FALLBACKS
+        // options.rutFromUrl: si la URL trae RUT, se valida contra el alumno.
         // ============================================================
-        // REGLA: El acceso SOLO puede depender del backend.
-        // NO hay fallback a localStorage para decisiones de acceso.
-        // ============================================================
-        async function searchByUserId(userId) {
+        async function searchByUserId(userId, options) {
+            options = options || {};
+            var rutFromUrl = options.rutFromUrl || null;
+            if (!rutFromUrl && userId) rutFromUrl = getRutFromInput(userId);
             console.log('═══════════════════════════════════════════════════');
             console.log('🔎 [PASO 1] searchByUserId() INICIADO');
             console.log('   Input recibido:', userId);
@@ -570,7 +609,7 @@
                 return;
             }
             
-            // PASO 2: Extraer ID limpio
+            // PASO 2: Extraer ID limpio (ID corto; RUT no reemplaza al ID)
             const cleanId = extractStudentId(userId);
             console.log('🔍 [PASO 2] ID extraído:', cleanId);
             
@@ -629,6 +668,24 @@
                 console.log('   Acceso:', resultado.acceso);
                 console.log('   Estado:', resultado.estado);
                 console.log('   Días restantes:', resultado.diasRestantes);
+                
+                // Si la URL trae RUT, validar que corresponda al alumno
+                if (rutFromUrl) {
+                    var rutCheck = validateChileanRut(rutFromUrl);
+                    if (!rutCheck.valid) {
+                        showCustomAlert('RUT inválido', 'El RUT del enlace no tiene un formato válido (ej: 12345678-9).', 'error');
+                        return;
+                    }
+                    var alumnoRut = (resultado.alumno && resultado.alumno.rut) ? String(resultado.alumno.rut).trim() : '';
+                    if (!alumnoRut) {
+                        showCustomAlert('RUT no registrado', 'Este alumno no tiene RUT registrado. No se puede validar el RUT del QR.', 'warning');
+                        return;
+                    }
+                    if (normalizeRut(alumnoRut) !== rutCheck.normalized) {
+                        showCustomAlert('RUT no corresponde', 'El RUT del QR no corresponde a este alumno. No se mostrarán datos.', 'error');
+                        return;
+                    }
+                }
                 
                 // PASO 6: Procesar resultado
                 console.log('🎨 [PASO 6] Procesando resultado y renderizando...');
@@ -1021,9 +1078,20 @@
             console.log('🔍 Query params:', window.location.search);
             console.log('🛤️ Pathname:', window.location.pathname);
             
-            // PASO 1: Extraer ID de la URL
+            // PASO 1: Extraer ID y RUT (opcional) de la URL
             const studentId = getStudentIdFromUrl();
+            const rutFromUrl = getRutFromUrl();
             console.log('🆔 [INICIO] ID detectado en URL:', studentId);
+            if (rutFromUrl) console.log('   RUT en URL:', rutFromUrl);
+            
+            if (rutFromUrl && studentId) {
+                var rutValid = validateChileanRut(rutFromUrl);
+                if (!rutValid.valid) {
+                    var searchSection = document.querySelector('.search-section');
+                    if (searchSection) searchSection.innerHTML = '<div style="text-align:center;padding:2rem;"><p style="color:#dc2626;font-weight:bold;">RUT inválido</p><p>El RUT del enlace no tiene un formato válido (ej: 12345678-9).</p></div>';
+                    return;
+                }
+            }
             
             if (studentId) {
                 console.log('✅ [INICIO] Modo acceso público detectado');
@@ -1053,7 +1121,7 @@
                     // NO cargar alumnos desde la nube primero
                     // La validación se hace directamente con el endpoint
                     console.log('📡 [INICIO] Disparando validación con ID:', studentId);
-                    await searchByUserId(studentId);
+                    await searchByUserId(studentId, { rutFromUrl: rutFromUrl });
                     
                     // Ocultar sección de búsqueda después de validar
                     if (searchSection) {

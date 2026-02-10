@@ -132,8 +132,14 @@
                         </svg>
                         Ingreso Manual
                     </h3>
-                    <input type="text" id="manualId" placeholder="Ingresa el ID del alumno">
-                    <button class="btn btn-primary" onclick="verificarManual()">Verificar</button>
+                    <p class="subtitle" style="margin-top:0; font-size:0.85rem; color:#6b7280;">Pega la URL del QR o usa un lector externo (USB): el campo recibe el código como teclado. Si no llega, haz clic en «Listo para lector».</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+                        <input type="text" id="manualId" placeholder="Pega aquí la URL del QR" autofocus
+                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); verificarManual(); }"
+                               style="flex:1; min-width:200px;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('manualId').focus(); document.getElementById('manualId').select && document.getElementById('manualId').select();" title="Poner foco aquí para que el lector externo envíe el código">Listo para lector</button>
+                        <button class="btn btn-primary" onclick="verificarManual()">Verificar</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -318,6 +324,11 @@
                     <input type="tel" id="verificarTelefono" placeholder="opcional">
                 </div>
                 <div class="form-group">
+                    <label for="verificarRut">RUT (opcional, ej: 12345678-9)</label>
+                    <input type="text" id="verificarRut" placeholder="12345678-9">
+                    <small class="subtitle" style="display: block; margin-top: 0.35rem;">Se incluirá en el QR para validar identidad.</small>
+                </div>
+                <div class="form-group">
                     <label for="verificarFechaPago">Fecha de último pago *</label>
                     <input type="date" id="verificarFechaPago" required>
                 </div>
@@ -346,7 +357,7 @@
     <script src="../js/cohab-config.js?v=1"></script>
     <script src="../js/mongodb-client.js?v=6"></script>
     <script src="../js/alert-system.js"></script>
-    <script src="../js/verificar.js?v=22"></script>
+    <script src="../js/verificar.js?v=23"></script>
     
     <script>
         // Verificación de acceso - Admin tiene acceso completo

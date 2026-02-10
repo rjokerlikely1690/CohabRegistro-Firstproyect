@@ -970,7 +970,52 @@
         let video, canvas, context, scanning = false;
         let currentStudent = null;
 
-        // Limpiar y extraer ID de una URL o string
+        // ============================================================
+        // RUT (Chile): atributo secundario, NO identificador principal.
+        // ID = identificador técnico CORTO y estable (legacy y nuevo).
+        // RUT = validación humana opcional; solo se valida si viene en la URL.
+        // ============================================================
+        function normalizeRut(str) {
+            if (!str || typeof str !== 'string') return '';
+            var cleaned = str.replace(/\./g, '').replace(/\s/g, '').toUpperCase().trim();
+            var match = cleaned.match(/^(\d{1,8})-?([0-9K])$/);
+            return match ? match[1] + '-' + match[2] : '';
+        }
+        function validateChileanRut(rut) {
+            var n = normalizeRut(rut);
+            if (!n) return { valid: false };
+            var parts = n.split('-');
+            var body = parts[0];
+            var dv = parts[1];
+            var digits = body.split('').map(Number).reverse();
+            var series = [2,3,4,5,6,7,2,3,4,5,6,7,2,3,4,5,6,7];
+            var sum = 0;
+            for (var i = 0; i < digits.length; i++) sum += digits[i] * (series[i] || 2);
+            var rest = 11 - (sum % 11);
+            var expectedDv = rest === 11 ? '0' : rest === 10 ? 'K' : String(rest);
+            if (dv !== expectedDv) return { valid: false };
+            return { valid: true, normalized: n };
+        }
+        /** Obtiene el RUT de la URL si existe (?rut=xxxxxxx-x). Opcional; legacy sin RUT sigue funcionando. */
+        function getRutFromUrl() {
+            var params = new URLSearchParams(window.location.search);
+            var rut = params.get('rut');
+            return (rut && typeof rut === 'string') ? rut.trim() : null;
+        }
+        /** Extrae RUT de un string que sea URL con parámetro rut= (p. ej. contenido escaneado de un QR). */
+        function getRutFromInput(input) {
+            if (!input || typeof input !== 'string') return null;
+            try {
+                if (input.startsWith('http') || input.includes('?')) {
+                    var url = input.startsWith('http') ? new URL(input) : new URL('https://x/?' + (input.split('?')[1] || ''));
+                    var r = url.searchParams.get('rut');
+                    return (r && r.trim()) ? r.trim() : null;
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        // Limpiar y extraer ID de una URL o string (ID corto; legacy y nuevo)
         function extractStudentId(input) {
             if (!input) return null;
             
@@ -1187,9 +1232,12 @@
         // FUNCIÓN PRINCIPAL DE VALIDACIÓN - SIN FALLBACKS
         // ============================================================
         // REGLA: El acceso SOLO puede depender del backend.
-        // NO hay fallback a localStorage para decisiones de acceso.
+        // options.rutFromUrl: si la URL trae RUT, se valida contra el alumno (no se muestran datos si no coincide).
         // ============================================================
-        async function searchByUserId(userId) {
+        async function searchByUserId(userId, options) {
+            options = options || {};
+            var rutFromUrl = options.rutFromUrl || null;
+            if (!rutFromUrl && userId) rutFromUrl = getRutFromInput(userId);
             // PASO 1: Obtener userId si no se proporcionó
             if (!userId) {
                 userId = document.getElementById('userIdInput') ? document.getElementById('userIdInput').value.trim() : null;
@@ -1201,7 +1249,7 @@
                 return;
             }
             
-            // PASO 2: Extraer ID limpio
+            // PASO 2: Extraer ID limpio (ID corto; RUT no reemplaza al ID)
             const cleanId = extractStudentId(userId);
             
             if (!cleanId) {
@@ -1231,6 +1279,7 @@
                 return;
             }
             
+            var searchSection = document.querySelector('.search-section');
             // PASO 4: Llamar al endpoint de validación
             try {
                 const inicioRequest = Date.now();
@@ -1244,7 +1293,30 @@
                     throw new Error('Respuesta inválida del servidor: falta campo "acceso"');
                 }
                 
-                // PASO 6: Procesar resultado
+                // PASO 6: Si la URL trae RUT, validar que corresponda al alumno (no mostrar datos si no coincide)
+                if (rutFromUrl) {
+                    var rutCheck = validateChileanRut(rutFromUrl);
+                    if (!rutCheck.valid) {
+                        showCustomAlert('RUT inválido', 'El RUT del enlace no tiene un formato válido (ej: 12345678-9).', 'error');
+                        hideScanFeedback();
+                        if (searchSection) searchSection.style.display = 'block';
+                        return;
+                    }
+                    var alumnoRut = (resultado.alumno && resultado.alumno.rut) ? String(resultado.alumno.rut).trim() : '';
+                    if (!alumnoRut) {
+                        showCustomAlert('RUT no registrado', 'Este alumno no tiene RUT registrado. No se puede validar el RUT del QR. Contacta a la administración.', 'warning');
+                        hideScanFeedback();
+                        if (searchSection) searchSection.style.display = 'block';
+                        return;
+                    }
+                    if (normalizeRut(alumnoRut) !== rutCheck.normalized) {
+                        showCustomAlert('RUT no corresponde', 'El RUT del QR no corresponde a este alumno. No se mostrarán datos.', 'error');
+                        hideScanFeedback();
+                        if (searchSection) searchSection.style.display = 'block';
+                        return;
+                    }
+                }
+                // PASO 7: Procesar resultado
                 await handleValidationResult(resultado, cleanId);
                 
             } catch (error) {
@@ -1679,7 +1751,17 @@
             const searchSection = document.querySelector('.search-section');
             const originalSearchSectionHTML = searchSection ? searchSection.innerHTML : null;
             const studentId = getStudentIdFromUrl();
+            var rutFromUrl = getRutFromUrl();
             var initDone = false; // true cuando ya mostramos resultado o error en página
+
+            // Si la URL trae RUT, validar formato antes de seguir (legacy sin RUT no exige nada)
+            if (rutFromUrl && studentId) {
+                var rutValid = validateChileanRut(rutFromUrl);
+                if (!rutValid.valid) {
+                    showInitErrorInPage(searchSection, 'RUT inválido', 'El RUT del enlace no tiene un formato válido (ej: 12345678-9). Recarga con un enlace correcto o usa uno sin RUT.', true);
+                    return;
+                }
+            }
 
             if (studentId) {
                 if (searchSection) {
@@ -1732,7 +1814,7 @@
                         return;
                     }
                     clearTimeout(configTimeout);
-                    searchByUserId(studentId).then(function() {
+                    searchByUserId(studentId, { rutFromUrl: rutFromUrl }).then(function() {
                         initDone = true;
                         clearTimeout(globalTimeout);
                         // Restaurar el panel (Escanear QR + Ingreso manual) para que "Nueva Consulta" lo muestre de nuevo
