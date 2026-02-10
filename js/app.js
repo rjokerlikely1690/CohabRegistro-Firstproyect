@@ -1,14 +1,57 @@
-// Sistema COHAB - Academia de BJJ
-// Versión limpia sin funciones problemáticas
-// VERSIÓN: 26 - Usa estado calculado por backend (fuente de verdad)
+/**
+ * ========================================
+ * SISTEMA COHAB - APLICACIÓN ADMIN
+ * ========================================
+ * 
+ * PROPÓSITO: Gestión completa de alumnos para la academia de BJJ COHAB
+ * - Crear, editar, eliminar alumnos
+ * - Generar códigos QR para verificación de estado de pago
+ * - Gestionar mensualidades y estado de suscripción
+ * - Sincronizar con MongoDB para almacenamiento persistente
+ * 
+ * VERSIÓN: 26 (Estado calculado por backend - fuente de verdad)
+ * ÚLTIMA ACTUALIZACIÓN: 2026-02-06
+ * 
+ * DEPENDENCIAS EXTERNAS:
+ * - mongodb-client.js (API llamadas a base de datos)
+ * - auth-client.js (Autenticación y tokens JWT)
+ * - alert-system.js (Sistema de notificaciones)
+ * - QRCode.js (Librería para generar códigos QR)
+ * 
+ * ========================================
+ */
+
 console.log('✅ App.js cargado - Versión 26 - Estado desde backend');
 
-// ⚠️ NO usar localStorage para datos de negocio
-// MongoDB es la única fuente de verdad
+/**
+ * VARIABLES GLOBALES
+ * 
+ * alumnos: Array con todos los alumnos cargados desde MongoDB
+ * editingAlumno: Referencia al alumno siendo editado (null si ninguno)
+ * diaPagoGlobal: Día del mes en que vence la suscripción (default: 30)
+ * 
+ * ⚠️ IMPORTANTE: MongoDB es la ÚNICA fuente de verdad
+ * NO confiar en localStorage para datos de negocio
+ */
 let alumnos = [];
 let editingAlumno = null;
-let diaPagoGlobal = 30; // Valor por defecto, se puede configurar desde UI si es necesario
+let diaPagoGlobal = 30; // Día vencimiento mensual (configurable desde UI)
 
+/**
+ * parseFechaLocal(valor)
+ * 
+ * Convierte diferentes formatos de fecha a objeto Date local (sin zona horaria)
+ * Necesario porque MongoDB usa ISO strings con zona horaria UTC
+ * 
+ * @param {string|Date|number} valor - Fecha en varios formatos
+ * @returns {Date|null} - Objeto Date local o null si inválido
+ * 
+ * Ejemplos de entrada soportados:
+ * - "2025-12-31" (formato YYYY-MM-DD)
+ * - "2025-12-31T00:00:00Z" (ISO 8601 con timezone)
+ * - Date object
+ * - Timestamp número
+ */
 function parseFechaLocal(valor) {
     if (!valor) {
         return null;
@@ -48,6 +91,14 @@ function parseFechaLocal(valor) {
 }
 
 function formatFechaLocal(fecha) {
+    /**
+     * formatFechaLocal(fecha)
+     * 
+     * Formatea un objeto Date a string legible DD/MM/YYYY
+     * 
+     * @param {Date} fecha - Objeto Date a formatear
+     * @returns {string} - Fecha formateada "DD/MM/YYYY" o "---" si inválida
+     */
     if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
         return '---';
     }
@@ -57,7 +108,19 @@ function formatFechaLocal(fecha) {
     return `${dia}/${mes}/${anio}`;
 }
 
-// Obtener URL base del servidor para generar enlaces que funcionen en móviles
+/**
+ * getServerBaseUrl()
+ * 
+ * Determina la URL base del servidor para generar enlaces correctos
+ * Necesario para que los QR y enlaces funcionen desde cualquier dispositivo/red
+ * 
+ * Prioridades:
+ * 1. URL configurada manualmente en localStorage (para testing)
+ * 2. Detección automática de Cloudflare Pages
+ * 3. URL local (último recurso)
+ * 
+ * @returns {string} - URL base con trailing slash "https://example.com/"
+ */
 function getServerBaseUrl() {
     // Prioridad 1: URL configurada manualmente
     let configured = localStorage.getItem('serverBaseUrl');
@@ -170,6 +233,25 @@ function generateId() {
 // ELIMINADA: Función duplicada calcularEstado - usar solo la versión que prioriza backend (más abajo)
 
 // Cargar alumnos - VERSIÓN LIMPIA CON ACTUALIZACIÓN AUTOMÁTICA
+/**
+ * loadAlumnos()
+ * 
+ * Carga TODOS los alumnos desde MongoDB
+ * Esta es la función más crítica - ejecuta el ÚNICO FETCH a la base de datos
+ * 
+ * FLUJO:
+ * 1. Verifica conexión a MongoDB backend
+ * 2. Hace fetch a API GET /alumnos
+ * 3. Actualiza array global 'alumnos' 
+ * 4. Renderiza tabla/grid con los datos
+ * 5. Muestra notificación de éxito o error
+ * 
+ * ✅ IMPORTANTE: MongoDB es la ÚNICA fuente de verdad
+ * NO hay fallback a localStorage - si MongoDB falla, se muestra error claro
+ * 
+ * @async
+ * @returns {Promise<void>}
+ */
 async function loadAlumnos() {
     const grid = document.getElementById('alumnosGrid');
     if (!grid) {
@@ -1235,7 +1317,7 @@ async function enviarQRPorEmail(id) {
 
 // Ir a verificación
 function irAVerificacion() {
-    window.location.href = 'public/verificar.html';
+    window.location.href = 'verificar.html';
 }
 
 // Cerrar modales al hacer clic fuera

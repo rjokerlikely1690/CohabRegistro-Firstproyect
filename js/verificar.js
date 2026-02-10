@@ -1,5 +1,30 @@
-// Sistema de verificación de estado de pagos
-// VERSIÓN: 14 - MongoDB como única fuente de verdad
+/**
+ * ========================================
+ * SISTEMA COHAB - VERIFICACIÓN QR
+ * ========================================
+ * 
+ * PROPÓSITO: Escaneo de códigos QR para verificar estado de pago
+ * - Leer código QR desde cámara del teléfono
+ * - Buscar alumno por ID
+ * - Mostrar estado de suscripción y próxima fecha de vencimiento
+ * - Interfaz táctil optimizada para móviles
+ * 
+ * VERSIÓN: 14 (MongoDB como única fuente de verdad)
+ * ÚLTIMA ACTUALIZACIÓN: 2026-02-06
+ * 
+ * DEPENDENCIAS EXTERNAS:
+ * - mongodb-client.js (Búsqueda de alumnos en BD)
+ * - jsQR (Librería para decodificar QR desde canvas)
+ * - alert-system.js (Notificaciones)
+ * 
+ * VARIABLES GLOBALES:
+ * - alumnos: Cache de alumnos para búsqueda rápida (actualizar con refresco)
+ * - stream: Acceso a la cámara del dispositivo
+ * - scanning: Flag booleano, true si está leyendo QR
+ * - currentDeviceId: ID de la cámara seleccionada
+ * 
+ * ========================================
+ */
 
 // ⚠️ NO usar localStorage para datos de negocio
 let alumnos = [];
@@ -9,7 +34,21 @@ let currentFilter = 'all';
 let currentTrack = null;
 let currentDeviceId = null;
 
-// URL base del servidor para construir enlaces válidos en móviles
+/**
+ * getServerBaseUrl()
+ * 
+ * Determina la URL base del servidor con prioridades para diferentes plataformas
+ * Crítico para que el escaneo de QR funcione desde cualquier dispositivo
+ * 
+ * Orden de detección:
+ * 1. URL configurada en localStorage (testing manual)
+ * 2. Cloudflare Pages (.pages.dev)
+ * 3. Netlify (.netlify.app)
+ * 4. URL actual si no es localhost
+ * 5. Localhost - fallback a Cloudflare configurado
+ * 
+ * @returns {string} - URL base "https://example.com/"
+ */
 function getServerBaseUrl() {
     // Prioridad 1: URL configurada manualmente
     let configured = localStorage.getItem('serverBaseUrl');

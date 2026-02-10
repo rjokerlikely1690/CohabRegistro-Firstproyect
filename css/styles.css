@@ -747,15 +747,15 @@ body.marketing .navbar .container {
         display: none !important;
     }
     
-    /* Site actions - Solo botón menú, sin superposición */
+    /* Site actions - Botones compactos */
     body.marketing .site-actions {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
-        gap: 0;
+        gap: 0.4rem;
         margin-left: auto;
-        flex-shrink: 0;
-        min-width: 44px;
+        flex-shrink: 1;
+        min-width: 0;
+        overflow: visible;
     }
     
     /* Mostrar solo menú en móvil - botón principal va al drawer */
@@ -767,12 +767,12 @@ body.marketing .navbar .container {
         display: none; /* Ocultar "Ingresar" en móvil */
     }
     
-    /* Botón menú - Una sola capa, sin superposición */
+    /* Botón menú - Visible y funcional */
     body.marketing .marketing-menu-btn {
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        padding: 0;
+        padding: 0.55rem 0.75rem;
         font-size: 0;
         font-weight: 700;
         background: rgba(220, 38, 38, 0.25);
@@ -786,31 +786,20 @@ body.marketing .navbar .container {
         width: 44px;
         height: 44px;
         position: relative;
-        z-index: 10;
         touch-action: manipulation;
         -webkit-tap-highlight-color: rgba(220, 38, 38, 0.3);
         user-select: none;
         -webkit-user-select: none;
-        margin-left: 0.5rem;
-        overflow: hidden;
     }
     
     body.marketing .marketing-menu-btn::before {
         content: '☰';
-        font-size: 1.35rem;
+        font-size: 1.4rem;
         line-height: 1;
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        display: block;
-        width: 1em;
-        text-align: center;
-    }
-    
-    /* Evitar que el logo invada el espacio del botón */
-    body.marketing .navbar a[aria-label="Ir a Inicio"] {
-        max-width: calc(100% - 56px);
     }
     
     body.marketing .marketing-menu-btn:active {
@@ -829,14 +818,9 @@ body.marketing .navbar .container {
         }
         
         body.marketing .marketing-menu-btn {
-            min-width: 44px;
-            width: 44px;
-            height: 44px;
-            margin-left: 0.4rem;
-        }
-        
-        body.marketing .navbar a[aria-label="Ir a Inicio"] {
-            max-width: calc(100% - 52px);
+            padding: 0.45rem 0.7rem;
+            font-size: 0.75rem;
+            min-width: 55px;
         }
     }
     
@@ -3529,12 +3513,6 @@ body.modal-open .navbar { pointer-events: none; }
         justify-content: space-between;
         gap: 0.75rem;
         min-height: auto;
-    }
-    
-    /* Marketing: navbar siempre en fila en móvil para evitar superposición del menú */
-    body.marketing .navbar .container {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
     }
     
     .logo {

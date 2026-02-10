@@ -1,12 +1,45 @@
-// ============================================================
-// COHAB Auth Client - Manejo de autenticación en frontend
-// Usa token en localStorage + Authorization header (cross-origin compatible)
-// ============================================================
+/**
+ * ========================================
+ * COHAB AUTH CLIENT - GESTIÓN DE AUTENTICACIÓN
+ * ========================================
+ * 
+ * PROPÓSITO: Manejo centralizado de autenticación para acceso al admin
+ * - Login con email y contraseña
+ * - Gestión de tokens JWT
+ * - Almacenamiento seguro de credenciales
+ * - Integración con MongoDB API backend
+ * 
+ * SEGURIDAD:
+ * - Usa tokens JWT almacenados en localStorage
+ * - Envía token en header Authorization: Bearer <token>
+ * - Cross-origin compatible (soporta CORS)
+ * 
+ * TOKENS:
+ * - Admin puede iniciar sesión con credenciales
+ * - Token se guarda y se usa en todas las llamadas API subsecuentes
+ * - Token caduca automáticamente (server-side validation)
+ * 
+ * ÚLTIMO ACTUALIZADO: 2026-02-06
+ * ========================================
+ */
 
 const AUTH = {
+    /**
+     * TOKEN_KEY: Clave para almacenar el JWT en localStorage
+     */
     TOKEN_KEY: 'cohabAuthToken',
     
-    // Obtener base URL del API (usa COHAB_CONFIG como fuente de verdad)
+    /**
+     * getApiUrl()
+     * 
+     * Obtiene URL del backend MongoDB API
+     * Prioridades:
+     * 1. URL configurada en COHAB_CONFIG.mongodbApiUrl
+     * 2. URL en localStorage (fallback)
+     * 3. URL por defecto en Render.com
+     * 
+     * @returns {string} - URL base del API "https://api.example.com"
+     */
     getApiUrl: function() {
         if (window.COHAB_CONFIG && window.COHAB_CONFIG.mongodbApiUrl) {
             return window.COHAB_CONFIG.mongodbApiUrl;
@@ -14,17 +47,42 @@ const AUTH = {
         return localStorage.getItem('serverBaseUrl') || 'https://cohabregistro-firstproyect.onrender.com';
     },
 
-    // Obtener token guardado
+    /**
+     * getToken()
+     * 
+     * Obtiene el JWT almacenado en localStorage
+     * 
+     * @returns {string|null} - Token JWT o null si no está logueado
+     */
     getToken: function() {
         return localStorage.getItem(this.TOKEN_KEY);
     },
 
-    // Guardar token
+    /**
+     * setToken(token)
+     * 
+     * Guarda el JWT en localStorage para futuras llamadas API
+     * 
+     * @param {string} token - JWT obtenido del servidor en login
+     */
     setToken: function(token) {
         localStorage.setItem(this.TOKEN_KEY, token);
     },
 
-    // Headers con Authorization
+    /**
+     * getAuthHeaders()
+     * 
+     * Prepara headers HTTP con autorización
+     * Incluye el token en el header "Authorization: Bearer <token>"
+     * Necesario para todas las llamadas API autenticadas
+     * 
+     * @returns {Object} - Headers con Content-Type y Authorization
+     * @example
+     * {
+     *   'Content-Type': 'application/json',
+     *   'Authorization': 'Bearer eyJhbGc...'
+     * }
+     */
     getAuthHeaders: function() {
         const token = this.getToken();
         const headers = { 'Content-Type': 'application/json' };
@@ -34,7 +92,10 @@ const AUTH = {
         return headers;
     },
 
-    // Iniciar sesión (credentials: 'include' para cookies cross-origin)
+    /**
+     * login(email, password) — credentials: 'include' para cookies cross-origin
+     * Autentica admin contra el backend; guarda token JWT en localStorage.
+     */
     login: async function(email, password) {
         let response;
         try {
