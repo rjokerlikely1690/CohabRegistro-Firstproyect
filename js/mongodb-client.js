@@ -244,6 +244,7 @@
             nombre: a.nombre,
             email: a.email || null,
             telefono: a.telefono || null,
+            rut: (a.rut != null && String(a.rut).trim() !== '') ? String(a.rut).trim() : undefined,
             fechaPago: a.fechaPago,
             diaPago: a.diaPago,
             monto: parseFloat(a.monto)
@@ -262,6 +263,7 @@
             diaPago: r.diaPago != null ? r.diaPago : (r.dia_pago != null ? r.dia_pago : null),
             monto: Number(r.monto) || 0
         };
+        if (r.rut != null && String(r.rut).trim() !== '') out.rut = String(r.rut).trim();
         // Estado calculado por el backend (fuente única de verdad para fechas)
         if (r.estado !== undefined) out.estado = r.estado;
         if (r.acceso !== undefined) out.acceso = r.acceso;
