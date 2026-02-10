@@ -838,8 +838,8 @@ function generarQRResultado(alumno) {
         return;
     }
     
-    // Crear URL directa para el alumno usando base configurada
-    const studentUrl = buildStudentUrl(alumno.id);
+    // Crear URL directa para el alumno: id + RUT (obligatorio en QR)
+    const studentUrl = buildStudentUrl(alumno.id, alumno.rut);
     
     try {
     // Generar QR con URL directa
@@ -971,8 +971,8 @@ function mostrarQRCompleto() {
     // Generar QR completo
     const qrCompleto = document.getElementById('qrCompleto');
     
-    // Crear URL directa para el alumno usando base configurada
-    const studentUrl = buildStudentUrl(alumno.id);
+    // Crear URL directa para el alumno: id + RUT
+    const studentUrl = buildStudentUrl(alumno.id, alumno.rut);
     
     const qrData = {
         id: alumno.id,
