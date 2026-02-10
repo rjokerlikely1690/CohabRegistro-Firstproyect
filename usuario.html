@@ -827,9 +827,12 @@
                 alertBanner.style.display = 'none';
             }
             
-            // Construir URL completa del alumno
-            const baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
-            const studentUrl = `${baseUrl}/usuario.html?id=${alumno.id}`;
+            // Construir URL completa del alumno: id + RUT si existe
+            const baseUrl = window.location.origin || 'https://cohabregistro-firstproyect.pages.dev';
+            let studentUrl = baseUrl + '/usuario.html?id=' + encodeURIComponent(alumno.id);
+            if (alumno.rut && String(alumno.rut).trim()) {
+                studentUrl += '&rut=' + encodeURIComponent(normalizeRut(String(alumno.rut).trim()));
+            }
             
             // Mostrar información completa
             const resultInfo = document.getElementById('resultInfo');
