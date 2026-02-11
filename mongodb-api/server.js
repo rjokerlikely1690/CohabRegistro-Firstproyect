@@ -1189,7 +1189,7 @@ app.get('/', (req, res) => {
                 'PATCH /alumnos/:id/pago': 'Registrar pago (admin)'
             },
             health: {
-                'GET /health': 'Health check'
+            'GET /health': 'Health check'
             }
         },
         usage: 'API backend con autenticación JWT. Los endpoints marcados (admin) requieren cookie de sesión.'

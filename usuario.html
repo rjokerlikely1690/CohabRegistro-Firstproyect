@@ -407,7 +407,7 @@
                 }
                 
                 console.log('📡 Intentando cargar desde MongoDB...');
-                const alumnos = await MONGO.listAlumnos();
+                    const alumnos = await MONGO.listAlumnos();
                 console.log('📡 Respuesta de MongoDB:', alumnos);
                 
                 if (!Array.isArray(alumnos)) {
@@ -415,7 +415,7 @@
                 }
                 
                 console.log('✅ Alumnos cargados desde MongoDB:', alumnos.length);
-                return alumnos;
+                        return alumnos;
                 
             } catch (error) {
                 console.error('❌ Error cargando alumnos desde MongoDB:', error);
@@ -468,9 +468,9 @@
         async function logout() {
             const ok = await confirm('¿Estás seguro de cerrar sesión?');
             if (!ok) return;
-            localStorage.removeItem('userRole');
-            localStorage.removeItem('lastAccess');
-            window.location.href = 'login.html';
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('lastAccess');
+                window.location.href = 'login.html';
         }
 
         // Alternar cámara
