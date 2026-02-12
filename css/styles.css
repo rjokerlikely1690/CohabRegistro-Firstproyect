@@ -397,12 +397,11 @@ body.marketing .navbar .container {
     filter: drop-shadow(0 2px 8px rgba(220, 38, 38, 0.3));
 }
 
-/* Foto Cultura respeto/control/seguridad: mismo resaltado rojo que la de arriba, más chica */
+/* Foto Cultura respeto/control/seguridad: foto completa sin recortes (incl. pies) */
 .cultura-featured-img-wrap {
     display: block;
     width: 100%;
     max-width: 380px;
-    height: 285px;
     margin-left: auto;
     margin-right: auto;
     border-radius: 12px;
@@ -418,9 +417,10 @@ body.marketing .navbar .container {
 .cultura-featured-img-wrap img {
     display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    height: auto !important;
+    max-height: none !important;
+    object-fit: none !important;
+    vertical-align: top;
 }
 
 .marketing-section h2 {
