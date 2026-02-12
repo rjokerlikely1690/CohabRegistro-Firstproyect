@@ -341,6 +341,15 @@ body.marketing .navbar .container {
     margin-top: 1.5rem;
 }
 
+/* Imagen destacada (ej. transformación al tatami en Comunidad): hover sutil */
+.hero-featured-image .section-image-wrap {
+    transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.hero-featured-image .section-image-wrap:hover {
+    box-shadow: 0 20px 56px rgba(0,0,0,0.6), 0 0 56px rgba(220, 38, 38, 0.25);
+    border-color: rgba(220, 38, 38, 0.7);
+}
+
 .marketing-section h2 {
     font-size: 2rem;
     letter-spacing: -0.02em;
