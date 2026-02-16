@@ -128,8 +128,8 @@
     <script src="js/cohab-config.js?v=2"></script>
 </head>
 <body>
-    <!-- Overlay: clave para acceder a Gestión de Alumnos (si está configurada en cohab-config.js) -->
-    <div id="gestionClaveOverlay">
+    <!-- Overlay: clave para acceder a Gestión de Alumnos (solo si el backend exige GESTION_CLAVE) -->
+    <div id="gestionClaveOverlay" style="display: none;">
         <div class="clave-box">
             <h3>🔐 Clave de Gestión de Alumnos</h3>
             <p>Introduce la clave para acceder a esta sección.</p>
@@ -479,16 +479,18 @@
             }
         }
         (async function initGestionClave() {
-            if (sessionStorage.getItem('gestionClaveOk') === '1') return;
             const overlay = document.getElementById('gestionClaveOverlay');
+            if (overlay) overlay.style.display = 'none';
+            if (sessionStorage.getItem('gestionClaveOk') === '1') return;
             const base = getApiBase();
             if (!base) return;
             try {
                 const res = await fetch(base + '/auth/gestion-requiere-clave');
                 const data = await res.json().catch(() => ({}));
-                if (data.requiereClave && overlay) overlay.style.display = 'flex';
+                if (res.ok && data.requiereClave === true && overlay) overlay.style.display = 'flex';
+                else if (overlay) overlay.style.display = 'none';
             } catch (e) {
-                // Si falla la petición, no mostramos overlay (evitar bloquear si el backend no tiene la ruta aún)
+                if (overlay) overlay.style.display = 'none';
             }
             document.getElementById('gestionClaveInput')?.addEventListener('keydown', function(e) { if (e.key === 'Enter') checkGestionClave(); });
         })();
