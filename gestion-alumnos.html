@@ -96,53 +96,59 @@
             .admin-sticky-header .header-actions { justify-content: center; }
             .stats-bar { justify-content: center; }
         }
-    </style>
-        /* Overlay clave Gestión de Alumnos */
+
+        /* Overlay: clave para acceder a Gestión de Alumnos (siempre que el backend la exija, aunque el admin ya esté logueado) */
         #gestionClaveOverlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.88);
             z-index: 99999;
             align-items: center;
             justify-content: center;
             padding: 1rem;
         }
         #gestionClaveOverlay .clave-box {
-            background: #1a1a1a;
-            border: 1px solid rgba(220, 38, 38, 0.4);
+            background: linear-gradient(145deg, #1a1a1a 0%, #111 100%);
+            border: 1px solid rgba(220, 38, 38, 0.35);
+            border-top: 3px solid #dc2626;
             border-radius: 1rem;
             padding: 2rem;
             max-width: 360px;
             width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        #gestionClaveOverlay h3 { margin: 0 0 1rem 0; color: #fff; font-size: 1.25rem; }
-        #gestionClaveOverlay p { color: #888; font-size: 0.9rem; margin-bottom: 1.25rem; }
-        #gestionClaveOverlay input { width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #444; background: #111; color: #fff; font-size: 1rem; box-sizing: border-box; }
-        #gestionClaveOverlay .clave-error { color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; }
+        #gestionClaveOverlay h3 { margin: 0 0 0.5rem 0; color: #fff; font-size: 1.25rem; text-align: center; }
+        #gestionClaveOverlay p.desc { color: #888; font-size: 0.9rem; margin-bottom: 1.25rem; text-align: center; }
+        #gestionClaveOverlay input {
+            width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem;
+            border: 1px solid #444; background: #111; color: #fff; font-size: 1rem;
+            box-sizing: border-box;
+        }
+        #gestionClaveOverlay .clave-error { color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; display: none; }
         #gestionClaveOverlay .clave-actions { margin-top: 1.25rem; display: flex; gap: 0.75rem; }
-        #gestionClaveOverlay .clave-actions .btn { flex: 1; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 600; border: none; }
+        #gestionClaveOverlay .clave-actions .btn {
+            flex: 1; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 600; border: none;
+        }
         #gestionClaveOverlay .clave-actions .btn-primary { background: #dc2626; color: #fff; }
+        #gestionClaveOverlay .clave-actions .btn-secondary { background: #333; color: #fff; }
     </style>
-
-    <script src="js/cohab-config.js?v=2"></script>
 </head>
 <body>
-    <!-- Overlay: clave para acceder a Gestión de Alumnos (solo si el backend exige GESTION_CLAVE) -->
-    <div id="gestionClaveOverlay" style="display: none;">
+    <!-- Clave de Gestión de Alumnos: se pide aunque el admin ya haya iniciado sesión (si el backend tiene GESTION_CLAVE) -->
+    <div id="gestionClaveOverlay">
         <div class="clave-box">
             <h3>🔐 Clave de Gestión de Alumnos</h3>
-            <p>Introduce la clave para acceder a esta sección.</p>
+            <p class="desc">Introduce la clave para acceder a esta sección.</p>
             <input type="password" id="gestionClaveInput" placeholder="Clave" autocomplete="off">
-            <div id="gestionClaveError" class="clave-error" style="display: none;">Clave incorrecta. Intenta de nuevo.</div>
+            <div id="gestionClaveError" class="clave-error"></div>
             <div class="clave-actions">
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='admin.html'">Cancelar</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='admin.html'">Volver</button>
                 <button type="button" class="btn btn-primary" onclick="checkGestionClave()">Acceder</button>
             </div>
         </div>
     </div>
 
-    <!-- Auth check removido - se verifica en login y admin.html -->
     <nav class="navbar" style="position: sticky; top: 0; z-index: 101;">
         <div class="container">
             <img src="img/logo_cohab.svg" alt="Academia COHAB BJJ" class="logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiMwMDAwMDAiIHJ4PSI4Ii8+PHRleHQgeD0iMTAwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9IjkwMCIgbGV0dGVyLXNwYWNpbmc9IjJweCI+Q09IQUI8L3RleHQ+PC9zdmc+'">
@@ -439,73 +445,84 @@
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="js/cohab-config.js?v=2"></script>
     <script src="js/auth-client.js?v=2"></script>
     <script src="js/mongodb-client.js?v=8"></script>
     <script src="js/alert-system.js"></script>
     <script src="js/app.js?v=35"></script>
     
     <script>
+        console.log('[GESTION] Página cargada');
+
         function getApiBase() {
-            if (window.MONGO && typeof window.MONGO.getApiUrl === 'function') return window.MONGO.getApiUrl().replace(/\/$/, '');
-            if (window.COHAB_CONFIG && window.COHAB_CONFIG.mongodbApiUrl) return String(window.COHAB_CONFIG.mongodbApiUrl).replace(/\/$/, '');
+            if (typeof window.MONGO !== 'undefined' && typeof window.MONGO.getApiUrl === 'function') return window.MONGO.getApiUrl().replace(/\/$/, '');
+            if (typeof window.COHAB_CONFIG !== 'undefined' && window.COHAB_CONFIG.mongodbApiUrl) return String(window.COHAB_CONFIG.mongodbApiUrl).replace(/\/$/, '');
             return '';
         }
+
         async function checkGestionClave() {
-            const input = document.getElementById('gestionClaveInput');
-            const errEl = document.getElementById('gestionClaveError');
-            const overlay = document.getElementById('gestionClaveOverlay');
-            const clave = (input && input.value) ? input.value.trim() : '';
-            const base = getApiBase();
-            if (errEl) errEl.style.display = 'none';
+            var overlay = document.getElementById('gestionClaveOverlay');
+            var input = document.getElementById('gestionClaveInput');
+            var errEl = document.getElementById('gestionClaveError');
+            var clave = (input && input.value) ? input.value.trim() : '';
+            var base = getApiBase();
+            if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
             if (!base) {
-                if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'No hay API configurada. Configura el backend en Admin.'; }
+                if (errEl) { errEl.textContent = 'No hay API configurada.'; errEl.style.display = 'block'; }
                 return;
             }
             try {
-                const res = await fetch(base + '/auth/verificar-gestion', {
+                var res = await fetch(base + '/auth/verificar-gestion', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ clave: clave })
                 });
-                const data = await res.json().catch(() => ({}));
+                var data = await res.json().catch(function() { return {}; });
                 if (res.ok && data.ok) {
                     try { sessionStorage.setItem('gestionClaveOk', '1'); } catch (e) {}
                     if (overlay) overlay.style.display = 'none';
                 } else {
-                    if (errEl) { errEl.style.display = 'block'; errEl.textContent = data.mensaje || 'Clave incorrecta. Intenta de nuevo.'; }
+                    if (errEl) { errEl.textContent = data.mensaje || 'Clave incorrecta.'; errEl.style.display = 'block'; }
                 }
             } catch (e) {
-                if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Error de conexión. Revisa que el backend esté en marcha.'; }
+                if (errEl) { errEl.textContent = 'Error de conexión. Revisa el backend.'; errEl.style.display = 'block'; }
             }
         }
-        (async function initGestionClave() {
-            const overlay = document.getElementById('gestionClaveOverlay');
-            if (overlay) overlay.style.display = 'none';
-            if (sessionStorage.getItem('gestionClaveOk') === '1') return;
-            const base = getApiBase();
-            if (!base) return;
-            try {
-                const res = await fetch(base + '/auth/gestion-requiere-clave');
-                const data = await res.json().catch(() => ({}));
-                if (res.ok && data.requiereClave === true && overlay) overlay.style.display = 'flex';
-                else if (overlay) overlay.style.display = 'none';
-            } catch (e) {
-                if (overlay) overlay.style.display = 'none';
-            }
-            document.getElementById('gestionClaveInput')?.addEventListener('keydown', function(e) { if (e.key === 'Enter') checkGestionClave(); });
-        })();
 
-        // Auth check - admin ya verificado en panel principal
-        console.log('[GESTION] Página cargada');
-        
-        // Verificar autenticación admin al cargar
-        (function checkAdminAuth() {
-            const token = localStorage.getItem('cohabAuthToken');
-            const role = localStorage.getItem('cohabUserRole');
+        // 1) Exigir ser admin (si no, ir a login). 2) Si el backend exige clave de gestión, mostrar overlay hasta que la ingresen.
+        (async function initGestionAuth() {
+            var token = localStorage.getItem('cohabAuthToken');
+            var role = localStorage.getItem('cohabUserRole');
             if (!token || role !== 'admin') {
                 window.location.href = 'login.html';
                 return;
             }
+            var overlay = document.getElementById('gestionClaveOverlay');
+            if (!overlay) return;
+            if (sessionStorage.getItem('gestionClaveOk') === '1') {
+                overlay.style.display = 'none';
+                return;
+            }
+            var base = getApiBase();
+            if (!base) {
+                overlay.style.display = 'none';
+                return;
+            }
+            try {
+                var res = await fetch(base + '/auth/gestion-requiere-clave');
+                var data = await res.json().catch(function() { return {}; });
+                if (res.ok && data.requiereClave === true) {
+                    overlay.style.display = 'flex';
+                    document.getElementById('gestionClaveInput').focus();
+                } else {
+                    overlay.style.display = 'none';
+                }
+            } catch (e) {
+                overlay.style.display = 'none';
+            }
+            document.getElementById('gestionClaveInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') checkGestionClave();
+            });
         })();
         
         function toggleMobileMenu() {
