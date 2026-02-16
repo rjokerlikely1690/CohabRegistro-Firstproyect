@@ -32,6 +32,11 @@
             width: 64px;
             height: 64px;
         }
+        .filter-count {
+            margin-left: 0.35rem;
+            font-weight: 600;
+            opacity: 0.95;
+        }
     </style>
 </head>
 <body>
@@ -267,36 +272,39 @@
 
         <!-- Vista Rápida de Todos los Alumnos -->
         <section class="todos-alumnos-section">
-            <h3 style="display: flex; align-items: center; gap: 0.5rem;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                Vista Rápida - Todos los Alumnos
-            </h3>
-            <p class="subtitle">Haz clic en cualquier tarjeta para verificar su estado. También puedes agregar alumnos nuevos aquí.</p>
-            
-            <div style="margin-bottom: 1rem;">
-                <input type="text" id="verificarSearchInput" placeholder="Buscar por nombre..." oninput="filterVerificarByNombre()" style="width: 100%; max-width: 320px; padding: 0.6rem 1rem 0.6rem 2.5rem; border-radius: 2rem; border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 0.9rem; background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23888%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>'); background-repeat: no-repeat; background-position: 0.75rem center;">
+            <div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Vista Rápida - Todos los Alumnos
+                    </h3>
+                    <p class="subtitle">Haz clic en cualquier tarjeta para verificar su estado. También puedes agregar alumnos nuevos aquí.</p>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem;">
+                    <input type="text" id="verificarSearchInput" placeholder="Buscar por nombre..." oninput="filterVerificarByNombre()" style="width: 100%; min-width: 220px; max-width: 280px; padding: 0.6rem 1rem 0.6rem 2.5rem; border-radius: 2rem; border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 0.9rem; background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23888%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>'); background-repeat: no-repeat; background-position: 0.75rem center;">
+                    <button class="btn btn-primary" onclick="openModalVerificar()">+ Agregar alumno</button>
+                </div>
             </div>
             
             <div class="filter-buttons" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                <button class="filter-btn active" onclick="filterStatus('all')">Todos</button>
+                <button class="filter-btn active" onclick="filterStatus('all')">Todos <span id="verificarCountTodos" class="filter-count">0</span></button>
                 <button class="filter-btn" onclick="filterStatus('atrasado')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="#ef4444"><circle cx="12" cy="12" r="10"/></svg>
-                    Atrasados
+                    Atrasados <span id="verificarCountAtrasados" class="filter-count">0</span>
                 </button>
                 <button class="filter-btn" onclick="filterStatus('proximo')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b"><circle cx="12" cy="12" r="10"/></svg>
-                    Próximos a vencer
+                    Próximos a vencer <span id="verificarCountProximo" class="filter-count">0</span>
                 </button>
                 <button class="filter-btn" onclick="filterStatus('aldia')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981"><circle cx="12" cy="12" r="10"/></svg>
-                    Al día
+                    Al día <span id="verificarCountAldia" class="filter-count">0</span>
                 </button>
-                <button class="btn btn-primary" onclick="openModalVerificar()" style="margin-left: auto;">+ Agregar alumno</button>
             </div>
             
             <div id="todosAlumnos" class="todos-alumnos-grid">

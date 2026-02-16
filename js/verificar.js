@@ -1260,6 +1260,7 @@ async function loadTodosAlumnos() {
         
     } catch (error) {
         console.error('❌ Error al cargar alumnos:', error);
+        updateVerificarFilterCounts({ total: 0, atrasado: 0, proximo: 0, aldia: 0 });
         container.innerHTML = `
             <div class="empty-state error-state" style="grid-column: 1/-1;">
                 <div class="empty-state-icon">❌</div>
@@ -1281,8 +1282,18 @@ async function loadTodosAlumnos() {
                 <p>Ve a Gestión de Alumnos para agregar alumnos</p>
             </div>
         `;
+        updateVerificarFilterCounts({ total: 0, atrasado: 0, proximo: 0, aldia: 0 });
         return;
     }
+    
+    const counts = { total: alumnos.length, atrasado: 0, proximo: 0, aldia: 0 };
+    alumnos.forEach(a => {
+        const estado = calcularEstadoLocal(a);
+        if (estado.clase === 'atrasado') counts.atrasado++;
+        else if (estado.clase === 'proximo') counts.proximo++;
+        else counts.aldia++;
+    });
+    updateVerificarFilterCounts(counts);
     
     container.innerHTML = '';
     
@@ -1329,6 +1340,15 @@ async function loadTodosAlumnos() {
             </div>
         `;
     }
+}
+
+// Actualizar conteos en los botones de filtro (Vista Rápida)
+function updateVerificarFilterCounts(counts) {
+    const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+    set('verificarCountTodos', (counts && counts.total != null) ? counts.total : 0);
+    set('verificarCountAtrasados', (counts && counts.atrasado != null) ? counts.atrasado : 0);
+    set('verificarCountProximo', (counts && counts.proximo != null) ? counts.proximo : 0);
+    set('verificarCountAldia', (counts && counts.aldia != null) ? counts.aldia : 0);
 }
 
 // Aplicar filtro de estado + búsqueda por nombre (Vista Rápida en Verificar)
