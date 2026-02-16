@@ -82,6 +82,11 @@
             font-weight: bold;
             margin-bottom: 0.5rem;
         }
+        /* Números con color según el estado (verde=al día, amarillo=próximos, rojo=atrasados, neutro=total) */
+        .stat-card.total .stat-number { color: #374151; }
+        .stat-card.aldia .stat-number { color: #059669; }
+        .stat-card.proximo .stat-number { color: #d97706; }
+        .stat-card.atrasado .stat-number { color: #dc2626; }
         
         .stat-label {
             color: #666;
