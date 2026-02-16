@@ -97,8 +97,51 @@
             .stats-bar { justify-content: center; }
         }
     </style>
+        /* Overlay clave Gestión de Alumnos */
+        #gestionClaveOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        #gestionClaveOverlay .clave-box {
+            background: #1a1a1a;
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 360px;
+            width: 100%;
+        }
+        #gestionClaveOverlay h3 { margin: 0 0 1rem 0; color: #fff; font-size: 1.25rem; }
+        #gestionClaveOverlay p { color: #888; font-size: 0.9rem; margin-bottom: 1.25rem; }
+        #gestionClaveOverlay input { width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #444; background: #111; color: #fff; font-size: 1rem; box-sizing: border-box; }
+        #gestionClaveOverlay .clave-error { color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; }
+        #gestionClaveOverlay .clave-actions { margin-top: 1.25rem; display: flex; gap: 0.75rem; }
+        #gestionClaveOverlay .clave-actions .btn { flex: 1; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 600; border: none; }
+        #gestionClaveOverlay .clave-actions .btn-primary { background: #dc2626; color: #fff; }
+    </style>
+
+    <script src="js/cohab-config.js?v=2"></script>
 </head>
 <body>
+    <!-- Overlay: clave para acceder a Gestión de Alumnos (si está configurada en cohab-config.js) -->
+    <div id="gestionClaveOverlay">
+        <div class="clave-box">
+            <h3>🔐 Clave de Gestión de Alumnos</h3>
+            <p>Introduce la clave para acceder a esta sección.</p>
+            <input type="password" id="gestionClaveInput" placeholder="Clave" autocomplete="off">
+            <div id="gestionClaveError" class="clave-error" style="display: none;">Clave incorrecta. Intenta de nuevo.</div>
+            <div class="clave-actions">
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='admin.html'">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="checkGestionClave()">Acceder</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Auth check removido - se verifica en login y admin.html -->
     <nav class="navbar" style="position: sticky; top: 0; z-index: 101;">
         <div class="container">
@@ -396,17 +439,39 @@
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="js/cohab-config.js?v=2"></script>
     <script src="js/auth-client.js?v=2"></script>
     <script src="js/mongodb-client.js?v=8"></script>
     <script src="js/alert-system.js"></script>
     <script src="js/app.js?v=35"></script>
     
     <script>
-        // Auth check desactivado temporalmente - admin ya verificado en panel principal
+        // Clave de Gestión de Alumnos (configurada en cohab-config.js como COHAB_CONFIG.gestionClave)
+        function checkGestionClave() {
+            const input = document.getElementById('gestionClaveInput');
+            const errEl = document.getElementById('gestionClaveError');
+            const overlay = document.getElementById('gestionClaveOverlay');
+            const clave = (input && input.value) ? input.value.trim() : '';
+            const configClave = (window.COHAB_CONFIG && window.COHAB_CONFIG.gestionClave) ? String(window.COHAB_CONFIG.gestionClave) : '';
+            if (clave === configClave) {
+                try { sessionStorage.setItem('gestionClaveOk', '1'); } catch (e) {}
+                if (errEl) errEl.style.display = 'none';
+                if (overlay) overlay.style.display = 'none';
+            } else {
+                if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Clave incorrecta. Intenta de nuevo.'; }
+            }
+        }
+        (function initGestionClave() {
+            const overlay = document.getElementById('gestionClaveOverlay');
+            const configClave = (window.COHAB_CONFIG && window.COHAB_CONFIG.gestionClave) ? String(window.COHAB_CONFIG.gestionClave).trim() : '';
+            if (!configClave) return;
+            if (sessionStorage.getItem('gestionClaveOk') === '1') return;
+            if (overlay) overlay.style.display = 'flex';
+            document.getElementById('gestionClaveInput')?.addEventListener('keydown', function(e) { if (e.key === 'Enter') checkGestionClave(); });
+        })();
+
+        // Auth check - admin ya verificado en panel principal
         console.log('[GESTION] Página cargada');
         
-        // Función para toggle del menú móvil
         // Verificar autenticación admin al cargar
         (function checkAdminAuth() {
             const token = localStorage.getItem('cohabAuthToken');
