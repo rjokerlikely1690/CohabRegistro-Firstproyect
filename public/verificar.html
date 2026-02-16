@@ -278,6 +278,10 @@
             </h3>
             <p class="subtitle">Haz clic en cualquier tarjeta para verificar su estado. También puedes agregar alumnos nuevos aquí.</p>
             
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="verificarSearchInput" placeholder="Buscar por nombre..." oninput="filterVerificarByNombre()" style="width: 100%; max-width: 320px; padding: 0.6rem 1rem 0.6rem 2.5rem; border-radius: 2rem; border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 0.9rem; background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23888%22 stroke-width=%222%22><circle cx=%2211%22 cy=%2211%22 r=%228%22/><path d=%22m21 21-4.35-4.35%22/></svg>'); background-repeat: no-repeat; background-position: 0.75rem center;">
+            </div>
+            
             <div class="filter-buttons" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
                 <button class="filter-btn active" onclick="filterStatus('all')">Todos</button>
                 <button class="filter-btn" onclick="filterStatus('atrasado')" style="display: inline-flex; align-items: center; gap: 0.5rem;">

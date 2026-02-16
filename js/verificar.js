@@ -31,6 +31,7 @@ let alumnos = [];
 let stream = null;
 let scanning = false;
 let currentFilter = 'all';
+let currentSearchVerificar = '';
 let currentTrack = null;
 let currentDeviceId = null;
 
@@ -1318,6 +1319,8 @@ async function loadTodosAlumnos() {
         container.appendChild(card);
     });
     
+    applyVerificarFilters();
+    
     if (container.children.length === 0) {
         container.innerHTML = `
             <div class="empty-state" style="grid-column: 1/-1;">
@@ -1328,42 +1331,41 @@ async function loadTodosAlumnos() {
     }
 }
 
-// Filtrar por estado
-function filterStatus(status) {
-    console.log('🔍 [filterStatus] Filtrando por:', status);
-    currentFilter = status;
-    
-    // Actualizar botones activos
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    const activeBtn = document.querySelector(`.filter-btn[onclick="filterStatus('${status}')"]`);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-    }
-    
-    // Aplicar filtro
+// Aplicar filtro de estado + búsqueda por nombre (Vista Rápida en Verificar)
+function applyVerificarFilters() {
     const cards = document.querySelectorAll('.mini-card');
+    const search = (currentSearchVerificar || '').trim().toLowerCase();
+    
     cards.forEach(card => {
-        if (status === 'all') {
-            card.style.display = 'block';
-        } else {
-            // Mapear estados
-            const statusMap = {
-                'aldia': 'al-dia',
-                'proximo': 'proximo',
-                'atrasado': 'atrasado'
-            };
-            
-            const targetClass = statusMap[status];
-            if (card.classList.contains(`estado-${targetClass}`)) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
+        const nameEl = card.querySelector('.mini-card-name');
+        const name = (nameEl && nameEl.textContent) ? nameEl.textContent.trim().toLowerCase() : '';
+        const matchesSearch = !search || name.includes(search);
+        
+        let matchesStatus = true;
+        if (currentFilter !== 'all') {
+            const statusMap = { 'aldia': 'al-dia', 'proximo': 'proximo', 'atrasado': 'atrasado' };
+            const targetClass = statusMap[currentFilter];
+            matchesStatus = targetClass ? card.classList.contains(`estado-${targetClass}`) : false;
         }
+        
+        card.style.display = (matchesStatus && matchesSearch) ? 'block' : 'none';
     });
+}
+
+// Filtrar por estado (Vista Rápida)
+function filterStatus(status) {
+    currentFilter = status;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.querySelector(`.filter-btn[onclick="filterStatus('${status}')"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+    applyVerificarFilters();
+}
+
+// Buscador por nombre (Vista Rápida en Verificar)
+function filterVerificarByNombre() {
+    const input = document.getElementById('verificarSearchInput');
+    currentSearchVerificar = (input && input.value) ? input.value.trim() : '';
+    applyVerificarFilters();
 }
 
 // Helpers para interpretar datos QR	
@@ -1495,4 +1497,5 @@ if (typeof window !== 'undefined') {
     window.closeModalVerificar = closeModalVerificar;
     window.setDiaPagoVerificar = setDiaPagoVerificar;
     window.saveAlumnoVerificar = saveAlumnoVerificar;
+    window.filterVerificarByNombre = filterVerificarByNombre;
 }
