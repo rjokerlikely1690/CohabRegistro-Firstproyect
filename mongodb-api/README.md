@@ -14,6 +14,7 @@ npm install
    - `DB_NAME`: Nombre de la base de datos (default: `cohab`)
    - `COLLECTION_NAME`: Nombre de la colección (default: `alumnos`)
    - `PORT`: Puerto del servidor (default: `3000`)
+   - `GESTION_CLAVE`: (Opcional) Clave para acceder a la sección Gestión de Alumnos. Si la defines, el frontend pedirá esta clave antes de mostrar la página.
 
 ## Despliegue
 

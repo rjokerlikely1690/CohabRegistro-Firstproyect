@@ -18,8 +18,7 @@ window.COHAB_CONFIG = window.COHAB_CONFIG || {};
 // Backend público en Render (producción)
 window.COHAB_CONFIG.mongodbApiUrl = 'https://cohabregistro-firstproyect.onrender.com';
 
-// Clave para acceder a Gestión de Alumnos (opcional). Si la dejas vacía '', no se pedirá clave.
-// Ejemplo: window.COHAB_CONFIG.gestionClave = 'miClaveSecreta';
-window.COHAB_CONFIG.gestionClave = window.COHAB_CONFIG.gestionClave || '';
+// La clave de Gestión de Alumnos se configura en el BACKEND (variable de entorno GESTION_CLAVE).
+// No pongas la clave aquí; el frontend la valida contra el API.
 
 

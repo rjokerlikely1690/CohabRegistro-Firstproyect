@@ -445,27 +445,51 @@
     <script src="js/app.js?v=35"></script>
     
     <script>
-        // Clave de Gestión de Alumnos (configurada en cohab-config.js como COHAB_CONFIG.gestionClave)
-        function checkGestionClave() {
+        function getApiBase() {
+            if (window.MONGO && typeof window.MONGO.getApiUrl === 'function') return window.MONGO.getApiUrl().replace(/\/$/, '');
+            if (window.COHAB_CONFIG && window.COHAB_CONFIG.mongodbApiUrl) return String(window.COHAB_CONFIG.mongodbApiUrl).replace(/\/$/, '');
+            return '';
+        }
+        async function checkGestionClave() {
             const input = document.getElementById('gestionClaveInput');
             const errEl = document.getElementById('gestionClaveError');
             const overlay = document.getElementById('gestionClaveOverlay');
             const clave = (input && input.value) ? input.value.trim() : '';
-            const configClave = (window.COHAB_CONFIG && window.COHAB_CONFIG.gestionClave) ? String(window.COHAB_CONFIG.gestionClave) : '';
-            if (clave === configClave) {
-                try { sessionStorage.setItem('gestionClaveOk', '1'); } catch (e) {}
-                if (errEl) errEl.style.display = 'none';
-                if (overlay) overlay.style.display = 'none';
-            } else {
-                if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Clave incorrecta. Intenta de nuevo.'; }
+            const base = getApiBase();
+            if (errEl) errEl.style.display = 'none';
+            if (!base) {
+                if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'No hay API configurada. Configura el backend en Admin.'; }
+                return;
+            }
+            try {
+                const res = await fetch(base + '/auth/verificar-gestion', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clave: clave })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    try { sessionStorage.setItem('gestionClaveOk', '1'); } catch (e) {}
+                    if (overlay) overlay.style.display = 'none';
+                } else {
+                    if (errEl) { errEl.style.display = 'block'; errEl.textContent = data.mensaje || 'Clave incorrecta. Intenta de nuevo.'; }
+                }
+            } catch (e) {
+                if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Error de conexión. Revisa que el backend esté en marcha.'; }
             }
         }
-        (function initGestionClave() {
-            const overlay = document.getElementById('gestionClaveOverlay');
-            const configClave = (window.COHAB_CONFIG && window.COHAB_CONFIG.gestionClave) ? String(window.COHAB_CONFIG.gestionClave).trim() : '';
-            if (!configClave) return;
+        (async function initGestionClave() {
             if (sessionStorage.getItem('gestionClaveOk') === '1') return;
-            if (overlay) overlay.style.display = 'flex';
+            const overlay = document.getElementById('gestionClaveOverlay');
+            const base = getApiBase();
+            if (!base) return;
+            try {
+                const res = await fetch(base + '/auth/gestion-requiere-clave');
+                const data = await res.json().catch(() => ({}));
+                if (data.requiereClave && overlay) overlay.style.display = 'flex';
+            } catch (e) {
+                // Si falla la petición, no mostramos overlay (evitar bloquear si el backend no tiene la ruta aún)
+            }
             document.getElementById('gestionClaveInput')?.addEventListener('keydown', function(e) { if (e.key === 'Enter') checkGestionClave(); });
         })();
 

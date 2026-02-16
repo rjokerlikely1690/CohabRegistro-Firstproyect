@@ -650,6 +650,26 @@ app.get('/auth/me', verifyToken, async (req, res) => {
     }
 });
 
+// Clave opcional para acceder a la sección Gestión de Alumnos (variable de entorno)
+const GESTION_CLAVE = (process.env.GESTION_CLAVE || '').trim();
+
+// POST /auth/verificar-gestion - Validar clave de Gestión de Alumnos (no requiere token)
+app.post('/auth/verificar-gestion', (req, res) => {
+    const clave = (req.body && req.body.clave != null) ? String(req.body.clave).trim() : '';
+    if (!GESTION_CLAVE) {
+        return res.json({ ok: true });
+    }
+    if (clave === GESTION_CLAVE) {
+        return res.json({ ok: true });
+    }
+    return res.status(401).json({ ok: false, mensaje: 'Clave incorrecta' });
+});
+
+// GET /auth/gestion-requiere-clave - Saber si el backend exige clave para Gestión (para mostrar/ocultar overlay)
+app.get('/auth/gestion-requiere-clave', (req, res) => {
+    res.json({ requiereClave: !!GESTION_CLAVE });
+});
+
 // ============================================================
 // ENDPOINTS DE GESTIÓN DE USUARIOS (Solo Admin)
 // ============================================================
@@ -1173,7 +1193,9 @@ app.get('/', (req, res) => {
             auth: {
                 'POST /auth/login': 'Iniciar sesión',
                 'POST /auth/logout': 'Cerrar sesión',
-                'GET /auth/me': 'Obtener usuario actual (requiere auth)'
+                'GET /auth/me': 'Obtener usuario actual (requiere auth)',
+                'GET /auth/gestion-requiere-clave': '¿Gestión de Alumnos exige clave?',
+                'POST /auth/verificar-gestion': 'Validar clave de Gestión (body: { clave })'
             },
             usuarios: {
                 'GET /usuarios': 'Listar usuarios (admin)',
