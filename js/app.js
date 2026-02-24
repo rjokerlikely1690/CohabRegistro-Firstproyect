@@ -1011,10 +1011,15 @@ function showQR(id) {
     const rutTexto = (alumno.rut != null && String(alumno.rut).trim() !== '') ? String(alumno.rut).trim() : '';
     const infoDiv = document.createElement('div');
     infoDiv.className = 'qr-info-card';
+    const alumnoIdVal = (alumno.id != null && String(alumno.id).trim() !== '') ? String(alumno.id).trim() : (alumno._id ? String(alumno._id) : '');
     infoDiv.innerHTML = `
         <div class="qr-info-row">
             <span class="qr-info-label">Nombre</span>
             <span class="qr-info-value">${alumno.nombre}</span>
+        </div>
+        <div class="qr-info-row">
+            <span class="qr-info-label">ID</span>
+            <span class="qr-info-value qr-id-copy" style="cursor:pointer; user-select:all; font-family:monospace;" onclick="navigator.clipboard.writeText('${alumnoIdVal.replace(/'/g, "\\'")}').then(() => { if(typeof showToast === 'function') showToast('ID copiado', 'success'); else alert('ID copiado'); })" title="Clic para copiar">${alumnoIdVal || '—'}</span>
         </div>
         ${rutTexto ? `<div class="qr-info-row">
             <span class="qr-info-label">RUT</span>
@@ -1170,8 +1175,9 @@ function imprimirQR(id) {
 
 // Helper para construir URL del estudiante. ID = identificador corto (obligatorio). RUT = opcional (solo para QRs nuevos).
 function buildStudentUrl(alumnoId, rutOptional) {
-    let baseUrl = localStorage.getItem('serverBaseUrl');
-    if (!baseUrl || !baseUrl.includes('pages.dev')) {
+    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(window.location.origin);
+    let baseUrl = isLocalhost ? window.location.origin : (localStorage.getItem('serverBaseUrl') || '');
+    if (!baseUrl || (!isLocalhost && !baseUrl.includes('pages.dev'))) {
         baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
     }
     baseUrl = baseUrl.replace(/\/verificar\/.*$/, '');

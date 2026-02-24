@@ -97,6 +97,135 @@
             .stats-bar { justify-content: center; }
         }
 
+        /* ===== MÓVIL - Gestión de Alumnos optimizado para teléfono ===== */
+        @media (max-width: 600px) {
+            /* Navbar: logo + hamburger compactos, ocultar buscador (ir al contenido) */
+            body .navbar .container {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                padding: 0.5rem 0.75rem;
+                min-height: 52px;
+            }
+            body .navbar .navbar-search {
+                order: 3;
+                flex: 1 1 100%;
+                max-width: 100%;
+                margin: 0.25rem 0 0;
+            }
+            body .navbar .navbar-search input {
+                padding: 0.75rem 1rem 0.75rem 2.75rem;
+                font-size: 16px; /* evita zoom en iOS */
+            }
+            body .navbar .logo { height: 36px; }
+            body .navbar .mobile-menu-btn {
+                padding: 0.75rem;
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            /* Menú móvil: items más grandes para tocar */
+            body .mobile-menu a {
+                padding: 1rem 1.25rem;
+                font-size: 1.05rem;
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+            body .mobile-menu .nav-icon { flex-shrink: 0; }
+            /* Menú móvil: overlay tipo modal (fondo oscuro + panel deslizante) */
+            body .mobile-menu.active {
+                position: fixed !important;
+                inset: 0 !important;
+                top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+                width: 100% !important; height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                background: transparent !important;
+                z-index: 9999 !important;
+            }
+            body .mobile-menu-backdrop {
+                position: absolute;
+                inset: 0;
+                background: rgba(0,0,0,0.7);
+                -webkit-tap-highlight-color: transparent;
+            }
+            body .mobile-menu-panel {
+                position: relative;
+                background: linear-gradient(180deg, #1a1a1a 0%, #111 100%);
+                border-top: 3px solid #dc2626;
+                border-radius: 0 0 1rem 1rem;
+                padding: 0.5rem 0;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                margin: 0 0.75rem;
+                max-width: 100%;
+            }
+            body .mobile-menu-panel a {
+                display: flex !important;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 1rem 1.25rem !important;
+                min-height: 52px;
+                border-bottom: 1px solid #333;
+            }
+            body .mobile-menu-panel a:last-child { border-bottom: none; }
+            /* Contenedor principal */
+            body main.container {
+                padding: 0.75rem;
+                padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+            }
+            /* Acciones rápidas: grid 2x2, botones más grandes para tocar */
+            body .gestion-actions {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.5rem;
+            }
+            body .gestion-actions .btn-primary { grid-column: 1 / -1; }
+            body main .gestion-actions .btn-small {
+                min-width: 44px;
+                min-height: 44px;
+                padding: 0.75rem !important;
+                font-size: 0.9rem !important;
+                border-radius: 0.75rem;
+                -webkit-tap-highlight-color: transparent;
+            }
+            body main .gestion-actions .btn-primary.btn-small {
+                min-height: 48px;
+            }
+            /* Stats: grid 2x2 en móvil */
+            .stats-bar {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+            .stat-pill {
+                padding: 0.75rem;
+                font-size: 0.85rem;
+                min-height: 52px;
+                justify-content: center;
+            }
+            .stat-pill .stat-num { font-size: 1.25rem; }
+            /* Filtros: columna en móvil */
+            body .gestion-filtros {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            body .gestion-filtros .filter-select,
+            body .gestion-filtros .btn {
+                width: 100%;
+                min-height: 44px;
+                font-size: 16px;
+            }
+        }
+        @media (max-width: 380px) {
+            .stats-bar { gap: 0.4rem; }
+            .stat-pill { padding: 0.6rem; font-size: 0.8rem; }
+            .stat-pill .stat-num { font-size: 1.1rem; }
+        }
+
         /* Overlay: clave para acceder a Gestión de Alumnos (siempre que el backend la exija, aunque el admin ya esté logueado) */
         #gestionClaveOverlay {
             display: none;
@@ -171,16 +300,19 @@
         
         <!-- Menú móvil -->
         <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-backdrop" onclick="toggleMobileMenu()" aria-label="Cerrar menú"></div>
+            <div class="mobile-menu-panel">
             <a href="login.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span> Inicio</a>
             <a href="gestion-alumnos.html" class="active"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span> Gestión de Alumnos</a>
             <a href="public/verificar.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span> Verificar QR</a>
             <a href="admin.html"><span class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></span> Panel Admin</a>
+            </div>
         </div>
     </nav>
 
     <main class="container" style="padding-top: 0;">
         <!-- Acciones rápidas -->
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+        <div class="gestion-actions" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
             <button class="btn btn-secondary btn-small" onclick="forceSync()" title="Sincronizar"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></button>
             <button class="btn btn-secondary btn-small" onclick="updateDatabase()" title="Actualizar"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button>
             <button class="btn btn-info btn-small" onclick="exportarDatos()" title="Exportar CSV"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></button>
@@ -208,7 +340,7 @@
         </div>
 
         <!-- Filtros -->
-        <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+        <div class="gestion-filtros" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
             <select id="filterEstado" onchange="filterAlumnos()" class="filter-select" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background: #1f1f1f; border: 1px solid #333; color: #fff;">
                 <option value="">Todos</option>
                 <option value="al-dia">Al Día</option>
@@ -449,7 +581,7 @@
     <script src="js/auth-client.js?v=2"></script>
     <script src="js/mongodb-client.js?v=8"></script>
     <script src="js/alert-system.js"></script>
-    <script src="js/app.js?v=35"></script>
+    <script src="js/app.js?v=37"></script>
     
     <script>
         console.log('[GESTION] Página cargada');

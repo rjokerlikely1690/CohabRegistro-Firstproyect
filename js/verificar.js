@@ -279,20 +279,24 @@ function scanQRCode(video, canvas) {
 
 // Construir URL de alumno estable en el mismo host
 function buildStudentUrl(alumnoId) {
-    // Prioridad: URL configurada > Cloudflare Pages por defecto
-    let baseUrl = localStorage.getItem('serverBaseUrl');
+    // En localhost: usar la URL actual para que funcione sin config
+    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(window.location.origin);
+    let baseUrl = isLocalhost ? window.location.origin : (localStorage.getItem('serverBaseUrl') || '');
     
     // Si no hay URL configurada o no es Cloudflare Pages, usar la por defecto
-    if (!baseUrl || !baseUrl.includes('pages.dev')) {
+    if (!baseUrl || (!isLocalhost && !baseUrl.includes('pages.dev'))) {
         baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
     }
     
     // Limpiar la URL: remover cualquier ruta adicional y trailing slash
     baseUrl = baseUrl.replace(/\/verificar\/.*$/, ''); // Remover /verificar/ si existe
     baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, ''); // Remover cualquier .html
-    baseUrl = baseUrl.replace(/\/$/, ''); // Remover trailing slash
+    baseUrl = baseUrl.replace(/\/$/, '');
     
-    // URL canónica de alumno (sin login): /alumno/:id
+    // En localhost usar ruta directa (los servidores estáticos no procesan _redirects)
+    if (isLocalhost) {
+        return `${baseUrl}/public/alumno.html?id=${encodeURIComponent(alumnoId)}`;
+    }
     return `${baseUrl}/alumno/${encodeURIComponent(alumnoId)}`;
 }
 

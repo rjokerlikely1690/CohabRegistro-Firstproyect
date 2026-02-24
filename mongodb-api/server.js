@@ -2,6 +2,7 @@
 // Este servidor expone una API REST segura para MongoDB
 // Desplegar en Railway, Render, Vercel, o similar
 
+require('dotenv').config();
 const dns = require('dns');
 const express = require('express');
 const cors = require('cors');
@@ -365,7 +366,7 @@ function generateEmailTemplate(alumno, alumnoUrl, qrBase64) {
                     <tr>
                         <td style="background-color: #0d0d0d; padding: 30px 40px; text-align: center; border-top: 1px solid #2a2a2a;">
                             <p style="margin: 0 0 8px 0; color: #666; font-size: 14px; font-weight: 600;">Academia COHAB BJJ</p>
-                            <p style="margin: 0; color: #666; font-size: 12px;">San Carlos de Apoquindo, Las Condes</p>
+                            <p style="margin: 0; color: #666; font-size: 12px;">El Alba 12620, Las Condes</p>
                             <p style="margin: 12px 0 0 0; color: #666; font-size: 12px;">Si tienes dudas, contáctanos por WhatsApp o email.</p>
                         </td>
                     </tr>
