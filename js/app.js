@@ -496,11 +496,14 @@ function updateDashboardStats() {
     let alumnosAlDia = 0;
     let alumnosVencidos = 0;
     let alumnosMorosos = 0;
+    let alumnosProximos = 0;
+    let alumnosAlDiaOnly = 0;
     
     alumnos.forEach(alumno => {
         const estado = calcularEstado(alumno);
         if (estado.clase === 'al-dia') {
             alumnosAlDia++;
+            alumnosAlDiaOnly++;
         } else if (estado.clase === 'atrasado') {
             const diasAtrasado = parseInt(estado.texto) || 0;
             if (diasAtrasado > 30) {
@@ -509,7 +512,7 @@ function updateDashboardStats() {
                 alumnosVencidos++;
             }
         } else if (estado.clase === 'proximo') {
-            // Los que están por vencer se cuentan como "al día" para estadísticas
+            alumnosProximos++;
             alumnosAlDia++;
         }
     });
@@ -524,6 +527,16 @@ function updateDashboardStats() {
     if (alDiaEl) alDiaEl.textContent = alumnosAlDia;
     if (vencidosEl) vencidosEl.textContent = alumnosVencidos;
     if (morososEl) morososEl.textContent = alumnosMorosos;
+    
+    // Contadores en los botones de filtro (misma modalidad que Verificar)
+    const setCount = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+    setCount('gestionCountTodos', totalAlumnos);
+    setCount('gestionCountVencidos', alumnosVencidos + alumnosMorosos);
+    setCount('gestionCountProximos', alumnosProximos);
+    setCount('gestionCountAlDia', alumnosAlDiaOnly);
+    setCount('gestionCountMorosos', alumnosMorosos);
+    
+    updateGestionFilterActive();
 }
 
 // Abrir modal para agregar alumno
@@ -1521,7 +1534,34 @@ function clearFilters() {
     if (searchInput) searchInput.value = '';
     if (filterEstado) filterEstado.value = '';
     
+    updateGestionFilterActive();
     loadAlumnos();
+}
+
+// Filtro por estado desde los botones pill (Gestión de Alumnos) — misma modalidad que Verificar
+function setGestionFilter(value) {
+    const sel = document.getElementById('filterEstado');
+    if (sel) {
+        sel.value = value;
+        filterAlumnos();
+    }
+    updateGestionFilterActive();
+}
+
+function updateGestionFilterActive() {
+    const sel = document.getElementById('filterEstado');
+    if (!sel) return;
+    const value = sel.value || '';
+    const ids = {
+        '': 'btnFilterTodos',
+        'al-dia': 'btnFilterAlDia',
+        'por-vencer': 'btnFilterPorVencer',
+        'vencido': 'btnFilterVencido',
+        'moroso': 'btnFilterMoroso'
+    };
+    document.querySelectorAll('.gestion-filtros-pills .filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === ids[value]);
+    });
 }
 
 // Exportar datos a CSV

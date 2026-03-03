@@ -111,6 +111,7 @@ body.marketing {
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Navbar: en escritorio sticky; en móvil/tablet fija (se define en media query) */
 body.marketing .navbar {
     position: sticky;
     top: 0;
@@ -119,6 +120,21 @@ body.marketing .navbar {
     overflow-x: hidden;
     width: 100%;
     max-width: 100vw;
+}
+
+@media (max-width: 992px) {
+    body.marketing .navbar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        z-index: 1000;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+    }
+    body.marketing .marketing-main {
+        padding-top: calc(60px + 1rem) !important;
+    }
 }
 
 body.marketing .navbar .container {
@@ -804,6 +820,14 @@ body.marketing .navbar .container {
     border-color: rgba(220, 38, 38, 0.30);
 }
 
+/* Sección actual en el drawer: resalte sutil en rojo (no bloque sólido) */
+.marketing-drawer nav a.active {
+    color: #fca5a5;
+    border-left: 3px solid #dc2626;
+    background: rgba(220, 38, 38, 0.12);
+    border-color: rgba(220, 38, 38, 0.35);
+}
+
     .marketing-drawer .drawer-actions {
         margin-top: 1.5rem;
         display: grid;
@@ -825,19 +849,20 @@ body.marketing .navbar .container {
 }
 
 @media (max-width: 768px) {
-    /* NAVBAR MÓVIL - Optimizada y limpia */
+    /* NAVBAR MÓVIL - Fija para que acompañe al usuario al hacer scroll */
     body.marketing .navbar {
-        position: -webkit-sticky;
-        position: sticky;
+        position: fixed;
         top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-width: 100vw;
         background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
         border-bottom: 1px solid rgba(220, 38, 38, 0.2);
         padding: 0.5rem 0;
         box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-        z-index: 100;
+        z-index: 1000;
         overflow-x: hidden;
-        width: 100%;
-        max-width: 100vw;
     }
     
     body.marketing .navbar .container {
@@ -958,9 +983,9 @@ body.marketing .navbar .container {
         }
     }
     
-    /* HERO SECTION MÓVIL - Optimizado */
+    /* HERO SECTION MÓVIL - Padding-top para no quedar bajo navbar fija */
     .marketing-main {
-        padding: 1rem 0.75rem 6rem;
+        padding: calc(56px + 1rem) 0.75rem 6rem;
         overflow-x: hidden;
         width: 100%;
         max-width: 100vw;
@@ -1403,6 +1428,13 @@ body.marketing .navbar .container {
     .marketing-drawer a:active {
         background: rgba(220, 38, 38, 0.15);
         transform: translateX(4px);
+    }
+    
+    .marketing-drawer nav a.active {
+        color: #fca5a5;
+        border-left: 3px solid #dc2626;
+        background: rgba(220, 38, 38, 0.12);
+        border-color: rgba(220, 38, 38, 0.35);
     }
     
     .marketing-drawer .drawer-actions a {
@@ -2577,11 +2609,15 @@ body.modal-open .navbar { pointer-events: none; }
     }
 
     .navbar {
-        position: sticky;
+        position: fixed;
         top: 0;
-        z-index: 100;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 1000;
         box-shadow: 0 2px 12px rgba(0,0,0,0.4);
         backdrop-filter: blur(6px);
+        background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
     }
 
     main {
@@ -3638,12 +3674,13 @@ body.modal-open .navbar { pointer-events: none; }
         max-width: 100%;
     }
     
-    /* NAVEGACIÓN MÓVIL MEJORADA - Consolidado */
+    /* NAVEGACIÓN MÓVIL MEJORADA - Fija para acompañar al usuario al hacer scroll */
     .navbar {
-        position: sticky;
+        position: fixed;
         top: 0;
         left: 0;
         right: 0;
+        width: 100%;
         z-index: 1000;
         background: linear-gradient(135deg, #1b1b1b 0%, #2a2a2a 100%);
         padding: 0.75rem 1rem;

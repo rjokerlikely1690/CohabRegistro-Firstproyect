@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+  <script>var _b=document.location.href.replace(/[#?].*$/,'').replace(/[^/]*$/,'');if(!_b.endsWith('/'))_b+='/';document.write('<base href="'+_b+'">');</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
   <title>COHAB BJJ — San Carlos de Apoquindo | Disciplina, comunidad y progreso</title>
   <meta name="theme-color" content="#dc2626">
@@ -10,7 +11,21 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="img/logo_cohab.png">
   <link rel="apple-touch-icon" href="img/logo_cohab.png">
-  <link rel="stylesheet" href="css/styles.css?v=36">
+  <link rel="stylesheet" href="css/styles.css?v=40" id="main-css">
+  <script>
+    (function() {
+      var link = document.getElementById('main-css');
+      if (!link) return;
+      link.onerror = function() {
+        var base = window.location.href.replace(/[#?].*$/, '').replace(/[^/]+$/, '');
+        var href = base + (base.match(/\/$/) ? '' : '') + 'css/styles.css?v=40';
+        var n = document.createElement('link');
+        n.rel = 'stylesheet';
+        n.href = href;
+        document.head.appendChild(n);
+      };
+    })();
+  </script>
   <style>
     /* CRÍTICO MÓVIL - Forzar navbar responsive */
     @media (max-width: 768px) {
@@ -86,7 +101,7 @@
       <button class="drawer-close" type="button" id="drawerClose" aria-label="Cerrar menú">CERRAR</button>
     </div>
     <nav>
-      <a href="index.html"><span>Inicio</span><span>›</span></a>
+      <a href="index.html" class="active"><span>Inicio</span><span>›</span></a>
       <a href="clases.html"><span>Clases</span><span>›</span></a>
       <a href="metodologia.html"><span>Metodología</span><span>›</span></a>
       <a href="comunidad.html"><span>Comunidad</span><span>›</span></a>
@@ -399,6 +414,7 @@
     <div style="max-width:1200px;margin:1.75rem auto 0;padding:0 1rem;color:rgba(255,255,255,0.45);font-size:0.95rem;">
       © 2026 COHAB BJJ — Santiago, Chile
     </div>
+    <p style="margin:0.5rem auto 0;padding:0 1rem;text-align:center;"><a href="login.html?role=admin" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-decoration:none;">Acceso equipo</a></p>
   </footer>
 
   <div class="marketing-cta-bar" aria-label="Acciones rápidas">
@@ -673,15 +689,22 @@
         document.body.style.overflow = '';
       }
 
-      // Abrir drawer - soporte para click y touch
+      function toggleDrawer() {
+        if (!drawer || !backdrop) return;
+        if (drawer.getAttribute('aria-hidden') === 'true' || drawer.style.display === 'none') {
+          openDrawer();
+        } else {
+          closeDrawer();
+        }
+      }
       if (menuBtn) {
         menuBtn.addEventListener('click', function(e) {
           e.preventDefault();
-          openDrawer();
+          toggleDrawer();
         });
         menuBtn.addEventListener('touchend', function(e) {
           e.preventDefault();
-          openDrawer();
+          toggleDrawer();
         });
       }
       

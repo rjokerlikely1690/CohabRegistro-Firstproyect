@@ -8,7 +8,7 @@
   <meta name="description" content="Horarios de COHAB BJJ (Gi / NoGi / Open Mat) en El Alba 12620, Las Condes.">
   <link rel="icon" type="image/png" href="img/logo_cohab.png">
   <link rel="apple-touch-icon" href="img/logo_cohab.png">
-  <link rel="stylesheet" href="css/styles.css?v=14">
+  <link rel="stylesheet" href="css/styles.css?v=40">
 </head>
 <body class="marketing">
   <nav class="navbar" role="navigation" aria-label="Navegación principal">
@@ -46,7 +46,7 @@
       <a href="clases.html"><span>Clases</span><span>›</span></a>
       <a href="metodologia.html"><span>Metodología</span><span>›</span></a>
       <a href="comunidad.html"><span>Comunidad</span><span>›</span></a>
-      <a href="horarios.html"><span>Horarios</span><span>›</span></a>
+      <a href="horarios.html" class="active"><span>Horarios</span><span>›</span></a>
       <a href="contacto.html"><span>Contacto</span><span>›</span></a>
       <a href="faq.html"><span>Preguntas frecuentes</span><span>›</span></a>
       <a href="ubicacion.html"><span>Ubicación</span><span>›</span></a>
@@ -193,6 +193,7 @@
     <div style="max-width:1200px;margin:1.75rem auto 0;padding:0 1rem;color:rgba(255,255,255,0.45);font-size:0.95rem;">
       © 2026 COHAB BJJ — Santiago, Chile
     </div>
+    <p style="margin:0.5rem auto 0;padding:0 1rem;text-align:center;"><a href="login.html?role=admin" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-decoration:none;">Acceso equipo</a></p>
   </footer>
 
   <div class="marketing-cta-bar" aria-label="Acciones rápidas">
@@ -222,7 +223,12 @@
         backdrop.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
       }
-      if (menuBtn) menuBtn.addEventListener('click', openDrawer);
+      function toggleDrawer() {
+        if (!drawer || !backdrop) return;
+        if (drawer.getAttribute('aria-hidden') === 'true' || drawer.style.display === 'none') openDrawer();
+        else closeDrawer();
+      }
+      if (menuBtn) menuBtn.addEventListener('click', toggleDrawer);
       if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
       if (backdrop) backdrop.addEventListener('click', closeDrawer);
       window.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });

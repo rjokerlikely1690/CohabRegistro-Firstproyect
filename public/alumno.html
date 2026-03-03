@@ -293,9 +293,10 @@
                 white-space: nowrap;
             }
             
-            /* 3. HEADER DE USUARIO - Compacto y claro */
+            /* 3. HEADER DE USUARIO - Compacto y claro; margen superior para no quedar bajo navbar fija */
             .user-header {
                 padding: 1rem 0;
+                margin-top: 88px; /* espacio para navbar fija en móvil (evita que tape el botón Volver) */
             }
             
             .user-nav {
@@ -313,6 +314,14 @@
             .user-nav button {
                 padding: 0.4rem 0.8rem !important;
                 font-size: 0.8rem !important;
+            }
+            
+            /* Mantener botón Volver visible en móvil (no aplicar width:100% del .btn-secondary genérico) */
+            .user-nav .btn-secondary {
+                width: auto;
+                min-width: auto;
+                margin-top: 0;
+                flex-shrink: 0;
             }
             
             .user-welcome h1 {

@@ -339,17 +339,35 @@
             </div>
         </div>
 
-        <!-- Filtros -->
-        <div class="gestion-filtros" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
-            <select id="filterEstado" onchange="filterAlumnos()" class="filter-select" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background: #1f1f1f; border: 1px solid #333; color: #fff;">
-                <option value="">Todos</option>
-                <option value="al-dia">Al Día</option>
-                <option value="por-vencer">Por Vencer</option>
-                <option value="vencido">Vencido</option>
-                <option value="moroso">+30 días</option>
-            </select>
-            <button class="btn btn-small btn-secondary" onclick="clearFilters()">Limpiar</button>
+        <p class="gestion-instruction" style="font-size: 0.95rem; color: rgba(255,255,255,0.75); margin-bottom: 1rem;">Haz clic en cualquier tarjeta para verificar su estado.</p>
+
+        <!-- Filtros (misma modalidad que Verificar: botones tipo pill) -->
+        <div class="filter-buttons gestion-filtros-pills" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <button type="button" class="filter-btn active" id="btnFilterTodos" onclick="setGestionFilter('')">Todos <span id="gestionCountTodos" class="filter-count">0</span></button>
+            <button type="button" class="filter-btn" id="btnFilterVencido" onclick="setGestionFilter('vencido')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#ef4444"><circle cx="12" cy="12" r="10"/></svg>
+                Atrasados <span id="gestionCountVencidos" class="filter-count">0</span>
+            </button>
+            <button type="button" class="filter-btn" id="btnFilterPorVencer" onclick="setGestionFilter('por-vencer')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b"><circle cx="12" cy="12" r="10"/></svg>
+                Próximos a vencer <span id="gestionCountProximos" class="filter-count">0</span>
+            </button>
+            <button type="button" class="filter-btn" id="btnFilterAlDia" onclick="setGestionFilter('al-dia')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#10b981"><circle cx="12" cy="12" r="10"/></svg>
+                Al día <span id="gestionCountAlDia" class="filter-count">0</span>
+            </button>
+            <button type="button" class="filter-btn" id="btnFilterMoroso" onclick="setGestionFilter('moroso')" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#dc2626"><circle cx="12" cy="12" r="10"/></svg>
+                +30 días <span id="gestionCountMorosos" class="filter-count">0</span>
+            </button>
         </div>
+        <select id="filterEstado" onchange="filterAlumnos(); updateGestionFilterActive();" class="filter-select" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;" aria-hidden="true">
+            <option value="">Todos</option>
+            <option value="al-dia">Al Día</option>
+            <option value="por-vencer">Por Vencer</option>
+            <option value="vencido">Vencido</option>
+            <option value="moroso">+30 días</option>
+        </select>
 
         <section class="alumnos-grid" id="alumnosGrid">
             <!-- Los alumnos se cargarán aquí dinámicamente -->

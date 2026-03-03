@@ -8,7 +8,27 @@
   <meta name="description" content="Contacto COHAB BJJ (El Alba 12620, Las Condes). WhatsApp, Instagram y email para agendar tu primera clase.">
   <link rel="icon" type="image/png" href="img/logo_cohab.png">
   <link rel="apple-touch-icon" href="img/logo_cohab.png">
-  <link rel="stylesheet" href="css/styles.css?v=20">
+  <link rel="stylesheet" href="css/styles.css?v=40">
+  <style>
+    /* Calidez en la página de contacto */
+    .contacto-ubicacion-section {
+      background: linear-gradient(180deg, rgba(220, 38, 38, 0.04) 0%, transparent 100%);
+      padding: 2rem 1rem;
+      border-radius: 1rem;
+      margin-top: 4rem;
+    }
+    .contacto-ubicacion-section h2 { color: #faf6f2; }
+    .contacto-ubicacion-section .lead { color: rgba(255, 250, 245, 0.88); }
+    .contacto-ubicacion-section .ubicacion-invite {
+      font-size: 0.95rem; color: rgba(255, 250, 245, 0.75); margin-top: 0.5rem;
+    }
+    .contacto-ubicacion-section figure {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2), 0 0 0 1px rgba(220, 38, 38, 0.12);
+    }
+    .contacto-ubicacion-section figure:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(220, 38, 38, 0.2);
+    }
+  </style>
 </head>
 <body class="marketing">
   <nav class="navbar" role="navigation" aria-label="Navegación principal">
@@ -47,7 +67,7 @@
       <a href="metodologia.html"><span>Metodología</span><span>›</span></a>
       <a href="comunidad.html"><span>Comunidad</span><span>›</span></a>
       <a href="horarios.html"><span>Horarios</span><span>›</span></a>
-      <a href="contacto.html"><span>Contacto</span><span>›</span></a>
+      <a href="contacto.html" class="active"><span>Contacto</span><span>›</span></a>
       <a href="faq.html"><span>Preguntas frecuentes</span><span>›</span></a>
       <a href="ubicacion.html"><span>Ubicación</span><span>›</span></a>
     </nav>
@@ -80,6 +100,20 @@
               Si vienes por primera vez, confirma cupo por WhatsApp.
             </p>
           </aside>
+        </div>
+      </section>
+
+      <section class="marketing-section contacto-ubicacion-section" aria-label="Fotos de la sede">
+        <h2>Ubicación</h2>
+        <p class="lead">El Alba 12620, Las Condes. Nuestra sede COHAB.</p>
+        <p class="ubicacion-invite">Te esperamos. Ven a conocernos o escríbenos antes si quieres agendar.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 280px)); gap: 1.25rem; justify-content: center; max-width: 600px; margin: 1.25rem auto 0;">
+          <figure style="margin: 0; border-radius: 0.75rem; overflow: hidden;">
+            <img src="img/ubicacion-interior.png" alt="Interior del dojo COHAB San Carlos" loading="lazy" style="width: 100%; height: auto; display: block; object-fit: cover; max-height: 200px;">
+          </figure>
+          <figure style="margin: 0; border-radius: 0.75rem; overflow: hidden;">
+            <img src="img/ubicacion-entrada.png" alt="Entrada COHAB — El Alba 12620, Las Condes" loading="lazy" style="width: 100%; height: auto; display: block; object-fit: cover; max-height: 200px;">
+          </figure>
         </div>
       </section>
 
@@ -163,6 +197,7 @@
     <div style="max-width:1200px;margin:1.75rem auto 0;padding:0 1rem;color:rgba(255,255,255,0.45);font-size:0.95rem;">
       © 2026 COHAB BJJ — Santiago, Chile
     </div>
+    <p style="margin:0.5rem auto 0;padding:0 1rem;text-align:center;"><a href="login.html?role=admin" style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-decoration:none;">Acceso equipo</a></p>
   </footer>
 
   <div class="marketing-cta-bar" aria-label="Acciones rápidas">
@@ -192,7 +227,12 @@
         backdrop.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
       }
-      if (menuBtn) menuBtn.addEventListener('click', openDrawer);
+      function toggleDrawer() {
+        if (!drawer || !backdrop) return;
+        if (drawer.getAttribute('aria-hidden') === 'true' || drawer.style.display === 'none') openDrawer();
+        else closeDrawer();
+      }
+      if (menuBtn) menuBtn.addEventListener('click', toggleDrawer);
       if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
       if (backdrop) backdrop.addEventListener('click', closeDrawer);
       window.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
