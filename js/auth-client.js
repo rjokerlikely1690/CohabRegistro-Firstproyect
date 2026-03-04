@@ -41,10 +41,12 @@ const AUTH = {
      * @returns {string} - URL base del API "https://api.example.com"
      */
     getApiUrl: function() {
-        if (window.COHAB_CONFIG && window.COHAB_CONFIG.mongodbApiUrl) {
-            return window.COHAB_CONFIG.mongodbApiUrl;
-        }
-        return localStorage.getItem('serverBaseUrl') || 'https://cohabregistro-firstproyect.onrender.com';
+        var configured = (window.COHAB_CONFIG && window.COHAB_CONFIG.mongodbApiUrl) || localStorage.getItem('serverBaseUrl');
+        var host = (window.location && window.location.hostname) ? window.location.hostname : '';
+        var isLocal = (host === 'localhost' || host === '127.0.0.1');
+        var isLocalhostUrl = configured && (configured.indexOf('localhost') !== -1 || configured.indexOf('127.0.0.1') !== -1);
+        if (configured && (isLocal || !isLocalhostUrl)) return configured;
+        return 'https://cohabregistro-firstproyect.onrender.com';
     },
 
     /**

@@ -26,6 +26,7 @@ const corsAllowedOrigins = [
     'http://127.0.0.1:5500',
     'https://cohabregistro-firstproyect.pages.dev',
     'https://cohabregistro-firstproyect.pages.dev/',
+    'https://cohabregistro.ro-anania.workers.dev',
     'http://localhost:8080',
     'http://127.0.0.1:8080'
 ];
@@ -38,8 +39,9 @@ const corsOptions = {
         // Sin origin = misma origen o peticiones tipo Postman
         if (!origin) return callback(null, true);
         if (corsAllowedOrigins.indexOf(origin) !== -1) return callback(null, true);
-        // Permitir cualquier subdominio de pages.dev
+        // Permitir cualquier subdominio de pages.dev o workers.dev
         if (origin.endsWith('.pages.dev')) return callback(null, true);
+        if (origin.endsWith('.workers.dev')) return callback(null, true);
         callback(new Error('CORS no permitido para: ' + origin));
     },
     credentials: true,
