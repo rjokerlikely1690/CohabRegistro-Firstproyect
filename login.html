@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academia COHAB - Sistema de Control de Mensualidades</title>
+    <script>
+    (function(){
+      var h = (typeof location !== 'undefined' && location.hostname) ? location.hostname : '';
+      var api = (h === 'localhost' || h === '127.0.0.1') ? 'http://localhost:3000' : 'https://cohabregistro-firstproyect.onrender.com';
+      window.COHAB_CONFIG = window.COHAB_CONFIG || {};
+      window.COHAB_CONFIG.mongodbApiUrl = api;
+      if (typeof console !== 'undefined' && console.log) console.log('[COHAB] API:', api);
+    })();
+    </script>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#dc2626">
