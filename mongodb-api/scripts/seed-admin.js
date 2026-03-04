@@ -6,7 +6,7 @@ const { MongoClient } = require('mongodb');
 const bcrypt = require('bcryptjs');
 
 // Configuración desde variables de entorno o valores por defecto
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.@cohab.oefjuvo.mongodb.net/?appName=cohab';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.1@cohab.oefjuvo.mongodb.net/?appName=cohab';
 const DB_NAME = process.env.DB_NAME || 'cohab';
 
 // Datos del admin inicial (cambiar después del primer uso)

@@ -969,8 +969,8 @@ function showQR(id) {
     }
     qrContainer.innerHTML = '';
     
-    // URL fija de Cloudflare Pages
-    const baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
+    // URL base producción (Workers)
+    const baseUrl = 'https://cohabregistro.ro-anania.workers.dev';
     
     // URL: ID obligatorio; RUT opcional (QRs nuevos incluyen RUT si está registrado)
     const studentUrl = buildStudentUrl(alumno.id, alumno.rut);
@@ -1186,16 +1186,10 @@ function imprimirQR(id) {
     ventanaImpresion.document.close();
 }
 
-// Helper para construir URL del estudiante. ID = identificador corto (obligatorio). RUT = opcional (solo para QRs nuevos).
+// Helper para construir URL del estudiante. En producción SIEMPRE workers.dev (no depender de localStorage).
 function buildStudentUrl(alumnoId, rutOptional) {
     const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(window.location.origin);
-    let baseUrl = isLocalhost ? window.location.origin : (localStorage.getItem('serverBaseUrl') || '');
-    if (!baseUrl || (!isLocalhost && !baseUrl.includes('pages.dev'))) {
-        baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
-    }
-    baseUrl = baseUrl.replace(/\/verificar\/.*$/, '');
-    baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, '');
-    baseUrl = baseUrl.replace(/\/$/, '');
+    const baseUrl = isLocalhost ? window.location.origin.replace(/\/$/, '') : 'https://cohabregistro.ro-anania.workers.dev';
     let url = baseUrl + '/public/alumno.html?id=' + encodeURIComponent(alumnoId);
     if (rutOptional && String(rutOptional).trim()) {
         url += '&rut=' + encodeURIComponent(String(rutOptional).trim());

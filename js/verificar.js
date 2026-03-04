@@ -277,27 +277,13 @@ function scanQRCode(video, canvas) {
     requestAnimationFrame(() => scanQRCode(video, canvas));
 }
 
-// Construir URL de alumno estable en el mismo host
+// Construir URL de alumno. En producción SIEMPRE workers.dev.
 function buildStudentUrl(alumnoId) {
-    // En localhost: usar la URL actual para que funcione sin config
     const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(window.location.origin);
-    let baseUrl = isLocalhost ? window.location.origin : (localStorage.getItem('serverBaseUrl') || '');
-    
-    // Si no hay URL configurada o no es Cloudflare Pages, usar la por defecto
-    if (!baseUrl || (!isLocalhost && !baseUrl.includes('pages.dev'))) {
-        baseUrl = 'https://cohabregistro-firstproyect.pages.dev';
-    }
-    
-    // Limpiar la URL: remover cualquier ruta adicional y trailing slash
-    baseUrl = baseUrl.replace(/\/verificar\/.*$/, ''); // Remover /verificar/ si existe
-    baseUrl = baseUrl.replace(/\/[^\/]+\.html.*$/, ''); // Remover cualquier .html
-    baseUrl = baseUrl.replace(/\/$/, '');
-    
-    // En localhost usar ruta directa (los servidores estáticos no procesan _redirects)
-    if (isLocalhost) {
-        return `${baseUrl}/public/alumno.html?id=${encodeURIComponent(alumnoId)}`;
-    }
-    return `${baseUrl}/alumno/${encodeURIComponent(alumnoId)}`;
+    const baseUrl = isLocalhost ? window.location.origin.replace(/\/$/, '') : 'https://cohabregistro.ro-anania.workers.dev';
+    let url = `${baseUrl}/public/alumno.html?id=${encodeURIComponent(alumnoId)}`;
+    if (arguments[1] && String(arguments[1]).trim()) url += '&rut=' + encodeURIComponent(String(arguments[1]).trim());
+    return url;
 }
 
 // Alternar linterna si está disponible

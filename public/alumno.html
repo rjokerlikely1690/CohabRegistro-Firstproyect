@@ -1462,8 +1462,9 @@
             }
             
             // Construir URL completa del alumno: id + RUT si existe (para compartir/copiar)
-            const baseUrl = window.location.origin || 'https://cohabregistro-firstproyect.pages.dev';
-            let studentUrl = baseUrl + '/public/alumno.html?id=' + encodeURIComponent(alumno.id);
+            const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(window.location.origin);
+            const baseUrl = isLocal ? window.location.origin : 'https://cohabregistro.ro-anania.workers.dev';
+            let studentUrl = baseUrl.replace(/\/$/, '') + '/public/alumno.html?id=' + encodeURIComponent(alumno.id);
             if (alumno.rut && String(alumno.rut).trim()) {
                 studentUrl += '&rut=' + encodeURIComponent(normalizeRut(String(alumno.rut).trim()));
             }

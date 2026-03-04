@@ -75,7 +75,7 @@ const COOKIE_NAME = 'cohab_token';
 const USERS_COLLECTION = 'usuarios';
 
 // MongoDB connection string (debe venir de variables de entorno)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.@cohab.oefjuvo.mongodb.net/?appName=cohab';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.1@cohab.oefjuvo.mongodb.net/?appName=cohab';
 const DB_NAME = process.env.DB_NAME || 'cohab';
 const COLLECTION_NAME = process.env.COLLECTION_NAME || 'alumnos';
 
@@ -84,7 +84,7 @@ let db = null;
 
 const SEND_EMAILS = process.env.EMAIL_ENABLED === 'true';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'COHAB <no-reply@cohab.cl>';
-const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://cohabregistro-firstproyect.pages.dev/';
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://cohabregistro.ro-anania.workers.dev/';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const USE_RESEND_API = process.env.USE_RESEND_API === 'true';
 const MAILERSEND_API_TOKEN = process.env.MAILERSEND_API_TOKEN;
@@ -256,8 +256,8 @@ function normalizeRutServer(str) {
 function buildStudentUrl(alumno) {
     const id = (alumno && (alumno.id != null && alumno.id !== '' ? String(alumno.id) : (alumno._id ? String(alumno._id) : ''))) || '';
     if (!id) return null;
-    const base = (PUBLIC_BASE_URL || 'https://cohabregistro-firstproyect.pages.dev/').trim().replace(/\/$/, '') + '/';
-    let url = `${base}alumno.html?id=${encodeURIComponent(id)}`;
+    const base = (PUBLIC_BASE_URL || 'https://cohabregistro.ro-anania.workers.dev/').trim().replace(/\/$/, '') + '/';
+    let url = `${base}public/alumno.html?id=${encodeURIComponent(id)}`;
     const rut = alumno.rut ? normalizeRutServer(String(alumno.rut)) : '';
     if (rut) url += '&rut=' + encodeURIComponent(rut);
     return url;
@@ -873,6 +873,7 @@ app.get('/alumnos', verifyToken, requireRole(['admin']), async (req, res) => {
                         hoyISO: new Date().toISOString().slice(0, 10)
                     };
                 }
+                alumno.url = buildStudentUrl(alumno);
             } catch (err) {
                 alumno.estado = 'ERROR';
                 alumno.acceso = false;
@@ -1162,7 +1163,8 @@ app.get('/alumnos/:id/validar', async (req, res) => {
                 telefono: alumno.telefono || null,
                 monto: alumno.monto || null,
                 fechaPago: alumno.fechaPago || null,
-                rut: alumno.rut || null
+                rut: alumno.rut || null,
+                url: buildStudentUrl({ id: alumnoId, rut: alumno.rut || null })
             }
         });
     } catch (error) {

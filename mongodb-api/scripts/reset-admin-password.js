@@ -4,7 +4,7 @@
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcryptjs');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.@cohab.oefjuvo.mongodb.net/?appName=cohab';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.1@cohab.oefjuvo.mongodb.net/?appName=cohab';
 const DB_NAME = process.env.DB_NAME || 'cohab';
 
 // Nueva contraseña para el admin

@@ -827,11 +827,15 @@
                 alertBanner.style.display = 'none';
             }
             
-            // Construir URL completa del alumno: id + RUT si existe
-            const baseUrl = window.location.origin || 'https://cohabregistro-firstproyect.pages.dev';
-            let studentUrl = baseUrl + '/usuario.html?id=' + encodeURIComponent(alumno.id);
-            if (alumno.rut && String(alumno.rut).trim()) {
-                studentUrl += '&rut=' + encodeURIComponent(normalizeRut(String(alumno.rut).trim()));
+            // URL del alumno: preferir la que envía el backend (workers.dev), sino construir local
+            let studentUrl = alumno.url;
+            if (!studentUrl || typeof studentUrl !== 'string') {
+                const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(window.location.origin);
+                const baseUrl = isLocal ? window.location.origin : 'https://cohabregistro.ro-anania.workers.dev';
+                studentUrl = baseUrl.replace(/\/$/, '') + '/public/alumno.html?id=' + encodeURIComponent(alumno.id);
+                if (alumno.rut && String(alumno.rut).trim()) {
+                    studentUrl += '&rut=' + encodeURIComponent(normalizeRut(String(alumno.rut).trim()));
+                }
             }
             
             // Mostrar información completa
