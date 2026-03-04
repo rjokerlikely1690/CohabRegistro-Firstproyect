@@ -131,37 +131,43 @@ if (SEND_EMAILS && !USE_RESEND_API && !USE_MAILERSEND_API) {
     }
 }
 
-// Conectar a MongoDB
-async function connectDB() {
-    try {
-        const isProduction = process.env.NODE_ENV === 'production';
+// Conectar a MongoDB (con reintentos en segundo plano si falla al inicio)
+const DB_RETRY_INTERVAL_MS = 15000; // 15 segundos
 
-        // Opciones de conexión con SSL/TLS mejoradas
-        const clientOptions = {
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            tls: true,
-            // En local/dev puede fallar la validación del CA bundle del sistema.
-            // Mantener estricto en producción.
-            tlsAllowInvalidCertificates: !isProduction,
-            retryWrites: true,
-            w: 'majority'
-        };
-        
+async function connectDB() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const clientOptions = {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        tls: true,
+        tlsAllowInvalidCertificates: !isProduction,
+        retryWrites: true,
+        w: 'majority'
+    };
+
+    try {
+        if (client) try { await client.close(); } catch (_) {}
         client = new MongoClient(MONGODB_URI, clientOptions);
         await client.connect();
         db = client.db(DB_NAME);
         console.log('✅ Conectado a MongoDB');
+        return true;
     } catch (error) {
-        console.error('❌ Error conectando a MongoDB:', error);
-        console.error('💡 Asegúrate de que:');
-        console.error('   1. La IP de Railway está permitida en MongoDB Atlas Network Access');
-        console.error('   2. MONGODB_URI está configurada correctamente');
-        console.error('   3. El usuario y contraseña son correctos');
-        console.warn('⚠️ Continuando sin conexión a MongoDB (modo degradado)');
-        // No lanzar error para permitir que el servidor inicie sin MongoDB
-        // Los endpoints que requieren DB fallarán con mensaje claro
+        console.error('❌ Error conectando a MongoDB:', error.message || error);
+        console.error('💡 Revisa: MONGODB_URI en Render, Network Access en Atlas (0.0.0.0/0 o IP de Render)');
+        if (client) { try { await client.close(); } catch (_) {} client = null; }
+        db = null;
+        return false;
     }
+}
+
+function startDBRetryLoop() {
+    const id = setInterval(async () => {
+        if (db) { clearInterval(id); return; }
+        console.log('🔄 Reintentando conexión a MongoDB...');
+        const ok = await connectDB();
+        if (ok) clearInterval(id);
+    }, DB_RETRY_INTERVAL_MS);
 }
 
 // ============================================================
@@ -1259,7 +1265,8 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 async function start() {
-    await connectDB(); // Intenta conectar, pero no bloquea si falla
+    const connected = await connectDB();
+    if (!connected) startDBRetryLoop();
     const host = process.env.HOST || '0.0.0.0';
     app.listen(PORT, host, () => {
         console.log(`🚀 Servidor MongoDB API corriendo en http://${host}:${PORT}`);
@@ -1271,7 +1278,7 @@ async function start() {
         console.log(`   DELETE /alumnos/:id`);
         console.log(`   PATCH  /alumnos/:id/pago`);
         if (!db) {
-            console.warn('⚠️ MongoDB no conectado - algunos endpoints pueden fallar');
+            console.warn('⚠️ MongoDB no conectado - reintentando cada 15s. Revisa MONGODB_URI y Atlas Network Access.');
         }
     });
 }
