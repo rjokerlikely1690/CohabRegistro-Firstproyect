@@ -519,6 +519,12 @@ async function sendStudentEmail(alumno) {
 // POST /auth/login - Iniciar sesión
 app.post('/auth/login', async (req, res) => {
     try {
+        if (!db) {
+            return res.status(503).json({
+                error: 'Servicio no disponible',
+                mensaje: 'Base de datos no conectada. Revisa MONGODB_URI en el backend.'
+            });
+        }
         const { email, password } = req.body;
         
         if (!email || !password) {
@@ -540,8 +546,23 @@ app.post('/auth/login', async (req, res) => {
                 mensaje: 'Email o contraseña incorrectos'
             });
         }
-        
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!user.password || typeof user.password !== 'string') {
+            console.error('❌ Usuario sin contraseña válida en DB:', user.email);
+            return res.status(401).json({
+                error: 'Credenciales inválidas',
+                mensaje: 'Usuario sin contraseña configurada. Ejecuta el script de seed o reseteo de admin.'
+            });
+        }
+        let passwordMatch = false;
+        try {
+            passwordMatch = await bcrypt.compare(password, user.password);
+        } catch (bcryptErr) {
+            console.error('❌ Error bcrypt en login:', bcryptErr.message);
+            return res.status(401).json({
+                error: 'Credenciales inválidas',
+                mensaje: 'Email o contraseña incorrectos'
+            });
+        }
         if (!passwordMatch) {
             return res.status(401).json({
                 error: 'Credenciales inválidas',
@@ -595,9 +616,10 @@ app.post('/auth/login', async (req, res) => {
         
     } catch (error) {
         console.error('❌ Error en login:', error);
+        const isDev = process.env.NODE_ENV !== 'production';
         res.status(500).json({
             error: 'Error interno',
-            mensaje: 'Error al procesar el inicio de sesión'
+            mensaje: isDev && error.message ? error.message : 'Error al procesar el inicio de sesión'
         });
     }
 });
