@@ -727,9 +727,18 @@
         </div>
     </div>
     
-    <!-- Auth Client -->
-    <script src="js/cohab-config.js?v=4"></script>
-    <script src="js/auth-client.js?v=4"></script>
+    <!-- Auth Client: forzar API producción si no es localhost (evita caché de config vieja) -->
+    <script src="js/cohab-config.js?v=5"></script>
+    <script>
+    (function(){
+      var h = (window.location && window.location.hostname) ? window.location.hostname : '';
+      if (h !== 'localhost' && h !== '127.0.0.1') {
+        window.COHAB_CONFIG = window.COHAB_CONFIG || {};
+        window.COHAB_CONFIG.mongodbApiUrl = 'https://cohabregistro-firstproyect.onrender.com';
+      }
+    })();
+    </script>
+    <script src="js/auth-client.js?v=5"></script>
     
     <script>
         // Rol deseado desde query (?role=admin | ?role=verifier)
