@@ -4,7 +4,8 @@
   "description": "Sistema de Registro COHAB - Frontend + MongoDB API",
   "main": "mongodb-api/server.js",
   "scripts": {
-    "build": "cd mongodb-api && npm install",
+    "build": "node scripts/build-pages.js && cd mongodb-api && npm install",
+    "build:pages": "node scripts/build-pages.js",
     "start": "cd mongodb-api && node server.js"
   },
   "engines": {

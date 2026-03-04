@@ -25,6 +25,7 @@ desktop.ini
 *.rar
 COHAB_FINAL/
 Sistema_COHAB_Completo.zip
+dist/
 
 # Python http.server cache
 __pycache__/
