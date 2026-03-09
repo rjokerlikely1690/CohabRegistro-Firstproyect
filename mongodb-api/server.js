@@ -38,11 +38,10 @@ if (process.env.FRONTEND_URL) {
 }
 const corsOptions = {
     origin: function (origin, callback) {
-        // Sin origin = misma origen o peticiones tipo Postman
         if (!origin) return callback(null, true);
+        // roazcor.com PRIMERO - dominio principal en producción
+        if (typeof origin === 'string' && origin.includes('roazcor.com')) return callback(null, true);
         if (corsAllowedOrigins.indexOf(origin) !== -1) return callback(null, true);
-        // Permitir roazcor.com y subdominios
-        if (origin.includes('roazcor.com')) return callback(null, true);
         if (origin.endsWith('.pages.dev')) return callback(null, true);
         if (origin.endsWith('.workers.dev')) return callback(null, true);
         callback(new Error('CORS no permitido para: ' + origin));
