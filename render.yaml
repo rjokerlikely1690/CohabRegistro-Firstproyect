@@ -1,4 +1,4 @@
- services:
+ l rservices:
   - type: web
     name: cohab-mongodb-api
     runtime: node
