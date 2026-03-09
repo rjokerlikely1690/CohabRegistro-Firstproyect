@@ -41,7 +41,8 @@ const corsOptions = {
         // Sin origin = misma origen o peticiones tipo Postman
         if (!origin) return callback(null, true);
         if (corsAllowedOrigins.indexOf(origin) !== -1) return callback(null, true);
-        // Permitir cualquier subdominio de pages.dev o workers.dev
+        // Permitir roazcor.com y subdominios
+        if (origin.includes('roazcor.com')) return callback(null, true);
         if (origin.endsWith('.pages.dev')) return callback(null, true);
         if (origin.endsWith('.workers.dev')) return callback(null, true);
         callback(new Error('CORS no permitido para: ' + origin));
@@ -77,7 +78,8 @@ const COOKIE_NAME = 'cohab_token';
 const USERS_COLLECTION = 'usuarios';
 
 // MongoDB connection string (debe venir de variables de entorno)
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1.1@cohab.oefjuvo.mongodb.net/?appName=cohab';
+// Contraseña con . debe ir URL-encoded (%2E) en la URI
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://cohabsancarlos:Papapapateto1%2E1@cohab.oefjuvo.mongodb.net/?appName=cohab';
 const DB_NAME = process.env.DB_NAME || 'cohab';
 const COLLECTION_NAME = process.env.COLLECTION_NAME || 'alumnos';
 
