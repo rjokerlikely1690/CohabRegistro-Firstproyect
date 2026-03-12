@@ -37,15 +37,8 @@ if (process.env.FRONTEND_URL) {
     if (url && !corsAllowedOrigins.includes(url)) corsAllowedOrigins.push(url);
 }
 const corsOptions = {
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        // roazcor.com - retornar el origen exacto para headers CORS
-        if (typeof origin === 'string' && origin.includes('roazcor.com')) return callback(null, origin);
-        if (corsAllowedOrigins.indexOf(origin) !== -1) return callback(null, origin);
-        if (origin.endsWith('.pages.dev')) return callback(null, origin);
-        if (origin.endsWith('.workers.dev')) return callback(null, origin);
-        callback(new Error('CORS no permitido para: ' + origin));
-    },
+    // Permitir cualquier origen para evitar bloqueos CORS (roazcor.com, localhost, etc)
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
