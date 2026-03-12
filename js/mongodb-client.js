@@ -102,7 +102,7 @@
      */
     function getDefaultApiUrlByHost() {
         // En producción, siempre usar el backend de Render
-        const PRODUCTION_API = 'https://cohab-mongodb-api-production-97ab.up.railway.app';
+        const PRODUCTION_API = 'https://cohab-finalizado-production.up.railway.app';
         
         const host = (window.location && window.location.hostname) ? window.location.hostname : '';
         const isLocal = host === 'localhost' || host === '127.0.0.1';

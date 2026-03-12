@@ -19,7 +19,7 @@ window.COHAB_CONFIG = window.COHAB_CONFIG || {};
 var _host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : '';
 window.COHAB_CONFIG.mongodbApiUrl = (_host === 'localhost' || _host === '127.0.0.1')
   ? 'http://localhost:3000'
-  : 'https://cohab-mongodb-api-production-97ab.up.railway.app';
+  : 'https://cohab-finalizado-production.up.railway.app';
 
 // La clave de Gestión de Alumnos se configura en el BACKEND (variable de entorno GESTION_CLAVE).
 // No pongas la clave aquí; el frontend la valida contra el API.

@@ -46,7 +46,7 @@ const AUTH = {
         var isLocal = (host === 'localhost' || host === '127.0.0.1');
         var isLocalhostUrl = configured && (configured.indexOf('localhost') !== -1 || configured.indexOf('127.0.0.1') !== -1);
         if (configured && (isLocal || !isLocalhostUrl)) return configured;
-        return 'https://cohab-mongodb-api-production-97ab.up.railway.app';
+        return 'https://cohab-finalizado-production.up.railway.app';
     },
 
     /**
