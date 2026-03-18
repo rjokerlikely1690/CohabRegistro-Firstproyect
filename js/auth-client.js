@@ -45,8 +45,17 @@ const AUTH = {
         var host = (window.location && window.location.hostname) ? window.location.hostname : '';
         var isLocal = (host === 'localhost' || host === '127.0.0.1');
         var isLocalhostUrl = configured && (configured.indexOf('localhost') !== -1 || configured.indexOf('127.0.0.1') !== -1);
-        if (configured && (isLocal || !isLocalhostUrl)) return configured;
-        return 'https://cohab-finalizado-production.up.railway.app';
+        var base = (configured && (isLocal || !isLocalhostUrl)) ? configured : 'https://cohab-finalizado-production.up.railway.app';
+
+        // Multi-academia (single domain): usamos /a/<academiaId>/...
+        // Si no viene en la URL, por compatibilidad usamos "cohab".
+        var path = (window.location && window.location.pathname) ? window.location.pathname : '';
+        var m = path.match(/\/a\/([^\/]+)/i);
+        var academiaId = (m && m[1]) ? decodeURIComponent(m[1]) : 'cohab';
+
+        base = String(base || '').replace(/\/$/, '');
+        if (base.indexOf('/a/') !== -1) return base; // ya viene con prefijo tenant
+        return base + '/a/' + encodeURIComponent(academiaId);
     },
 
     /**

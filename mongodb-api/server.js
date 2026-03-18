@@ -58,6 +58,29 @@ app.use((req, res, next) => {
     next();
 });
 
+// ============================================================
+// MULTI-ACADEMIA (TENANCY) - /a/:academiaId/...
+// ============================================================
+// Convención:
+// - Requests bajo /a/<academiaId>/... pertenecen a esa academia.
+// - Si no viene /a/<academiaId>, asumimos "cohab" para compatibilidad.
+// - Reescribimos req.url para reutilizar las rutas existentes (sin duplicarlas).
+app.use((req, _res, next) => {
+    try {
+        const originalPath = req.url || '';
+        const m = originalPath.match(/^\/a\/([^\/\?]+)(?=\/|$)/i);
+        if (m && m[1]) {
+            req.academiaId = decodeURIComponent(m[1]);
+            req.url = originalPath.replace(/^\/a\/[^\/\?]+/i, '') || '/';
+        } else {
+            req.academiaId = 'cohab';
+        }
+    } catch (_) {
+        req.academiaId = 'cohab';
+    }
+    next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -194,6 +217,16 @@ function verifyToken(req, res, next) {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
+        // Multi-academia: el token queda amarrado a una academia.
+        // Compatibilidad: si el token no trae academiaId, asumimos "cohab".
+        const tokenAcademiaId = (decoded && decoded.academiaId) ? String(decoded.academiaId) : 'cohab';
+        const reqAcademiaId = (req && req.academiaId) ? String(req.academiaId) : 'cohab';
+        if (tokenAcademiaId !== reqAcademiaId) {
+            return res.status(403).json({
+                error: 'Acceso denegado',
+                mensaje: 'Este usuario no pertenece a esta academia'
+            });
+        }
         next();
     } catch (error) {
         // Token inválido o expirado
@@ -224,6 +257,19 @@ function requireRole(allowedRoles) {
         
         next();
     };
+}
+
+function requireSuperAdmin(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({ error: 'No autenticado', mensaje: 'Debes iniciar sesión' });
+    }
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Acceso denegado', mensaje: 'Solo administradores' });
+    }
+    if (req.user.isSuperAdmin !== true) {
+        return res.status(403).json({ error: 'Acceso denegado', mensaje: 'Solo superadmin' });
+    }
+    next();
 }
 
 // Middleware combinado: verificar token + requerir admin
@@ -518,6 +564,18 @@ async function sendStudentEmail(alumno) {
 // ENDPOINTS DE AUTENTICACIÓN
 // ============================================================
 
+function getRequestAcademiaId(req) {
+    return (req && req.academiaId) ? String(req.academiaId) : 'cohab';
+}
+
+// Compatibilidad: documentos antiguos sin academiaId pertenecen a "cohab"
+function tenantFilter(academiaId) {
+    if (academiaId === 'cohab') {
+        return { $or: [{ academiaId: 'cohab' }, { academiaId: { $exists: false } }] };
+    }
+    return { academiaId };
+}
+
 // POST /auth/login - Iniciar sesión
 app.post('/auth/login', async (req, res) => {
     try {
@@ -537,9 +595,11 @@ app.post('/auth/login', async (req, res) => {
         }
         
         const usersCollection = db.collection(USERS_COLLECTION);
-        const user = await usersCollection.findOne({ 
+        const academiaId = getRequestAcademiaId(req);
+        const user = await usersCollection.findOne({
             email: email.toLowerCase().trim(),
-            activo: { $ne: false }
+            activo: { $ne: false },
+            ...tenantFilter(academiaId)
         });
         
         if (!user) {
@@ -571,13 +631,34 @@ app.post('/auth/login', async (req, res) => {
                 mensaje: 'Email o contraseña incorrectos'
             });
         }
+
+        // Bootstrap superadmin:
+        // - El primer admin del sistema que inicia sesión se marca como superadmin.
+        // - Luego, solo los superadmins pueden crear academias y admins de otras academias desde la web.
+        let isSuperAdmin = user.isSuperAdmin === true;
+        try {
+            if (user.role === 'admin' && !isSuperAdmin) {
+                const existingSuper = await usersCollection.findOne({ isSuperAdmin: true, activo: { $ne: false } });
+                if (!existingSuper) {
+                    await usersCollection.updateOne(
+                        { _id: user._id },
+                        { $set: { isSuperAdmin: true, updatedAt: new Date() } }
+                    );
+                    isSuperAdmin = true;
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ No se pudo verificar/establecer superadmin:', e.message || e);
+        }
         
         // Crear JWT
         const tokenPayload = {
             userId: user._id.toString(),
             email: user.email,
             role: user.role,
-            nombre: user.nombre
+            nombre: user.nombre,
+            academiaId: user.academiaId || academiaId || 'cohab',
+            isSuperAdmin: isSuperAdmin
         };
         
         if (user.alumnoId) {
@@ -645,8 +726,10 @@ app.post('/auth/logout', (req, res) => {
 app.get('/auth/me', verifyToken, async (req, res) => {
     try {
         const usersCollection = db.collection(USERS_COLLECTION);
+        const academiaId = getRequestAcademiaId(req);
         const user = await usersCollection.findOne({ 
-            _id: new ObjectId(req.user.userId) 
+            _id: new ObjectId(req.user.userId),
+            ...tenantFilter(academiaId)
         });
         
         if (!user || user.activo === false) {
@@ -664,7 +747,9 @@ app.get('/auth/me', verifyToken, async (req, res) => {
                 email: user.email,
                 nombre: user.nombre,
                 role: user.role,
-                alumnoId: user.alumnoId ? user.alumnoId.toString() : null
+                alumnoId: user.alumnoId ? user.alumnoId.toString() : null,
+                academiaId: user.academiaId || academiaId || 'cohab',
+                isSuperAdmin: user.isSuperAdmin === true
             }
         });
         
@@ -701,11 +786,99 @@ app.get('/auth/gestion-requiere-clave', (req, res) => {
 // ENDPOINTS DE GESTIÓN DE USUARIOS (Solo Admin)
 // ============================================================
 
+// ============================================================
+// ENDPOINTS MULTI-ACADEMIA (Solo Superadmin)
+// ============================================================
+
+// GET /academias - Listar academias
+app.get('/academias', verifyToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const academias = await db.collection('academias').find({}).sort({ id: 1 }).toArray();
+        res.json({ data: academias });
+    } catch (e) {
+        console.error('Error listando academias:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /academias - Crear academia
+app.post('/academias', verifyToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const id = (req.body && req.body.id != null) ? String(req.body.id).trim().toLowerCase() : '';
+        const nombre = (req.body && req.body.nombre != null) ? String(req.body.nombre).trim() : '';
+        if (!id || !/^[a-z0-9][a-z0-9\-]{1,30}[a-z0-9]$/.test(id)) {
+            return res.status(400).json({ error: 'ID inválido', mensaje: 'Usa solo letras/números y guiones (2–32 chars).' });
+        }
+        if (!nombre) {
+            return res.status(400).json({ error: 'Nombre requerido' });
+        }
+        const col = db.collection('academias');
+        const existing = await col.findOne({ id });
+        if (existing) {
+            return res.status(409).json({ error: 'Academia duplicada', mensaje: 'Ya existe una academia con ese id' });
+        }
+        await col.insertOne({ id, nombre, activo: true, createdAt: new Date(), updatedAt: new Date() });
+        res.status(201).json({ success: true, id });
+    } catch (e) {
+        console.error('Error creando academia:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /academias/:academiaId/admins - Crear primer admin de esa academia
+app.post('/academias/:academiaId/admins', verifyToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const academiaId = String(req.params.academiaId || '').trim().toLowerCase();
+        const email = (req.body && req.body.email != null) ? String(req.body.email).trim().toLowerCase() : '';
+        const password = (req.body && req.body.password != null) ? String(req.body.password) : '';
+        const nombre = (req.body && req.body.nombre != null) ? String(req.body.nombre).trim() : '';
+
+        if (!academiaId) return res.status(400).json({ error: 'academiaId requerido' });
+        if (!email || !password || !nombre) return res.status(400).json({ error: 'Datos incompletos', mensaje: 'email, password y nombre son requeridos' });
+
+        const academiasCol = db.collection('academias');
+        const aca = await academiasCol.findOne({ id: academiaId });
+        if (!aca) {
+            return res.status(404).json({ error: 'Academia no encontrada', mensaje: 'Crea la academia primero' });
+        }
+
+        const usersCollection = db.collection(USERS_COLLECTION);
+        const existing = await usersCollection.findOne({ email, ...tenantFilter(academiaId) });
+        if (existing) {
+            return res.status(409).json({ error: 'Email duplicado', mensaje: 'Ya existe un usuario con ese email en esa academia' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = {
+            email,
+            password: hashedPassword,
+            nombre,
+            role: 'admin',
+            alumnoId: null,
+            academiaId,
+            isSuperAdmin: false,
+            activo: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            lastLogin: null
+        };
+        const result = await usersCollection.insertOne(newUser);
+        res.status(201).json({ success: true, id: result.insertedId.toString() });
+    } catch (e) {
+        console.error('Error creando admin de academia:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // GET /usuarios - Listar usuarios (solo admin)
 app.get('/usuarios', verifyToken, requireRole(['admin']), async (req, res) => {
     try {
         const usersCollection = db.collection(USERS_COLLECTION);
-        const users = await usersCollection.find({}).project({ password: 0 }).toArray();
+        const academiaId = getRequestAcademiaId(req);
+        const users = await usersCollection
+            .find({ ...tenantFilter(academiaId) })
+            .project({ password: 0 })
+            .toArray();
         res.json({ data: users });
     } catch (error) {
         console.error('Error listando usuarios:', error);
@@ -741,9 +914,13 @@ app.post('/usuarios', verifyToken, requireRole(['admin']), async (req, res) => {
         }
         
         const usersCollection = db.collection(USERS_COLLECTION);
+        const academiaId = getRequestAcademiaId(req);
         
         // Verificar email único
-        const existing = await usersCollection.findOne({ email: email.toLowerCase().trim() });
+        const existing = await usersCollection.findOne({
+            email: email.toLowerCase().trim(),
+            ...tenantFilter(academiaId)
+        });
         if (existing) {
             return res.status(409).json({
                 error: 'Email duplicado',
@@ -760,6 +937,7 @@ app.post('/usuarios', verifyToken, requireRole(['admin']), async (req, res) => {
             nombre: nombre.trim(),
             role,
             alumnoId: alumnoId ? new ObjectId(alumnoId) : null,
+            academiaId,
             activo: true,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -795,8 +973,9 @@ app.delete('/usuarios/:id', verifyToken, requireRole(['admin']), async (req, res
         }
         
         const usersCollection = db.collection(USERS_COLLECTION);
+        const academiaId = getRequestAcademiaId(req);
         const result = await usersCollection.updateOne(
-            { _id: new ObjectId(id) },
+            { _id: new ObjectId(id), ...tenantFilter(academiaId) },
             { $set: { activo: false, updatedAt: new Date() } }
         );
         
@@ -824,11 +1003,13 @@ app.get('/alumnos', verifyToken, requireRole(['admin']), async (req, res) => {
     res.set('Pragma', 'no-cache');
     try {
         const debug = req.query.debug === '1' || req.query.debug === 'true';
+        const academiaId = getRequestAcademiaId(req);
         const collection = db.collection(COLLECTION_NAME);
-        const raw = await collection.find({}).sort({ nombre: 1 }).toArray();
+        const raw = await collection.find({ ...tenantFilter(academiaId) }).sort({ nombre: 1 }).toArray();
         const alumnos = raw.map((a) => {
             const alumno = { ...a };
             try {
+                alumno.academiaId = alumno.academiaId || academiaId || 'cohab';
                 if (!alumno.fechaPago) {
                     alumno.estado = 'SIN_DATOS';
                     alumno.acceso = false;
@@ -897,11 +1078,11 @@ function generarIdCorto() {
     const digitos = String(Math.floor(1000 + Math.random() * 9000)); // 4 dígitos: 1000–9999
     return prefijo + digitos; // ej: ALU-4821 (8 caracteres)
 }
-async function generarIdCortoUnico(collection) {
+async function generarIdCortoUnico(collection, academiaId) {
     const maxIntentos = 20;
     for (let i = 0; i < maxIntentos; i++) {
         const id = generarIdCorto();
-        const existente = await collection.findOne({ id });
+        const existente = await collection.findOne({ id, ...tenantFilter(academiaId || 'cohab') });
         if (!existente) return id;
     }
     // Fallback muy improbable: añadir sufijo
@@ -913,10 +1094,12 @@ app.post('/alumnos', verifyToken, requireRole(['admin']), async (req, res) => {
     try {
         const alumno = req.body;
         const collection = db.collection(COLLECTION_NAME);
+        const academiaId = getRequestAcademiaId(req);
+        alumno.academiaId = alumno.academiaId || academiaId || 'cohab';
 
         // ID: si viene, respetarlo; si no, generar ID corto (solo nuevos alumnos). No tocar existentes.
         if (!alumno.id || String(alumno.id).trim() === '') {
-            alumno.id = await generarIdCortoUnico(collection);
+            alumno.id = await generarIdCortoUnico(collection, alumno.academiaId);
         }
         
         // Convertir fecha si es necesario
@@ -952,6 +1135,8 @@ app.put('/alumnos', verifyToken, requireRole(['admin']), async (req, res) => {
         if (!alumno.id) {
             return res.status(400).json({ error: 'ID requerido' });
         }
+        const academiaId = getRequestAcademiaId(req);
+        alumno.academiaId = alumno.academiaId || academiaId || 'cohab';
         
         // Convertir fecha si es necesario
         if (alumno.fechaPago) {
@@ -960,8 +1145,8 @@ app.put('/alumnos', verifyToken, requireRole(['admin']), async (req, res) => {
         
         const collection = db.collection(COLLECTION_NAME);
         const result = await collection.updateOne(
-            { id: alumno.id },
-            { $set: alumno },
+            { id: alumno.id, ...tenantFilter(alumno.academiaId) },
+            { $set: alumno, $setOnInsert: { academiaId: alumno.academiaId } },
             { upsert: true }
         );
         
@@ -985,7 +1170,8 @@ app.delete('/alumnos/:id', verifyToken, requireRole(['admin']), async (req, res)
     try {
         const { id } = req.params;
         const collection = db.collection(COLLECTION_NAME);
-        const result = await collection.deleteOne({ id });
+        const academiaId = getRequestAcademiaId(req);
+        const result = await collection.deleteOne({ id, ...tenantFilter(academiaId) });
         
         if (result.deletedCount === 0) {
             return res.status(404).json({ error: 'Alumno no encontrado' });
@@ -1003,6 +1189,7 @@ app.patch('/alumnos/:id/pago', verifyToken, requireRole(['admin']), async (req, 
     try {
         const { id } = req.params;
         const { fechaPago } = req.body;
+        const academiaId = getRequestAcademiaId(req);
         
         if (!fechaPago) {
             return res.status(400).json({ error: 'fechaPago requerida' });
@@ -1010,8 +1197,8 @@ app.patch('/alumnos/:id/pago', verifyToken, requireRole(['admin']), async (req, 
         
         const collection = db.collection(COLLECTION_NAME);
         const result = await collection.updateOne(
-            { id },
-            { $set: { fechaPago: new Date(fechaPago) } }
+            { id, ...tenantFilter(academiaId) },
+            { $set: { fechaPago: new Date(fechaPago), academiaId: academiaId || 'cohab' } }
         );
         
         if (result.matchedCount === 0) {
@@ -1108,6 +1295,7 @@ function calcularEstadoSuscripcion(alumno) {
 app.get('/alumnos/:id/validar', async (req, res) => {
     try {
         const { id } = req.params;
+        const academiaId = getRequestAcademiaId(req);
         
         if (!id || id.trim() === '') {
             return res.status(400).json({ 
@@ -1118,7 +1306,7 @@ app.get('/alumnos/:id/validar', async (req, res) => {
         }
         
         const collection = db.collection(COLLECTION_NAME);
-        const alumno = await collection.findOne({ id: id.trim() });
+        const alumno = await collection.findOne({ id: id.trim(), ...tenantFilter(academiaId) });
         
         if (!alumno) {
             return res.status(404).json({ 
@@ -1192,8 +1380,9 @@ app.post('/alumnos/:id/enviar-qr', verifyToken, requireRole(['admin']), async (r
         }
 
         const { id } = req.params;
+        const academiaId = getRequestAcademiaId(req);
         const collection = db.collection(COLLECTION_NAME);
-        const alumno = await collection.findOne({ id });
+        const alumno = await collection.findOne({ id, ...tenantFilter(academiaId) });
 
         if (!alumno) {
             return res.status(404).json({ error: 'Alumno no encontrado' });

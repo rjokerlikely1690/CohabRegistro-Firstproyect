@@ -127,14 +127,32 @@
     function getApiUrl() {
         // 1) Configuración global (funciona para TODOS los dispositivos)
         const globalCfg = getConfiguredFromGlobal();
-        if (globalCfg) return globalCfg;
+        if (globalCfg) return withAcademiaPrefix(globalCfg);
 
         // 2) Fallback por navegador (útil para admin/dev)
         const stored = getStored('mongodbApiUrl');
-        if (stored) return stored;
+        if (stored) return withAcademiaPrefix(stored);
 
         // 3) Default por entorno
-        return getDefaultApiUrlByHost();
+        return withAcademiaPrefix(getDefaultApiUrlByHost());
+    }
+
+    function getAcademiaIdFromPath() {
+        try {
+            const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+            const m = path.match(/\/a\/([^\/]+)/i);
+            return (m && m[1]) ? decodeURIComponent(m[1]) : 'cohab';
+        } catch (_) {
+            return 'cohab';
+        }
+    }
+
+    function withAcademiaPrefix(baseUrl) {
+        const base = String(baseUrl || '').trim().replace(/\/$/, '');
+        if (!base) return '';
+        if (base.indexOf('/a/') !== -1) return base; // ya viene con prefijo tenant
+        const academiaId = getAcademiaIdFromPath();
+        return `${base}/a/${encodeURIComponent(academiaId)}`;
     }
 
     async function apiCall(endpoint, method = 'GET', body = null) {

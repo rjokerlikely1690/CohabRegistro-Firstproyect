@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academias - Superadmin</title>
+  <link rel="stylesheet" href="css/styles.css?v=12" />
+  <style>
+    body { background: #0b0b0f; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+    .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 800px){ .row { grid-template-columns: 1fr; } }
+    label { display:block; font-size: 12px; color: rgba(255,255,255,0.75); margin: 10px 0 6px; }
+    input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.25); color: #fff; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14); cursor:pointer; color:#fff; background: rgba(255,255,255,0.08); }
+    .btn-primary { background: #dc2626; border-color: #dc2626; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .muted { color: rgba(255,255,255,0.7); font-size: 13px; }
+    .list { margin-top: 14px; display: grid; gap: 10px; }
+    .item { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.10); background: rgba(0,0,0,0.25); display:flex; justify-content:space-between; gap: 10px; align-items:center; }
+    .pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.10); }
+    .err { margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.35); color: #fecaca; display:none; }
+    .ok { margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.28); color: #d1fae5; display:none; }
+    a { color: #fca5a5; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap: 12px; margin-bottom: 14px;">
+      <div>
+        <div style="color:#fff; font-size: 20px; font-weight: 800;">Academias</div>
+        <div class="muted">Solo superadmin. Crea academias y el primer admin de cada una.</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <a class="btn" href="admin.html">Volver</a>
+        <button class="btn" id="btnReload" type="button">Recargar</button>
+      </div>
+    </div>
+
+    <div id="msgOk" class="ok"></div>
+    <div id="msgErr" class="err"></div>
+
+    <div class="card">
+      <div style="color:#fff; font-weight:700; margin-bottom: 6px;">Crear academia</div>
+      <div class="row">
+        <div>
+          <label>Academia ID (slug)</label>
+          <input id="acaId" placeholder="cohab, academia2, bjj-norte" />
+          <div class="muted">Letras/números/guiones. Se usa en URLs: `/a/&lt;id&gt;/...`</div>
+        </div>
+        <div>
+          <label>Nombre</label>
+          <input id="acaNombre" placeholder="Academia BJJ Norte" />
+        </div>
+      </div>
+      <div style="margin-top: 12px;">
+        <button id="btnCrearAcademia" class="btn btn-primary" type="button">Crear academia</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 14px;">
+      <div style="color:#fff; font-weight:700; margin-bottom: 6px;">Crear primer admin de una academia</div>
+      <div class="row">
+        <div>
+          <label>Academia ID</label>
+          <input id="adminAcaId" placeholder="academia2" />
+        </div>
+        <div>
+          <label>Nombre</label>
+          <input id="adminNombre" placeholder="Administrador" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="adminEmail" placeholder="admin@academia2.com" />
+        </div>
+        <div>
+          <label>Contraseña</label>
+          <input id="adminPass" placeholder="ClaveSegura123!" />
+        </div>
+      </div>
+      <div style="margin-top: 12px; display:flex; gap: 10px; flex-wrap: wrap;">
+        <button id="btnCrearAdmin" class="btn btn-primary" type="button">Crear admin</button>
+        <div class="muted">Luego entra en: <code style="color:#fff">/a/&lt;academiaId&gt;/login.html?role=admin</code></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 14px;">
+      <div style="color:#fff; font-weight:700; margin-bottom: 6px;">Listado</div>
+      <div class="muted">Estas son las academias creadas.</div>
+      <div id="list" class="list"></div>
+    </div>
+  </div>
+
+  <script src="js/cohab-config.js?v=20"></script>
+  <script src="js/auth-client.js?v=20"></script>
+  <script>
+    const msgOk = document.getElementById('msgOk');
+    const msgErr = document.getElementById('msgErr');
+
+    function showOk(text) {
+      msgErr.style.display = 'none';
+      msgOk.textContent = text;
+      msgOk.style.display = 'block';
+    }
+    function showErr(text) {
+      msgOk.style.display = 'none';
+      msgErr.textContent = text;
+      msgErr.style.display = 'block';
+    }
+
+    async function api(path, method, body) {
+      const base = AUTH.getApiUrl().replace(/\/$/, ''); // incluye /a/<academiaId>
+      const res = await fetch(base + path, {
+        method,
+        headers: AUTH.getAuthHeaders(),
+        credentials: 'include',
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.mensaje || data.error || ('HTTP ' + res.status));
+      }
+      return data;
+    }
+
+    async function load() {
+      try {
+        const user = await AUTH.requireAdmin('login.html?role=admin');
+        if (!user || user.isSuperAdmin !== true) {
+          showErr('Acceso denegado: solo superadmin puede ver esta página.');
+          return;
+        }
+        const data = await api('/academias', 'GET');
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        (data.data || []).forEach(a => {
+          const el = document.createElement('div');
+          el.className = 'item';
+          el.innerHTML = `
+            <div>
+              <div style="color:#fff; font-weight:700;">${a.nombre || a.id}</div>
+              <div class="muted">ID: <span class="pill">${a.id}</span></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+              <div class="pill">${a.activo === false ? 'Inactiva' : 'Activa'}</div>
+              <a class="muted" href="/a/${encodeURIComponent(a.id)}/login.html?role=admin">Ir a login</a>
+            </div>
+          `;
+          list.appendChild(el);
+        });
+      } catch (e) {
+        showErr(e.message || String(e));
+      }
+    }
+
+    document.getElementById('btnReload').addEventListener('click', load);
+
+    document.getElementById('btnCrearAcademia').addEventListener('click', async () => {
+      try {
+        const id = document.getElementById('acaId').value.trim();
+        const nombre = document.getElementById('acaNombre').value.trim();
+        const btn = document.getElementById('btnCrearAcademia');
+        btn.disabled = true;
+        await api('/academias', 'POST', { id, nombre });
+        showOk('Academia creada: ' + id);
+        await load();
+      } catch (e) {
+        showErr(e.message || String(e));
+      } finally {
+        document.getElementById('btnCrearAcademia').disabled = false;
+      }
+    });
+
+    document.getElementById('btnCrearAdmin').addEventListener('click', async () => {
+      try {
+        const academiaId = document.getElementById('adminAcaId').value.trim();
+        const nombre = document.getElementById('adminNombre').value.trim();
+        const email = document.getElementById('adminEmail').value.trim();
+        const password = document.getElementById('adminPass').value;
+        const btn = document.getElementById('btnCrearAdmin');
+        btn.disabled = true;
+        await api(`/academias/${encodeURIComponent(academiaId)}/admins`, 'POST', { nombre, email, password });
+        showOk(`Admin creado para ${academiaId}. Entra en /a/${academiaId}/login.html?role=admin`);
+      } catch (e) {
+        showErr(e.message || String(e));
+      } finally {
+        document.getElementById('btnCrearAdmin').disabled = false;
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>
+
