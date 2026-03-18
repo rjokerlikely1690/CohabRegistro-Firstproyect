@@ -7,7 +7,11 @@
     <script>
     (function(){
       var h = (typeof location !== 'undefined' && location.hostname) ? location.hostname : '';
-      var api = (h === 'localhost' || h === '127.0.0.1') ? 'http://localhost:3000' : 'https://cohab-finalizado-production.up.railway.app';
+      var base = (h === 'localhost' || h === '127.0.0.1') ? 'http://localhost:3000' : 'https://cohab-finalizado-production.up.railway.app';
+      var p = (typeof location !== 'undefined' && location.pathname) ? location.pathname : '';
+      var m = p.match(/\/a\/([^\/]+)/i);
+      var academiaId = (m && m[1]) ? decodeURIComponent(m[1]) : 'cohab';
+      var api = String(base).replace(/\/$/, '') + '/a/' + encodeURIComponent(academiaId);
       window.COHAB_CONFIG = window.COHAB_CONFIG || {};
       window.COHAB_CONFIG.mongodbApiUrl = api;
       if (typeof console !== 'undefined' && console.log) console.log('[COHAB] API:', api);
