@@ -344,17 +344,7 @@
             // Verificar autenticación admin
             let isAuthenticated = false;
             
-            // Primero verificar localStorage (login reciente)
-            const storedRole = localStorage.getItem('cohabUserRole');
-            const storedUser = localStorage.getItem('cohabUser');
-            
-            if (storedRole === 'admin' && storedUser) {
-                // Tenemos datos locales, asumir autenticado temporalmente
-                isAuthenticated = true;
-                console.log('✅ Usuario admin (localStorage)');
-            }
-            
-            // Intentar verificar con el servidor (no bloquear si falla)
+            // Verificar con el servidor (fuente de verdad). Evita loops con tokens viejos / tenant mismatch.
             if (typeof AUTH !== 'undefined') {
                 try {
                     const user = await AUTH.checkAuth();
@@ -365,10 +355,9 @@
                         // Usuario existe pero no es admin
                         isAuthenticated = false;
                     }
-                    // Si user es null pero tenemos localStorage, mantener isAuthenticated
                 } catch (error) {
                     console.warn('⚠️ No se pudo verificar con servidor:', error.message);
-                    // Mantener el estado de localStorage si existe
+                    isAuthenticated = false;
                 }
             }
             

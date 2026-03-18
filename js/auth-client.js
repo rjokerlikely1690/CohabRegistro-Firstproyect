@@ -203,8 +203,9 @@ const AUTH = {
 
         } catch (e) {
             console.warn('Error verificando autenticación:', e);
-            // Si hay error de red, confiar en localStorage
-            return this.getCurrentUser();
+            // Evitar bucles de redirección: no confiar en localStorage cuando el servidor no confirma.
+            // Esto fuerza al usuario a re-login si hay mismatch de tenant o token inválido.
+            return null;
         }
     },
 
