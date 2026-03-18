@@ -12,7 +12,7 @@ const toCopy = [
   'index.html', '404.html', 'clases.html', 'contacto.html', 'faq.html',
   'horarios.html', 'login.html', 'metodologia.html', 'comunidad.html',
   'ubicacion.html', 'admin.html', 'gestion-alumnos.html', 'obtener-ids.html',
-  'usuario.html',
+  'usuario.html', 'academias.html',
   '_redirects', 'manifest.json', 'sw.js', 'netlify.toml',
   'css', 'js', 'img', 'public', 'admin',
 ];
