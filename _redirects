@@ -28,3 +28,8 @@
 
 # Admin (canónico)
 /admin/dashboard.html /admin.html 200
+
+# Multi-academia (tenant) bajo un solo dominio
+/a/:academiaId/login.html /login.html 200
+/a/:academiaId/admin.html /admin.html 200
+/a/:academiaId/academias.html /academias.html 200
