@@ -30,12 +30,6 @@
 /admin/dashboard.html /admin.html 200
 
 # Multi-academia (tenant) bajo un solo dominio
-/login /login.html 302
-/admin /admin.html 302
-/academias /academias.html 302
 /a/:academiaId/login.html /login.html 200
-/a/:academiaId/login /a/:academiaId/login.html 302
 /a/:academiaId/admin.html /admin.html 200
-/a/:academiaId/admin /a/:academiaId/admin.html 302
 /a/:academiaId/academias.html /academias.html 200
-/a/:academiaId/academias /a/:academiaId/academias.html 302
